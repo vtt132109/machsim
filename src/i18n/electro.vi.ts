@@ -111,6 +111,7 @@ export const ELECTRO_TEXT_VI: Record<string, string> = {
   // measurement file
   'Measurement data': 'Dữ liệu đo',
   'The text of the file: an X (time) column and one column per channel; use Open file… to load an LVM text, CSV or TSV file': 'Nội dung tệp: một cột X (thời gian) và mỗi kênh một cột; dùng Mở tệp… để nạp tệp LVM dạng văn bản, CSV hoặc TSV',
+  'The text of the file: an X (time) column and one column per channel; use Open file… to load an LVM text, CSV, TSV or binary TDMS file (a TDMS file is converted to this text)': 'Nội dung tệp: một cột X (thời gian) và mỗi kênh một cột; dùng Mở tệp… để nạp tệp LVM dạng văn bản, CSV, TSV hoặc tệp nhị phân TDMS (tệp TDMS được đổi thành văn bản này)',
   Channel: 'Kênh',
   'Which value column to play (1 = the first after the time column)': 'Phát cột giá trị nào (1 = cột đầu sau cột thời gian)',
   '2 plays the recording twice as slowly, 0.5 twice as fast': '2 phát bản ghi chậm gấp đôi, 0.5 nhanh gấp đôi',

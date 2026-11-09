@@ -40,6 +40,10 @@ const wizards = () => import('../wizards/wizardDialogs');
 const instrumentUi = () => import('../integration/instrumentDialogs');
 /** snippets, File information, File options, XML / KiCad / EDIF, template files (lazy chunk) */
 const filesUi = () => import('../files/flows');
+/** The circuit on the operating-system clipboard (picture + private format), loaded on first use. */
+const clipboardUi = () => import('../files/systemClipboard');
+/** KiCad symbol libraries into / out of the User database (lazy chunk). */
+const kicadSymbolUi = () => import('../parts/kicadSymbolFlows');
 /** Select a component dialog (database / group / family / component, details, detail report) */
 const placeUi = () => import('../parts/PlaceComponentDialog');
 /** Update components from library, variant manager, library profile (lazy chunk) */
@@ -115,6 +119,8 @@ export const BUILTIN_COMMANDS = [
   'edit.cut',
   'edit.copy',
   'edit.paste',
+  'edit.copySystem',
+  'edit.pasteSystem',
   'edit.duplicate',
   'edit.delete',
   'edit.selectAll',
@@ -192,6 +198,8 @@ export const BUILTIN_COMMANDS = [
   'tools.symbolEditor',
   'tools.databaseManager',
   'tools.importModel',
+  'tools.importKicadSymbols',
+  'tools.exportKicadSymbols',
   'tools.updateComponents',
   'tools.variants',
   'tools.exportLibraryProfile',
@@ -334,6 +342,14 @@ export function installBuiltinCommands(): void {
     const at = cursorStore.getState().pos;
     actions.paste(at ?? undefined);
   });
+  // the operating-system clipboard: a picture plus the circuit itself (src/ui/files/systemClipboard.ts)
+  def('edit.copySystem', async () => {
+    await (await clipboardUi()).copyToSystemClipboard();
+  });
+  def('edit.pasteSystem', async () => {
+    const at = cursorStore.getState().pos;
+    await (await clipboardUi()).pasteFromSystemClipboard(at ?? undefined);
+  });
   def('edit.pasteSpecial.keepNames', async () => (await editingUi()).pasteSpecialFlow('keepNames'));
   def('edit.pasteSpecial.values', async () => (await editingUi()).pasteSpecialFlow('values'));
   def('edit.pasteSpecial.block', async () => (await editingUi()).pasteSpecialFlow('block'));
@@ -450,6 +466,8 @@ export function installBuiltinCommands(): void {
   def('tools.symbolEditor', async () => (await partsUi()).openSymbolEditor());
   def('tools.databaseManager', async () => (await partsUi()).openDatabaseManager());
   def('tools.importModel', async () => (await partsUi()).openSpiceImport());
+  def('tools.importKicadSymbols', async () => (await kicadSymbolUi()).importKicadSymbolsFlow());
+  def('tools.exportKicadSymbols', async () => (await kicadSymbolUi()).exportKicadSymbolsFlow());
   def('tools.updateComponents', async () => (await libraryUi()).openUpdateComponentsDialog());
   def('tools.variants', async () => (await libraryUi()).openVariantManager());
   def('tools.exportLibraryProfile', async () => (await libraryUi()).exportLibraryProfileFlow());

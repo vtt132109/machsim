@@ -52,3 +52,24 @@ export async function downloadText(text: string, fileName: string, mime = 'text/
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+/**
+ * Ask for several text files at once (browser file input with `multiple`; the desktop shell uses
+ * the same input). `accept` lists extensions (".kicad_sch,.sch"). Resolves [] when cancelled.
+ */
+export function pickTextFiles(accept: string): Promise<PickedFile[]> {
+  if (typeof document === 'undefined') return Promise.resolve([]);
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = accept;
+    input.multiple = true;
+    input.addEventListener('change', () => {
+      const files = Array.from(input.files ?? []);
+      if (!files.length) return resolve([]);
+      Promise.all(files.map((f) => f.text().then((text) => ({ name: f.name, text }), () => null))).then((all) => resolve(all.filter((x): x is PickedFile => x !== null)));
+    });
+    input.addEventListener('cancel', () => resolve([]));
+    input.click();
+  });
+}

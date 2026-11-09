@@ -80,7 +80,8 @@ import { centerOn, DEFAULT_VIEW, fitRect, zoomAt } from './viewport';
 import { nextInteractiveValue, type InteractionPhase } from './interactive';
 import { newId } from './ids';
 import { newRung } from '../../ladder/edit';
-import type { LadderRung } from '../../ladder/types';
+import { renameLadderBlock as renameLadderBlockInDesign } from '../../ladder/editBlocks';
+import type { LadderBlock, LadderRung } from '../../ladder/types';
 import type { LadderLive } from '../../ladder/probes';
 import { parseUserNumber } from '../../util/units';
 
@@ -1084,6 +1085,18 @@ export function createEditor(options: EditorOptions = {}) {
     /** Replace the rungs of a ladder sheet (one undo step). */
     setLadderRungs(sheetId: string, rungs: LadderRung[]) {
       commit(ops.updateSheet(getState().design, sheetId, (sh) => (sh.kind === 'ladder' ? { ...sh, ladder: rungs } : sh)));
+    },
+    /** Replace the function blocks of the ladder program (one undo step; an empty list removes the field). */
+    setLadderBlocks(blocks: LadderBlock[]) {
+      const design = { ...getState().design };
+      if (blocks.length) design.ladderBlocks = blocks;
+      else delete design.ladderBlocks;
+      commit(design);
+    },
+    /** Rename a function block and every call of it (one undo step). */
+    renameLadderBlock(id: string, name: string) {
+      const next = renameLadderBlockInDesign(getState().design, id, name);
+      if (next !== getState().design) commit(next);
     },
     /** Live state of the running ladder program (set by the simulation controller). */
     setLadderLive(live: LadderLive | null) {

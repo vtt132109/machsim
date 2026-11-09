@@ -45,6 +45,9 @@ import { packageKey, packageOf } from '../../../src/model/sections';
 import { blockInstances, childIdOfPart, getChild, isBlockPartId, resolveLivePart, withLiveParam } from '../../../src/model/hierarchy';
 import { isCustomPartId } from '../../../src/library/custom/types';
 import { getPart } from '../../../src/library';
+import { newBlock } from '../../../src/ladder/blocks';
+import { renameLadderBlock } from '../../../src/ladder/editBlocks';
+import { newSheet } from '../../../src/model/types';
 import type { Design, PartInstance, Sheet } from '../../../src/model/types';
 import { EXAMPLES } from '../../../src/ui/integration/exampleDesigns';
 import { LESSONS } from '../../../src/learn/lessons';
@@ -254,6 +257,28 @@ const OPS: Op[] = [
       const key = Object.keys(part.params)[0];
       // the saved value written as the copy's own: the circuit is unchanged, the state is stored
       return ref ? withLiveParam(d, ref, key, part.params[key]) : d;
+    },
+  },
+  {
+    // round 4 step 7: a ladder function block, a call of it, a word instruction, then the block renamed
+    name: 'ladder function block',
+    apply: (d, r) => {
+      const tag = Math.floor(r() * 1e9).toString(36);
+      let next = d;
+      let sheet = next.sheets.find((s) => s.kind === 'ladder');
+      if (!sheet) {
+        sheet = { ...newSheet(`lad-${tag}`, 'Ladder'), kind: 'ladder', ladder: [] };
+        next = { ...next, sheets: [...next.sheets, sheet] };
+      }
+      const blocks = next.ladderBlocks ?? [];
+      const block = blocks[0] ?? newBlock(`blk-${tag}`, `Blk${tag.replace(/[^a-z0-9]/g, '')}`, `br-${tag}`);
+      const rungs = [
+        ...(sheet.ladder ?? []),
+        { id: `lc-${tag}`, outputs: [{ kind: 'call' as const, address: `FB${tag.replace(/[^a-z0-9]/gi, '')}`, block: block.name, args: { IN1: 'I0.0', OUT1: 'M0.0' } }] },
+        { id: `lw-${tag}`, outputs: [{ kind: 'add' as const, address: 'MW0', a: 'MW0', b: '1' }] },
+      ];
+      next = { ...next, sheets: next.sheets.map((s) => (s.id === sheet!.id ? { ...s, ladder: rungs } : s)), ladderBlocks: blocks.length ? blocks : [block] };
+      return renameLadderBlock(next, block.id, `${block.name}x`);
     },
   },
   { name: 'annotate missing', apply: (d) => annotateDesign(d, { mode: 'missing' }).design },

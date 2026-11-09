@@ -13,6 +13,7 @@ import { L, type LocalizedText } from './core';
 import { LADDER_GUIDE_PAGES } from './ladderHelp';
 import { DOCS_GUIDE_PAGES } from './docsHelp';
 import { ELECTRO_GUIDE_PAGES } from './electroHelp';
+import { XCHG_GUIDE_SECTIONS } from './xchgHelp';
 
 export type GuidePageId = 'whatsNew' | 'lessons' | 'description' | 'instructor' | 'reports' | 'pcb' | 'spiceImport' | 'commandLine' | 'samples' | 'snippets' | 'fileSafety' | 'exchange' | 'measurements' | 'spiceMeasure' | 'signalBlocks' | 'realParts' | 'placement' | 'updateComponents' | 'variants' | 'myLibrary' | 'mcu' | 'pld' | 'ladder' | 'mecha' | 'ercTools' | 'netSettings' | 'customizeUi' | 'footprints' | 'documents' | 'printing' | 'editingTools' | 'relays' | 'audio';
 
@@ -703,3 +704,6 @@ export const GUIDE_PAGES: Record<GuidePageId, GuidePage> = {
     ],
   },
 };
+
+// the exchange-formats round adds sections to the pages of the same id (KiCad libraries, the system clipboard, TDMS)
+for (const [id, extra] of Object.entries(XCHG_GUIDE_SECTIONS)) GUIDE_PAGES[id as GuidePageId].sections.push(...(extra ?? []));

@@ -7,3 +7,5 @@
 .msf-num { text-align: right; font-variant-numeric: tabular-nums; }
 .msf-steps, .msf-notes { margin: 6px 0; padding-left: 20px; line-height: 1.45; }
 .msf-notes { max-height: 40vh; overflow: auto; }
+.msf-table { border-collapse: collapse; width: 100%; font-size: 12px; }
+.msf-table th, .msf-table td { text-align: left; padding: 2px 8px; border-bottom: 1px solid var(--border); }

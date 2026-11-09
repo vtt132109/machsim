@@ -42,6 +42,9 @@ contextBridge.exposeInMainWorld('machsimDesktop', {
     };
   },
   confirmQuit: () => ipcRenderer.send('machsim:confirm-quit'),
+  /** System clipboard: a circuit as picture + private format + HTML + text, and reading it back. */
+  clipboardWrite: (opts) => ipcRenderer.invoke('machsim:clipboard-write', opts || {}),
+  clipboardRead: (privateFormat) => ipcRenderer.invoke('machsim:clipboard-read', String(privateFormat || '')),
   /** Print the page (the print preview's print-only container) with the system print dialog. */
   printPage: (opts) => ipcRenderer.invoke('machsim:print-page', opts || {}),
   /** Save the page as a PDF file through a save dialog. */

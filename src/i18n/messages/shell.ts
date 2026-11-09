@@ -42,6 +42,8 @@ export default {
   'cmd.edit.cut': ['Cắt', 'Cut'],
   'cmd.edit.copy': ['Sao chép', 'Copy'],
   'cmd.edit.paste': ['Dán', 'Paste'],
+  'cmd.edit.copySystem': ['Sao chép ra clipboard hệ thống (ảnh + mạch)', 'Copy to the system clipboard (picture + circuit)'],
+  'cmd.edit.pasteSystem': ['Dán từ clipboard hệ thống', 'Paste from the system clipboard'],
   'cmd.edit.duplicate': ['Nhân bản', 'Duplicate'],
   'cmd.edit.delete': ['Xoá', 'Delete'],
   'cmd.edit.selectAll': ['Chọn tất cả', 'Select all'],

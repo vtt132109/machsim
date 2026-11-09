@@ -22,6 +22,12 @@
  * 10 ms scan used to need an eleventh scan — and the elapsed time never equalled the preset the
  * learner typed, so a `T1.ET = 0.1` comparison contact could not fire. The done bit now falls
  * after `round(preset / scan)` scans and the elapsed time is the preset itself once it is reached.
+ * Word instructions (MOV / ADD / SUB / MUL / DIV)
+ *   While their rung carries power they run on every scan: `dest = a <op> b`. A memory word (MWn) is a
+ *   signed 16-bit integer: the result is rounded to the nearest integer (a division truncates toward
+ *   zero, like an integer division in a controller) and a result outside -32768 ... 32767 wraps
+ *   round. An analog output (AQn) keeps the exact value in volts. Division by zero writes nothing
+ *   and counts in `mathErrors`.
  * Counters
  *   CTU  +1 on every 0→1 change of its rung, done when the count reaches the preset;
  *   CTD  −1 on every 0→1 change, starts at the preset, done when the count reaches 0;
@@ -33,6 +39,16 @@
  */
 import type { LadderOutputKind } from './types';
 import type { BitArea, BitRef, ExprIR, LadderIR, NumRef, OutputIR, RungIR } from './program';
+import { LADDER_LIMITS } from './types';
+
+/** Wrap a number into a signed 16-bit word (the value of an integer register of a controller). */
+export function toWord(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  // nearest integer, a tie goes away from zero (2.5 -> 3, -2.5 -> -3)
+  const r = Math.sign(value) * Math.round(Math.abs(value));
+  const w = (((r % 65536) + 65536) % 65536) | 0;
+  return w >= 32768 ? w - 65536 : w;
+}
 
 /** Bits packed into one probe word (well inside the exact-integer range of a double). */
 export const SLOT_BITS = 24;
@@ -50,14 +66,22 @@ export class LadderMachine {
   readonly inputs: Uint8Array;
   readonly outputs: Uint8Array;
   readonly mem: Uint8Array;
+  /** hidden bits of function-block instances (enable bits, private memory) */
+  readonly local: Uint8Array;
   /** analog input channels, volts */
   readonly analog: Float64Array;
+  /** memory words MW0 ... (signed 16-bit integers) */
+  readonly words: Float64Array;
+  /** analog output channels AQ0 ..., volts */
+  readonly analogOut: Float64Array;
   readonly timerDone: Uint8Array;
   readonly counterDone: Uint8Array;
   readonly timerElapsed: Float64Array;
   readonly counterValue: Float64Array;
   /** scans run since reset */
   scans = 0;
+  /** divisions by zero met since reset */
+  mathErrors = 0;
   /** simulated time of the last scan, seconds */
   time = 0;
 
@@ -79,7 +103,10 @@ export class LadderMachine {
     this.inputs = new Uint8Array(64);
     this.outputs = new Uint8Array(64);
     this.mem = new Uint8Array(128);
+    this.local = new Uint8Array(LADDER_LIMITS.localBits);
     this.analog = new Float64Array(16);
+    this.words = new Float64Array(LADDER_LIMITS.wordsTotal);
+    this.analogOut = new Float64Array(8);
     this.timerDone = new Uint8Array(Math.max(1, ir.timers));
     this.counterDone = new Uint8Array(Math.max(1, ir.counters));
     this.timerElapsed = new Float64Array(Math.max(1, ir.timers));
@@ -99,7 +126,11 @@ export class LadderMachine {
     this.inputs.fill(0);
     this.outputs.fill(0);
     this.mem.fill(0);
+    this.local.fill(0);
     this.analog.fill(0);
+    this.words.fill(0);
+    this.analogOut.fill(0);
+    this.mathErrors = 0;
     this.timerDone.fill(0);
     this.timerElapsed.fill(0);
     this.timerRunning.fill(0);
@@ -126,7 +157,12 @@ export class LadderMachine {
   /** Voltage an output port drives (0 when the port is not an output channel). */
   portOutput(port: number): number {
     const p = this.ir.ports[port];
-    if (!p || p.kind !== 'q') return 0;
+    if (!p) return 0;
+    if (p.kind === 'aq') {
+      const v = p.index < this.analogOut.length ? this.analogOut[p.index] : 0;
+      return Math.max(-Math.abs(p.vmax), Math.min(Math.abs(p.vmax), v));
+    }
+    if (p.kind !== 'q') return 0;
     return this.outputs[p.index] ? p.von : 0;
   }
 
@@ -169,6 +205,8 @@ export class LadderMachine {
         return this.outputs;
       case 'M':
         return this.mem;
+      case 'L':
+        return this.local;
       case 'TD':
         return this.timerDone;
       default:
@@ -195,6 +233,10 @@ export class LadderMachine {
         return ref.n < this.timerElapsed.length ? this.timerElapsed[ref.n] : 0;
       case 'cv':
         return ref.n < this.counterValue.length ? this.counterValue[ref.n] : 0;
+      case 'mw':
+        return ref.n < this.words.length ? this.words[ref.n] : 0;
+      case 'aq':
+        return ref.n < this.analogOut.length ? this.analogOut[ref.n] : 0;
       default:
         return ref.n < this.analog.length ? this.analog[ref.n] : 0;
     }
@@ -335,9 +377,45 @@ export class LadderMachine {
     }
   }
 
+  /** Run a mov / add / sub / mul / div while its rung carries power. */
+  private runWordOutput(o: OutputIR): void {
+    const dest = o.dest!;
+    const a = this.numberOf(o.a!);
+    let result: number;
+    if (o.kind === 'mov') result = a;
+    else {
+      const b = this.numberOf(o.b!);
+      switch (o.kind) {
+        case 'add':
+          result = a + b;
+          break;
+        case 'sub':
+          result = a - b;
+          break;
+        case 'mul':
+          result = a * b;
+          break;
+        default:
+          if (b === 0) {
+            this.mathErrors++;
+            return;
+          }
+          // a division into a word truncates toward zero, an analog output keeps the exact quotient
+          result = dest.area === 'mw' ? Math.trunc(a / b) : a / b;
+      }
+    }
+    if (dest.area === 'mw') {
+      if (dest.n < this.words.length) this.words[dest.n] = toWord(result);
+    } else if (dest.n < this.analogOut.length) this.analogOut[dest.n] = Number.isFinite(result) ? result : 0;
+  }
+
   private runOutput(o: OutputIR, power: 0 | 1, dt: number): void {
     this.slotState[o.slot] = power;
     const kind: LadderOutputKind = o.kind;
+    if (kind === 'mov' || kind === 'add' || kind === 'sub' || kind === 'mul' || kind === 'div') {
+      if (power) this.runWordOutput(o);
+      return;
+    }
     if (kind === 'ton' || kind === 'tof') {
       this.runTimer(o, power, dt);
       return;

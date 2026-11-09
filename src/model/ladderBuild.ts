@@ -7,7 +7,8 @@
  * of their own: this module collects them, gives every channel its ladder address, compiles the
  * program and builds the single `A_LADDER` element plus its model card.
  *
- *   channel order of the element  analog inputs (AI0 …), digital inputs (I0.0 …), outputs (Q0.0 …)
+ *   channel order of the element  analog inputs (AI0 …), digital inputs (I0.0 …), outputs (Q0.0 …),
+ *                                 analog outputs (AQ0 …)
  *   last node                     the common of the rack (every module must share it)
  *
  * What it reports back (ERC): a ladder sheet without modules, modules without a ladder sheet,
@@ -15,7 +16,7 @@
  * compiler found in a rung. Nothing here stops the rest of the circuit from simulating.
  */
 import { SCAN_DEFAULT, compileLadder, encodeLadderIr, type LadderError, type LadderIR, type LadderPort } from '../ladder/program';
-import type { LadderRung } from '../ladder/types';
+import type { LadderBlock, LadderRung } from '../ladder/types';
 import { hash8, type LadderIoSpec } from '../library/partkit';
 import { parseUserNumber } from '../util/units';
 import type { ElementIR, ModelCard } from '../sim/netlist';
@@ -92,6 +93,7 @@ const intOf = (params: Record<string, string>, key: string, def: number): number
 /** Address text of a channel, for the messages and the editor's address list. */
 export function channelAddress(spec: LadderIoSpec, start: number, channel: number): string {
   if (spec.kind === 'analog-input') return `AI${start + channel}`;
+  if (spec.kind === 'analog-output') return `AQ${start + channel}`;
   return `${spec.kind === 'input' ? 'I' : 'Q'}${start}.${channel}`;
 }
 
@@ -101,7 +103,13 @@ export function channelAddress(spec: LadderIoSpec, start: number, channel: numbe
  *   `modules`   the rack parts placed on the schematic sheets of the level
  *   `elementName` how to name the element (the netlister's naming rule)
  */
-export function buildLadder(rungs: readonly LadderRung[], sheetIds: readonly string[], modules: readonly LadderModule[], elementName: (refdes: string) => string): LadderBuildResult {
+export function buildLadder(
+  rungs: readonly LadderRung[],
+  sheetIds: readonly string[],
+  modules: readonly LadderModule[],
+  elementName: (refdes: string) => string,
+  blocks: readonly LadderBlock[] = [],
+): LadderBuildResult {
   const messages: LadderBuildMessage[] = [];
   const cpu = modules.find((m) => m.spec.kind === 'cpu');
   const io = modules.filter((m) => m.spec.kind !== 'cpu');
@@ -153,6 +161,7 @@ export function buildLadder(rungs: readonly LadderRung[], sheetIds: readonly str
   const analog: { port: LadderPort; node: string }[] = [];
   const digital: { port: LadderPort; node: string }[] = [];
   const outputs: { port: LadderPort; node: string }[] = [];
+  const analogOut: { port: LadderPort; node: string }[] = [];
   /** address -> refdes that already uses it */
   const taken = new Map<string, string>();
 
@@ -162,6 +171,7 @@ export function buildLadder(rungs: readonly LadderRung[], sheetIds: readonly str
     const vth = num(m.params, 'vth', 12);
     const vhys = Math.max(0, num(m.params, 'vhys', 4));
     const von = num(m.params, 'von', 24);
+    const vmax = Math.abs(num(m.params, 'vmax', 10)) || 10;
     spec.pins.forEach((pinName, channel) => {
       const node = m.node(pinName);
       if (node === undefined) return; // an unwired channel costs nothing
@@ -182,10 +192,11 @@ export function buildLadder(rungs: readonly LadderRung[], sheetIds: readonly str
       taken.set(address, m.refdes);
       if (spec.kind === 'analog-input') analog.push({ port: { kind: 'ai', index: start + channel }, node });
       else if (spec.kind === 'input') digital.push({ port: { kind: 'di', index: start * 8 + channel, vth, vhys }, node });
+      else if (spec.kind === 'analog-output') analogOut.push({ port: { kind: 'aq', index: start + channel, vmax }, node });
       else outputs.push({ port: { kind: 'q', index: start * 8 + channel, von }, node });
     });
   }
-  for (const list of [analog, digital, outputs]) {
+  for (const list of [analog, digital, outputs, analogOut]) {
     for (const item of list) {
       ports.push(item.port);
       nodes.push(item.node);
@@ -206,12 +217,12 @@ export function buildLadder(rungs: readonly LadderRung[], sheetIds: readonly str
 
   const scan = cpu ? num(cpu.params, 'scan', SCAN_DEFAULT) : SCAN_DEFAULT;
   const debug = cpu ? (cpu.params.debug ?? 'true').trim().toLowerCase() !== 'false' : true;
-  const { ir, errors } = compileLadder(rungs, { scan, ports });
+  const { ir, errors } = compileLadder(rungs, { scan, ports, blocks });
   for (const e of errors) {
     messages.push({
       severity: 'error',
-      message: `ladder rung ${e.rung}: ${e.code}${e.text !== undefined ? ` (${e.text})` : ''}`,
-      detail: { id: 'ladderRung', params: { rung: e.rung, code: e.code, text: e.text ?? '', limit: e.limit ?? 0 } },
+      message: `ladder ${e.rung > 0 ? `rung ${e.rung}` : 'block'}${e.block ? ` (block ${e.block}${e.innerRung ? `, rung ${e.innerRung}` : ''})` : ''}: ${e.code}${e.text !== undefined ? ` (${e.text})` : ''}`,
+      detail: { id: 'ladderRung', params: { rung: e.rung, code: e.code, text: e.text ?? '', limit: e.limit ?? 0, block: e.block ?? '', innerRung: e.innerRung ?? 0 } },
       ...(sheetIds.length ? { sheetId: sheetIds[0] } : {}),
     });
   }

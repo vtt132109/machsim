@@ -14,10 +14,14 @@
  * code), which src/i18n/ladderText.ts turns into a Vietnamese or English sentence.
  */
 import { parseUserNumber } from '../util/units';
-import { LADDER_LIMITS, type LadderCompareOp, type LadderNode, type LadderOutput, type LadderOutputKind, type LadderRung } from './types';
+import { expandBlocks, type ExpandedEntry } from './blocks';
+import { LADDER_LIMITS, type LadderBlock, type LadderCompareOp, type LadderNode, type LadderOutput, type LadderOutputKind, type LadderRung } from './types';
 
-/** Bit areas the machine keeps: inputs, outputs, memory, timer done bits, counter done bits. */
-export type BitArea = 'I' | 'Q' | 'M' | 'TD' | 'CD';
+/**
+ * Bit areas the machine keeps: inputs, outputs, memory, timer done bits, counter done bits and the
+ * hidden bits of function-block instances ('L', never typed by the learner).
+ */
+export type BitArea = 'I' | 'Q' | 'M' | 'TD' | 'CD' | 'L';
 
 /** A resolved bit address: `index` is byte·8 + bit for I / Q / M, and n − 1 for T / C done bits. */
 export interface BitRef {
@@ -33,7 +37,17 @@ export type NumRef =
   /** present value of counter `n` (0-based) */
   | { kind: 'cv'; n: number }
   /** analog input channel, volts */
-  | { kind: 'ai'; n: number };
+  | { kind: 'ai'; n: number }
+  /** memory word MWn (signed 16-bit integer) */
+  | { kind: 'mw'; n: number }
+  /** analog output channel AQn as last written, volts */
+  | { kind: 'aq'; n: number };
+
+/** Where a word instruction writes: a memory word or an analog output channel. */
+export interface WordDest {
+  area: 'mw' | 'aq';
+  n: number;
+}
 
 /** Compiled rung logic. */
 export type ExprIR =
@@ -54,6 +68,10 @@ export interface OutputIR {
   /** seconds (timers) or counts (counters) */
   preset: number;
   slot: number;
+  /** mov / add / sub / mul / div: where the result goes and what it is made of */
+  dest?: WordDest;
+  a?: NumRef;
+  b?: NumRef;
 }
 
 export interface RungIR {
@@ -73,7 +91,9 @@ export type LadderPort =
   /** digital input channel: bit `index` of the input image, thresholded by the machine */
   | { kind: 'di'; index: number; vth: number; vhys: number }
   /** output channel: bit `index` of the output image drives this pin */
-  | { kind: 'q'; index: number; von: number };
+  | { kind: 'q'; index: number; von: number }
+  /** analog output channel: the voltage written to AQ`index`, limited to ±`vmax` */
+  | { kind: 'aq'; index: number; vmax: number };
 
 /** Everything the scan machine needs. */
 export interface LadderIR {
@@ -86,6 +106,10 @@ export interface LadderIR {
   timers: number;
   /** counters used (0-based count) */
   counters: number;
+  /** memory words used (count, MW0 … MWn−1; absent in programs compiled before word instructions) */
+  words?: number;
+  /** analog output channels used (count, AQ0 … AQn−1) */
+  aouts?: number;
   /** start value of each counter (preset for a count-down counter, 0 for a count-up one) */
   counterInit: number[];
   /** scan period in seconds */
@@ -103,6 +127,10 @@ export interface LadderError {
   text?: string;
   /** limit / value mentioned by the message */
   limit?: number;
+  /** the problem is inside the function block of this name (the rung is the one that calls it) */
+  block?: string;
+  /** rung number inside that block, 1-based */
+  innerRung?: number;
 }
 
 export type LadderErrorCode =
@@ -115,7 +143,16 @@ export type LadderErrorCode =
   | 'presetRequired'
   | 'emptyGroup'
   | 'noOutput'
-  | 'range';
+  | 'range'
+  | 'notWritable'
+  | 'operandRequired'
+  | 'divZero'
+  | 'blockUnknown'
+  | 'blockRecursion'
+  | 'blockDepth'
+  | 'blockName'
+  | 'blockArg'
+  | 'blockInstance';
 
 export const SCAN_MIN = 1e-4;
 export const SCAN_MAX = 1;
@@ -148,9 +185,13 @@ const COUNTER_RE = /^c\s*(\d+)$/i;
 const ET_RE = /^t\s*(\d+)\s*\.\s*et$/i;
 const CV_RE = /^c\s*(\d+)\s*\.\s*cv$/i;
 const AI_RE = /^ai\s*(\d+)$/i;
+const AQ_RE = /^aq\s*(\d+)$/i;
+const MW_RE = /^mw\s*(\d+)$/i;
+const LOCAL_BIT_RE = /^l(\d+)$/i;
 
 /** Upper bound (exclusive) of the bit index of an area. */
 export function areaSize(area: BitArea): number {
+  if (area === 'L') return LADDER_LIMITS.localBits;
   if (area === 'M') return LADDER_LIMITS.memBytes * 8;
   if (area === 'TD') return LADDER_LIMITS.timers;
   if (area === 'CD') return LADDER_LIMITS.counters;
@@ -160,9 +201,26 @@ export function areaSize(area: BitArea): number {
 /**
  * Read a bit address: "I0.0", "Q1.3", "M2.7", "T1", "C4" (case and spaces are free).
  * Returns null when the text is not a bit address at all, and 'range' when it is one but too big.
+ *
+ * `internal` is set for the addresses the function-block expander generates (src/ladder/blocks.ts):
+ * they start with "$" ("$L12" a hidden bit, "$T40" a private timer) and may lie beyond the numbers
+ * a learner can type. Text typed by the learner never parses with a "$".
  */
-export function parseBitAddress(text: string): BitRef | null | 'range' {
-  const s = text.trim();
+export function parseBitAddress(text: string, internal = false): BitRef | null | 'range' {
+  let s = text.trim();
+  let timers: number = LADDER_LIMITS.timers;
+  let counters: number = LADDER_LIMITS.counters;
+  if (s.startsWith('$')) {
+    if (!internal) return null;
+    s = s.slice(1);
+    timers = LADDER_LIMITS.timersTotal;
+    counters = LADDER_LIMITS.countersTotal;
+    const l = LOCAL_BIT_RE.exec(s);
+    if (l) {
+      const index = Number(l[1]);
+      return index < LADDER_LIMITS.localBits ? { area: 'L', index } : 'range';
+    }
+  }
   const m = BIT_RE.exec(s);
   if (m) {
     const area = m[1].toUpperCase() as 'I' | 'Q' | 'M';
@@ -172,18 +230,19 @@ export function parseBitAddress(text: string): BitRef | null | 'range' {
   const t = TIMER_RE.exec(s);
   if (t) {
     const n = Number(t[1]);
-    return n >= 1 && n <= LADDER_LIMITS.timers ? { area: 'TD', index: n - 1 } : 'range';
+    return n >= 1 && n <= timers ? { area: 'TD', index: n - 1 } : 'range';
   }
   const c = COUNTER_RE.exec(s);
   if (c) {
     const n = Number(c[1]);
-    return n >= 1 && n <= LADDER_LIMITS.counters ? { area: 'CD', index: n - 1 } : 'range';
+    return n >= 1 && n <= counters ? { area: 'CD', index: n - 1 } : 'range';
   }
   return null;
 }
 
 /** Address text of a bit reference ("I0.0", "T3"). */
 export function formatBitAddress(ref: BitRef): string {
+  if (ref.area === 'L') return `$L${ref.index}`;
   if (ref.area === 'TD') return `T${ref.index + 1}`;
   if (ref.area === 'CD') return `C${ref.index + 1}`;
   return `${ref.area}${Math.floor(ref.index / 8)}.${ref.index % 8}`;
@@ -193,18 +252,38 @@ export function formatBitAddress(ref: BitRef): string {
  * Read a number operand: an address of the number kind (T1.ET, C2.CV, AI0) or a literal in
  * user-number syntax. Returns null when the text means nothing, 'range' when the index is too big.
  */
-export function parseNumOperand(text: string): NumRef | null | 'range' {
-  const s = text.trim();
+export function parseNumOperand(text: string, internal = false): NumRef | null | 'range' {
+  let s = text.trim();
   if (s === '') return null;
+  let timers: number = LADDER_LIMITS.timers;
+  let counters: number = LADDER_LIMITS.counters;
+  let words: number = LADDER_LIMITS.words;
+  if (s.startsWith('$')) {
+    if (!internal) return null;
+    s = s.slice(1);
+    timers = LADDER_LIMITS.timersTotal;
+    counters = LADDER_LIMITS.countersTotal;
+    words = LADDER_LIMITS.wordsTotal;
+  }
   const et = ET_RE.exec(s);
   if (et) {
     const n = Number(et[1]);
-    return n >= 1 && n <= LADDER_LIMITS.timers ? { kind: 'et', n: n - 1 } : 'range';
+    return n >= 1 && n <= timers ? { kind: 'et', n: n - 1 } : 'range';
   }
   const cv = CV_RE.exec(s);
   if (cv) {
     const n = Number(cv[1]);
-    return n >= 1 && n <= LADDER_LIMITS.counters ? { kind: 'cv', n: n - 1 } : 'range';
+    return n >= 1 && n <= counters ? { kind: 'cv', n: n - 1 } : 'range';
+  }
+  const mw = MW_RE.exec(s);
+  if (mw) {
+    const n = Number(mw[1]);
+    return n < words ? { kind: 'mw', n } : 'range';
+  }
+  const aq = AQ_RE.exec(s);
+  if (aq) {
+    const n = Number(aq[1]);
+    return n < LADDER_LIMITS.analogOutputs ? { kind: 'aq', n } : 'range';
   }
   const ai = AI_RE.exec(s);
   if (ai) {
@@ -213,6 +292,28 @@ export function parseNumOperand(text: string): NumRef | null | 'range' {
   }
   const v = parseUserNumber(s);
   return Number.isFinite(v) ? { kind: 'const', value: v } : null;
+}
+
+/** Read the destination of a word instruction: "MW3" or "AQ0" (null = not writable, 'range' = too big). */
+export function parseWordDest(text: string, internal = false): WordDest | null | 'range' {
+  let s = text.trim();
+  let words: number = LADDER_LIMITS.words;
+  if (s.startsWith('$')) {
+    if (!internal) return null;
+    s = s.slice(1);
+    words = LADDER_LIMITS.wordsTotal;
+  }
+  const mw = MW_RE.exec(s);
+  if (mw) {
+    const n = Number(mw[1]);
+    return n < words ? { area: 'mw', n } : 'range';
+  }
+  const aq = AQ_RE.exec(s);
+  if (aq) {
+    const n = Number(aq[1]);
+    return n < LADDER_LIMITS.analogOutputs ? { area: 'aq', n } : 'range';
+  }
+  return null;
 }
 
 /** Comparison symbol of an operator, for the editor and the drawing. */
@@ -236,7 +337,23 @@ export const OUTPUT_CODE: Record<LadderOutputKind, string> = {
   ctu: 'CTU',
   ctd: 'CTD',
   creset: 'RES',
+  mov: 'MOV',
+  add: 'ADD',
+  sub: 'SUB',
+  mul: 'MUL',
+  div: 'DIV',
+  call: 'FB',
 };
+
+/** True for a word instruction (MOV / ADD / SUB / MUL / DIV). */
+export function isWordOutput(kind: LadderOutputKind): boolean {
+  return kind === 'mov' || kind === 'add' || kind === 'sub' || kind === 'mul' || kind === 'div';
+}
+
+/** Operands a word instruction takes: MOV one, the arithmetic ones two. */
+export function wordOperandCount(kind: LadderOutputKind): number {
+  return kind === 'mov' ? 1 : isWordOutput(kind) ? 2 : 0;
+}
 
 /** True for an output that drives a timer. */
 export function isTimerOutput(kind: LadderOutputKind): boolean {
@@ -256,7 +373,11 @@ interface Builder {
   edges: number;
   timers: number;
   counters: number;
+  words: number;
+  aouts: number;
   counterInit: number[];
+  /** the rung being compiled was generated by the block expander: "$" addresses are allowed */
+  internal: boolean;
 }
 
 /** Next element slot of the rung being compiled. */
@@ -265,18 +386,36 @@ function nextSlot(b: Builder): number {
   return elementSlot(b.rung, Math.min(k, MAX_RUNG_ELEMENTS - 1));
 }
 
-function fail(b: Builder, rung: number, code: LadderErrorCode, text?: string, limit?: number): void {
-  const e: LadderError = { rung, code };
+/** Where the problem is reported: the 1-based rung and, inside a block, which block and rung. */
+interface Where {
+  rung: number;
+  block?: string;
+  innerRung?: number;
+}
+
+function fail(b: Builder, where: Where | number, code: LadderErrorCode, text?: string, limit?: number): void {
+  const w: Where = typeof where === 'number' ? { rung: where } : where;
+  const e: LadderError = { rung: w.rung, code };
   if (text !== undefined) e.text = text;
   if (limit !== undefined) e.limit = limit;
+  if (w.block !== undefined) e.block = w.block;
+  if (w.innerRung !== undefined) e.innerRung = w.innerRung;
   b.errors.push(e);
 }
 
-function compileNode(b: Builder, rung: number, node: LadderNode): ExprIR | null {
+/** Note the highest word / analog output a number operand reads. */
+function noteOperand(b: Builder, ref: NumRef): void {
+  if (ref.kind === 'mw') b.words = Math.max(b.words, ref.n + 1);
+  else if (ref.kind === 'aq') b.aouts = Math.max(b.aouts, ref.n + 1);
+  else if (ref.kind === 'et') b.timers = Math.max(b.timers, ref.n + 1);
+  else if (ref.kind === 'cv') b.counters = Math.max(b.counters, ref.n + 1);
+}
+
+function compileNode(b: Builder, where: Where, node: LadderNode): ExprIR | null {
   if (node.kind === 'series' || node.kind === 'parallel') {
-    const items = node.items.map((n) => compileNode(b, rung, n)).filter((x): x is ExprIR => x !== null);
+    const items = node.items.map((n) => compileNode(b, where, n)).filter((x): x is ExprIR => x !== null);
     if (items.length === 0) {
-      fail(b, rung, 'emptyGroup');
+      fail(b, where, 'emptyGroup');
       return null;
     }
     if (items.length === 1) return items[0];
@@ -284,21 +423,23 @@ function compileNode(b: Builder, rung: number, node: LadderNode): ExprIR | null 
   }
   const slot = nextSlot(b);
   if (node.kind === 'compare') {
-    const a = parseNumOperand(node.left);
-    const c = parseNumOperand(node.right);
+    const a = parseNumOperand(node.left, b.internal);
+    const c = parseNumOperand(node.right, b.internal);
     if (a === null || a === 'range') {
-      fail(b, rung, a === 'range' ? 'range' : 'notNumber', node.left);
+      fail(b, where, a === 'range' ? 'range' : 'notNumber', node.left);
       return null;
     }
     if (c === null || c === 'range') {
-      fail(b, rung, c === 'range' ? 'range' : 'notNumber', node.right);
+      fail(b, where, c === 'range' ? 'range' : 'notNumber', node.right);
       return null;
     }
+    noteOperand(b, a);
+    noteOperand(b, c);
     return { k: 'cmp', op: node.op, a, b: c, slot };
   }
-  const ref = parseBitAddress(node.address);
+  const ref = parseBitAddress(node.address, b.internal);
   if (ref === null || ref === 'range') {
-    fail(b, rung, ref === 'range' ? 'range' : 'badAddress', node.address);
+    fail(b, where, ref === 'range' ? 'range' : 'badAddress', node.address);
     return null;
   }
   const edge: 0 | 1 | -1 = node.type === 'rising' ? 1 : node.type === 'falling' ? -1 : 0;
@@ -306,23 +447,67 @@ function compileNode(b: Builder, rung: number, node: LadderNode): ExprIR | null 
   return { k: 'bit', ref, invert: node.type === 'nc', edge, slot, mem };
 }
 
-function compileOutput(b: Builder, rung: number, out: LadderOutput): OutputIR | null {
+/** Compile a mov / add / sub / mul / div output. */
+function compileWordOutput(b: Builder, where: Where, out: LadderOutput, slot: number): OutputIR | null {
+  const dest = parseWordDest(out.address, b.internal);
+  if (dest === 'range') {
+    fail(b, where, 'range', out.address);
+    return null;
+  }
+  if (dest === null) {
+    fail(b, where, 'notWritable', out.address);
+    return null;
+  }
+  const need = wordOperandCount(out.kind);
+  const texts = [out.a ?? '', out.b ?? ''].slice(0, need);
+  const refs: NumRef[] = [];
+  for (const text of texts) {
+    if (text.trim() === '') {
+      fail(b, where, 'operandRequired', out.address);
+      return null;
+    }
+    const ref = parseNumOperand(text, b.internal);
+    if (ref === null || ref === 'range') {
+      fail(b, where, ref === 'range' ? 'range' : 'notNumber', text);
+      return null;
+    }
+    refs.push(ref);
+  }
+  if (out.kind === 'div' && refs[1].kind === 'const' && refs[1].value === 0) {
+    fail(b, where, 'divZero', texts[1]);
+    return null;
+  }
+  for (const r of refs) noteOperand(b, r);
+  if (dest.area === 'mw') b.words = Math.max(b.words, dest.n + 1);
+  else b.aouts = Math.max(b.aouts, dest.n + 1);
+  const ir: OutputIR = { kind: out.kind, ref: null, preset: 0, slot, dest, a: refs[0] };
+  if (refs.length > 1) ir.b = refs[1];
+  return ir;
+}
+
+function compileOutput(b: Builder, where: Where, out: LadderOutput): OutputIR | null {
   const slot = nextSlot(b);
+  if (out.kind === 'call') {
+    // a call that reached the compiler was not expanded: the expander reports why
+    fail(b, where, 'blockUnknown', out.block ?? out.address);
+    return null;
+  }
+  if (isWordOutput(out.kind)) return compileWordOutput(b, where, out, slot);
   const preset = out.preset === undefined || out.preset.trim() === '' ? NaN : parseUserNumber(out.preset);
   if (isTimerOutput(out.kind) || isCounterOutput(out.kind)) {
-    const ref = parseBitAddress(out.address);
+    const ref = parseBitAddress(out.address, b.internal);
     if (ref === null || ref === 'range') {
-      fail(b, rung, ref === 'range' ? 'range' : 'badAddress', out.address);
+      fail(b, where, ref === 'range' ? 'range' : 'badAddress', out.address);
       return null;
     }
     const wantTimer = isTimerOutput(out.kind);
     if (wantTimer ? ref.area !== 'TD' : ref.area !== 'CD') {
-      fail(b, rung, 'badAddress', out.address);
+      fail(b, where, 'badAddress', out.address);
       return null;
     }
     if (out.kind !== 'creset') {
       if (!Number.isFinite(preset) || preset < 0) {
-        fail(b, rung, out.preset === undefined || out.preset.trim() === '' ? 'presetRequired' : 'badPreset', out.preset);
+        fail(b, where, out.preset === undefined || out.preset.trim() === '' ? 'presetRequired' : 'badPreset', out.preset);
         return null;
       }
     }
@@ -337,17 +522,17 @@ function compileOutput(b: Builder, rung: number, out: LadderOutput): OutputIR | 
     else if (b.counterInit[ref.index] === undefined) b.counterInit[ref.index] = 0;
     return { kind: out.kind, ref: null, counter: ref.index, preset: value, slot };
   }
-  const ref = parseBitAddress(out.address);
+  const ref = parseBitAddress(out.address, b.internal);
   if (ref === null || ref === 'range') {
-    fail(b, rung, ref === 'range' ? 'range' : 'badAddress', out.address);
+    fail(b, where, ref === 'range' ? 'range' : 'badAddress', out.address);
     return null;
   }
   if (ref.area === 'I') {
-    fail(b, rung, 'writeInput', out.address);
+    fail(b, where, 'writeInput', out.address);
     return null;
   }
   if (ref.area === 'TD' || ref.area === 'CD') {
-    fail(b, rung, 'writeTimerBit', out.address);
+    fail(b, where, 'writeTimerBit', out.address);
     return null;
   }
   return { kind: out.kind, ref, preset: 0, slot };
@@ -358,6 +543,8 @@ export interface CompileOptions {
   scan?: number;
   /** element ports of the netlist element */
   ports?: LadderPort[];
+  /** the design's function blocks, for the rungs that call one (src/ladder/blocks.ts) */
+  blocks?: readonly LadderBlock[];
 }
 
 export interface CompileResult {
@@ -369,23 +556,41 @@ export interface CompileResult {
  * Compile the rungs of every ladder sheet of a design (already concatenated, in sheet order).
  * Rungs with a problem are left out of the compiled program, so the rest still runs: the editor
  * shows the problems and the simulation keeps going, which is what a learner needs.
+ *
+ * Function blocks are expanded first (src/ladder/blocks.ts): every `call` coil becomes a plain
+ * coil on a hidden enable bit and the rungs of the block, with the instance's own addresses
+ * substituted, follow the calling rung in the scan order. Those rungs get element slots after the
+ * ones of the real rungs (`rungs.length`, `rungs.length + 1` …), so the slot of every drawn rung
+ * stays what the editor computes from its position.
  */
 export function compileLadder(rungs: readonly LadderRung[], opts: CompileOptions = {}): CompileResult {
-  const b: Builder = { errors: [], rung: 0, k: 0, edges: 0, timers: 0, counters: 0, counterInit: [] };
+  const b: Builder = { errors: [], rung: 0, k: 0, edges: 0, timers: 0, counters: 0, words: 0, aouts: 0, counterInit: [], internal: false };
+  const expanded = expandBlocks(rungs, opts.blocks ?? []);
+  b.errors.push(...expanded.errors);
   const out: RungIR[] = [];
-  rungs.forEach((rung, i) => {
-    b.rung = i;
+  const failedHosts = new Set<number>(expanded.failedHosts);
+  let extra = 0;
+  for (const entry of expanded.entries) {
+    const src = entry.source;
+    const index = src.kind === 'block' ? rungs.length + extra++ : src.index;
+    const host = src.kind === 'block' ? src.host : src.index;
+    if (entry.rung.disabled) continue;
+    if (failedHosts.has(host)) continue;
+    b.rung = index;
     b.k = 0;
-    if (rung.disabled) return;
-    const n = i + 1;
+    const n = host + 1;
+    const where: Where = src.kind === 'block' ? { rung: n, block: src.block, innerRung: src.inner } : { rung: n };
+    // the expander has already rejected any "$" address the learner typed, so what is left was written by it
+    b.internal = true;
     const before = b.errors.length;
-    const expr = rung.logic ? compileNode(b, n, rung.logic) : null;
-    const outputs = rung.outputs.map((o) => compileOutput(b, n, o)).filter((x): x is OutputIR => x !== null);
-    if (rung.outputs.length === 0) fail(b, n, 'noOutput');
-    if (b.k > MAX_RUNG_ELEMENTS) fail(b, n, 'range', undefined, MAX_RUNG_ELEMENTS);
-    if (b.errors.length !== before) return;
-    out.push({ index: i, expr, outputs, slot: rungSlot(i) });
-  });
+    const rung = entry.rung;
+    const expr = rung.logic ? compileNode(b, where, rung.logic) : null;
+    const outputs = rung.outputs.map((o) => compileOutput(b, where, o)).filter((x): x is OutputIR => x !== null);
+    if (rung.outputs.length === 0) fail(b, where, 'noOutput');
+    if (b.k > MAX_RUNG_ELEMENTS) fail(b, where, 'range', undefined, MAX_RUNG_ELEMENTS);
+    if (b.errors.length !== before) continue;
+    out.push({ index, expr, outputs, slot: rungSlot(index) });
+  }
   const counterInit: number[] = [];
   for (let k = 0; k < b.counters; k++) counterInit[k] = b.counterInit[k] ?? 0;
   const scan = Number.isFinite(opts.scan) ? Math.min(SCAN_MAX, Math.max(SCAN_MIN, opts.scan!)) : SCAN_DEFAULT;
@@ -393,9 +598,11 @@ export function compileLadder(rungs: readonly LadderRung[], opts: CompileOptions
     ir: {
       rungs: out,
       edges: b.edges,
-      slots: rungs.length * SLOTS_PER_RUNG,
+      slots: (rungs.length + extra) * SLOTS_PER_RUNG,
       timers: b.timers,
       counters: b.counters,
+      ...(b.words > 0 ? { words: b.words } : {}),
+      ...(b.aouts > 0 ? { aouts: b.aouts } : {}),
       counterInit,
       scan,
       ports: opts.ports ?? [],
@@ -474,6 +681,8 @@ export function decodeLadderIr(text: string): LadderIR {
     slots: raw.slots ?? 0,
     timers: raw.timers ?? 0,
     counters: raw.counters ?? 0,
+    ...(raw.words ? { words: raw.words } : {}),
+    ...(raw.aouts ? { aouts: raw.aouts } : {}),
     counterInit: raw.counterInit ?? [],
     scan: raw.scan && raw.scan > 0 ? raw.scan : SCAN_DEFAULT,
     ports: raw.ports,

@@ -4,6 +4,8 @@
  *   55  motor start / stop with self-holding (two push-buttons, a contactor lamp)
  *   56  traffic-light junction driven by one cycle timer and comparison contacts
  *   57  tank filling control: two float switches, the analog level and an overflow alarm
+ *   78  the same tank with the pump rung written once as a function block, a word counter of the
+ *       pump starts and the level shown on an analog output
  *
  * Each sample is built by code, like the other samples of src/ui/integration/sampleDesigns.ts
  * (the .msim files in examples/ are the output of these builders; regenerate them with
@@ -14,7 +16,7 @@
 import { DesignBuilder, type PartHandle } from '../../model/designkit';
 import type { Design, Point, TextNote } from '../../model/types';
 import type { AnalysisSpec, AnalysisType } from '../../sim/netlist';
-import type { LadderCompareOp, LadderNode, LadderOutput, LadderRung } from '../../ladder/types';
+import type { LadderBlock, LadderCompareOp, LadderNode, LadderOutput, LadderRung } from '../../ladder/types';
 
 const p = (x: number, y: number): Point => ({ x, y });
 
@@ -254,8 +256,112 @@ export function ladderTankSample(): Design {
   return d;
 }
 
+// ---------------------------------------------------------------------------------------------
+// 78 — the tank with a function block, a word counter and an analog output
+// ---------------------------------------------------------------------------------------------
+
+export function ladderBlockSample(): Design {
+  rungSeq = 0;
+  const b = new DesignBuilder('Tank control with a function block and word math');
+  const d = b.design;
+  d.description =
+    'Cùng bồn nước của mẫu 57, viết gọn hơn bằng ba thứ mới của sơ đồ bậc thang. (1) KHỐI HÀM “BomHaiMuc”: bài toán bơm tự giữ giữa hai công tắc phao được viết MỘT lần (nhấn “Khối hàm” trên thanh công cụ của trang bậc thang để xem), bậc 1 chỉ gọi nó và nối ba tham số với I0.0, I0.1 và Q0.0. Muốn thêm một bồn thứ hai, chỉ cần gọi khối lần nữa. ' +
+    '(2) LỆNH SỐ: bậc 2 là MUL AQ0 = AI0 × 0,5 (đồng hồ mức 0 … 5 V), bậc 3 dùng tiếp điểm SƯỜN LÊN của Q0.0 để ADD MW0 = MW0 + 1 mỗi lần bơm khởi động, bậc 4 so sánh MW0 ≥ 2 để báo bơm khởi động lại. ' +
+    '(3) NGÕ RA TƯƠNG TỰ: mô-đun AQ đưa điện áp của AQ0 ra chân GAUGE; bồn đầy 80 % thì mức là 8 V và đồng hồ chỉ 4 V. Nhấn Chạy (F5); sau 16 s bơm nghỉ. Nhấp công tắc S1 (phím V) để xả nước, bơm chạy lại và đèn báo sáng ở lần khởi động thứ hai. Nhấn “Tham chiếu chéo” để thấy MW0 được ghi ở bậc 3 và đọc ở bậc 4. ' +
+    'The tank of sample 57, written more compactly with three new things of the ladder editor. (1) A FUNCTION BLOCK “BomHaiMuc”: the self-holding pump between the two float switches is written ONCE (press “Function blocks” on the ladder sheet’s toolbar to see it); rung 1 only calls it and ties three parameters to I0.0, I0.1 and Q0.0. A second tank needs only another call. ' +
+    '(2) WORD INSTRUCTIONS: rung 2 is MUL AQ0 = AI0 × 0.5 (a level gauge of 0 … 5 V), rung 3 uses a RISING-EDGE contact of Q0.0 to ADD MW0 = MW0 + 1 each time the pump starts, rung 4 compares MW0 ≥ 2 to flag a pump that restarted. ' +
+    '(3) AN ANALOG OUTPUT: the AQ module drives the voltage of AQ0 onto the pin GAUGE; with the tank 80 % full the level is 8 V and the gauge reads 4 V. Press Run (F5); after 16 s the pump rests. Click switch S1 (key V) to drain the tank, the pump starts again and the alarm lamp lights on the second start. Press “Cross-reference” to see MW0 written in rung 3 and read in rung 4.';
+
+  const v = b.part('sources/dc-voltage', 'V1', 100, 200, { value: '24' });
+  gnd(b, 100, 320);
+  b.wire(b.pin(v, '-'), p(100, 320));
+  b.labelPin(v, '+', 'P24');
+  b.part('misc-digital/plc-controller', 'PLC1', 260, 460, { scan: '20m' });
+
+  const inp = b.part('misc-digital/plc-input-8', 'PLCI1', 340, 200, { byte: '0' });
+  b.labelPin(inp, 'I0', 'LOW');
+  b.labelPin(inp, 'I1', 'HIGH');
+  b.labelPin(inp, 'COM', '0');
+
+  const ai = b.part('misc-digital/plc-analog-in-2', 'PLCA1', 340, 400, { chan: '0' });
+  b.labelPin(ai, 'AI0', 'LVL');
+  b.labelPin(ai, 'COM', '0');
+
+  const out = b.part('misc-digital/plc-output-8', 'PLCQ1', 620, 200, { byte: '0' });
+  b.labelPin(out, 'Q0', 'PUMP');
+  b.labelPin(out, 'Q2', 'ALARM');
+  b.labelPin(out, 'COM', '0');
+
+  const aq = b.part('misc-digital/plc-analog-out-2', 'PLCO1', 620, 420, { chan: '0', vmax: '10' });
+  b.labelPin(aq, 'AQ0', 'GAUGE');
+  b.labelPin(aq, 'COM', '0');
+  const load = b.part('basic/resistor', 'R1', 860, 440, { value: '10k' }, { rotation: 90 });
+  b.labelPin(load, '1', 'GAUGE');
+  b.labelPin(load, '2', '0');
+  b.probe('voltage', b.pin(aq, 'AQ0').x, b.pin(aq, 'AQ0').y, 'GAUGE');
+
+  const tank = b.part('misc/water-tank', 'TK1', 900, 260, { volume: '10', qin: '500m', qout: '350m', low: '20', high: '80', start: '0' });
+  b.labelPin(tank, 'PUMP', 'PUMP');
+  b.labelPin(tank, 'VALVE', 'DRAIN');
+  b.labelPin(tank, 'LOW', 'LOW');
+  b.labelPin(tank, 'HIGH', 'HIGH');
+  b.labelPin(tank, 'LEVEL', 'LVL');
+  b.labelPin(tank, 'COM', '0');
+
+  const sw = b.part('basic/switch-spst', 'S1', 640, 560, { key: 'V' });
+  b.labelPin(sw, '1', 'P24');
+  b.labelPin(sw, '2', 'DRAIN');
+
+  const lamp = b.part('indicators/lamp', 'X1', 760, 120, { vrated: '24', prated: '5' }, { rotation: 90 });
+  b.labelPin(lamp, '1', 'ALARM');
+  b.labelPin(lamp, '2', '0');
+  b.probe('digital', 740, 200, 'PUMP');
+  b.label('PUMP', 740, 200);
+
+  note(
+    b,
+    100,
+    620,
+    'Thử: đổi khối “BomHaiMuc” (nhấn Khối hàm › BomHaiMuc) rồi chạy lại; mọi lời gọi đổi theo. ' +
+      'MW0 là từ nhớ 16 bit có dấu; số lần bơm khởi động hiện trong dải trạng thái của trang bậc thang khi chạy.',
+  );
+
+  const pumpBlock: LadderBlock = {
+    id: 'blk-pump',
+    name: 'BomHaiMuc',
+    comment: 'Bơm tự giữ giữa hai công tắc phao: chạy khi nước dưới mức thấp, nghỉ khi tới mức cao',
+    inputs: ['MUCTHAP', 'MUCCAO'],
+    outputs: ['BOM'],
+    rungs: [
+      {
+        id: 'blk-pump-1',
+        comment: 'Tự giữ: (nước dưới mức thấp HOẶC đang bơm) VÀ chưa tới mức cao → bơm',
+        logic: and(nc('MUCCAO'), or(nc('MUCTHAP'), no('BOM'))),
+        outputs: [coil('BOM')],
+      },
+    ],
+  };
+  d.ladderBlocks = [pumpBlock];
+
+  b.ladderSheet(
+    [
+      rung('Bơm: gọi khối BomHaiMuc, nối mức thấp I0.0, mức cao I0.1 và cuộn dây Q0.0', undefined, [
+        { kind: 'call', address: 'P1', block: 'BomHaiMuc', args: { MUCTHAP: 'I0.0', MUCCAO: 'I0.1', BOM: 'Q0.0' } },
+      ]),
+      rung('Đồng hồ mức: AQ0 = AI0 × 0,5 (bồn đầy 10 V cho 5 V)', undefined, [{ kind: 'mul', address: 'AQ0', a: 'AI0', b: '0.5' }]),
+      rung('Đếm số lần bơm khởi động: sườn lên của Q0.0 cộng 1 vào MW0', { kind: 'contact', type: 'rising', address: 'Q0.0' }, [{ kind: 'add', address: 'MW0', a: 'MW0', b: '1' }]),
+      rung('Báo bơm đã khởi động từ 2 lần trở lên', cmp('MW0', 'ge', '2'), [coil('Q0.2')]),
+    ],
+    'Ladder 1',
+  );
+  b.useSheet(0);
+  setAnalyses(d, 'tran', [{ type: 'op' }, { type: 'tran', tstep: 0.1, tstop: 25 }]);
+  return d;
+}
+
 export const LADDER_SAMPLE_BUILDERS: Record<string, () => Design> = {
   '55-ladder-start-stop.msim': ladderStartStopSample,
   '56-ladder-traffic.msim': ladderTrafficSample,
   '57-ladder-tank.msim': ladderTankSample,
+  '78-ladder-function-block.msim': ladderBlockSample,
 };

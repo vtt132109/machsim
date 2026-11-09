@@ -88,6 +88,12 @@ export const LADDER_TEXT = {
     ctu: L('Đếm lên (CTU) — +1 mỗi sườn lên của bậc', 'Count up (CTU) — +1 on every rising edge of the rung'),
     ctd: L('Đếm xuống (CTD) — −1 mỗi sườn lên, bắt đầu từ “đặt trước”', 'Count down (CTD) — −1 on every rising edge, starting at “preset”'),
     creset: L('Xoá bộ đếm (RES) — đưa bộ đếm về giá trị đầu', 'Reset counter (RES) — back to its starting value'),
+    mov: L('Chuyển (MOV) — đích = A, mỗi vòng quét khi bậc có điện', 'Move (MOV) — destination = A on every scan while the rung carries power'),
+    add: L('Cộng (ADD) — đích = A + B', 'Add (ADD) — destination = A + B'),
+    sub: L('Trừ (SUB) — đích = A − B', 'Subtract (SUB) — destination = A − B'),
+    mul: L('Nhân (MUL) — đích = A × B', 'Multiply (MUL) — destination = A × B'),
+    div: L('Chia (DIV) — đích = A ÷ B (chia cho 0 thì không ghi)', 'Divide (DIV) — destination = A ÷ B (a division by 0 writes nothing)'),
+    call: L('Gọi khối hàm (FB) — chạy một khối do bạn viết', 'Call function block (FB) — runs a block you wrote'),
   } as Record<LadderOutputKind, LocalizedText>,
 
   // ---- live
@@ -115,7 +121,100 @@ export const LADDER_TEXT = {
     emptyGroup: L('có nhóm rỗng trong phần logic', 'there is an empty group in the logic'),
     noOutput: L('bậc chưa có cuộn dây nào', 'the rung has no coil yet'),
     range: L('“{text}” vượt giới hạn cho phép', '“{text}” is outside the allowed range'),
+    notWritable: L('“{text}” không ghi được: đích của lệnh số học phải là một từ nhớ MW0…MW31 hoặc một ngõ ra tương tự AQ0…AQ3', '“{text}” cannot be written: the destination of a word instruction must be a memory word MW0…MW31 or an analog output AQ0…AQ3'),
+    operandRequired: L('lệnh ghi vào “{text}” còn thiếu toán hạng A hoặc B', 'the instruction that writes “{text}” is missing operand A or B'),
+    divZero: L('chia cho hằng số 0 (“{text}”)', 'division by the constant 0 (“{text}”)'),
+    blockUnknown: L('không có khối hàm tên “{text}”', 'there is no function block called “{text}”'),
+    blockRecursion: L('khối “{text}” gọi chính nó (trực tiếp hoặc qua khối khác)', 'block “{text}” calls itself (directly or through another block)'),
+    blockDepth: L('khối “{text}” lồng nhau quá {limit} tầng', 'block “{text}” is nested more than {limit} levels deep'),
+    blockName: L('“{text}” không phải một tên hợp lệ (chữ, số và dấu gạch dưới, không trùng, không phải EN)', '“{text}” is not a valid name (letters, digits and underscore, unique, not EN)'),
+    blockArg: L('lời gọi chưa nối tham số “{text}” với địa chỉ nào', 'the call does not tie the parameter “{text}” to any address'),
+    blockInstance: L('tên bản thể “{text}” đã được dùng cho một lời gọi khác', 'the instance name “{text}” is already used by another call'),
   } as Record<string, LocalizedText>,
+  errInBlock: L('{text} (trong khối {block}, bậc {inner})', '{text} (in block {block}, rung {inner})'),
+  errBlockDef: L('Khối {block}: {text}', 'Block {block}: {text}'),
+
+  // ---- word instructions and function blocks
+  operandA: L('Toán hạng A', 'Operand A'),
+  operandB: L('Toán hạng B', 'Operand B'),
+  destination: L('Đích (MW0…MW31 hoặc AQ0…AQ3)', 'Destination (MW0…MW31 or AQ0…AQ3)'),
+  wordHint: L(
+    'MW0…MW31 là từ nhớ 16 bit có dấu (−32768…32767, vượt quá thì quay vòng); AQ0…AQ3 là ngõ ra tương tự, đơn vị vôn. Lệnh chạy MỖI vòng quét khi bậc có điện — đặt tiếp điểm sườn lên phía trước nếu chỉ muốn chạy một lần.',
+    'MW0…MW31 are signed 16-bit memory words (−32768…32767, a larger result wraps round); AQ0…AQ3 are analog outputs in volts. The instruction runs on EVERY scan while the rung carries power — put a rising-edge contact in front for “once”.',
+  ),
+  operandHint: L('Một số, hoặc MW0…, AI0…, AQ0…, T1.ET, C1.CV.', 'A number, or MW0…, AI0…, AQ0…, T1.ET, C1.CV.'),
+  blockLabel: L('Khối hàm', 'Function block'),
+  instanceName: L('Tên bản thể', 'Instance name'),
+  instanceHint: L('Mỗi lời gọi có một tên riêng (FB1, DONGCO1…); bộ nhớ riêng của khối (#tên, #T1, #W1) thuộc về bản thể đó.', 'Every call has a name of its own (FB1, MOTOR1…); the block’s private memory (#name, #T1, #W1) belongs to that instance.'),
+  argsTitle: L('Nối tham số với địa chỉ', 'Tie the parameters to addresses'),
+  argInput: L('vào', 'in'),
+  argOutput: L('ra', 'out'),
+  noBlocks: L('Chưa có khối hàm nào. Tạo một khối ở “Khối hàm” rồi gọi nó bằng cuộn dây “Gọi khối hàm”.', 'There are no function blocks yet. Create one under “Function blocks”, then call it with a “Call function block” coil.'),
+  editing: L('Đang sửa', 'Editing'),
+  mainProgram: L('Chương trình của trang này', 'This sheet’s program'),
+  blocksTitle: L('Khối hàm', 'Function blocks'),
+  blocksIntro: L(
+    'Khối hàm là một đoạn bậc thang có tên, có đầu vào, đầu ra và các bậc riêng; viết một lần, gọi nhiều lần. Trong khối: tên đầu vào / ra là tham số hình thức, EN là “cho phép” (bật khi bậc gọi có điện), tên bắt đầu bằng # là bộ nhớ riêng của từng bản thể.',
+    'A function block is a named piece of ladder with its own inputs, outputs and rungs; write it once, call it many times. Inside it the input / output names are the formal parameters, EN is “enable” (on while the calling rung carries power), and a name starting with # is memory private to each instance.',
+  ),
+  newBlock: L('Khối mới', 'New block'),
+  deleteBlock: L('Xoá khối', 'Delete block'),
+  deleteBlockAsk: L('Xoá khối “{name}”? Những lời gọi nó sẽ báo lỗi.', 'Delete block “{name}”? The calls to it will report an error.'),
+  blockName: L('Tên khối', 'Block name'),
+  blockComment: L('Mô tả khối', 'Block description'),
+  blockInputs: L('Đầu vào (cách nhau dấu phẩy)', 'Inputs (comma separated)'),
+  blockOutputs: L('Đầu ra (cách nhau dấu phẩy)', 'Outputs (comma separated)'),
+  backToProgram: L('Quay lại chương trình', 'Back to the program'),
+  blockUsedBy: L('{n} lời gọi', '{n} call(s)'),
+  blockNameTaken: L('Tên khối “{name}” đã có hoặc không hợp lệ.', 'The block name “{name}” is taken or not valid.'),
+
+  // ---- copy / cut / paste
+  copy: L('Sao chép', 'Copy'),
+  cut: L('Cắt', 'Cut'),
+  paste: L('Dán', 'Paste'),
+  pasteParallel: L('Dán song song', 'Paste in parallel'),
+  tipCopy: L('Sao chép phần tử đang chọn (một bậc, một tiếp điểm hay một cuộn dây) — Ctrl+C.', 'Copy the selected thing (a rung, a contact or a coil) — Ctrl+C.'),
+  tipCut: L('Cắt bậc đang chọn — Ctrl+X.', 'Cut the selected rung — Ctrl+X.'),
+  tipPaste: L('Dán: bậc vào dưới bậc đang chọn, tiếp điểm nối tiếp sau phần tử đang chọn, cuộn dây vào cuối bậc — Ctrl+V.', 'Paste: a rung goes below the selected rung, a contact in series after the selected element, a coil at the end of the rung — Ctrl+V.'),
+  tipPasteParallel: L('Dán tiếp điểm song song (bên dưới) phần tử đang chọn.', 'Paste the contact in parallel (below) the selected element.'),
+  extendHint: L('Giữ Shift khi nhấp để chọn nhiều bậc liền nhau.', 'Hold Shift while clicking to select several rungs in a row.'),
+  rungsSelected: L('{n} bậc được chọn', '{n} rungs selected'),
+  pasted: L('Đã dán.', 'Pasted.'),
+  nothingToPaste: L('Chưa có gì để dán — hãy sao chép một bậc, tiếp điểm hay cuộn dây trước.', 'Nothing to paste yet — copy a rung, a contact or a coil first.'),
+  cannotPasteHere: L('Không dán được vào chỗ đang chọn.', 'This cannot be pasted at the selection.'),
+
+  // ---- cross-reference
+  xref: L('Tham chiếu chéo', 'Cross-reference'),
+  xrefIntro: L(
+    'Mỗi địa chỉ được ĐỌC ở đâu và GHI ở đâu. Nhấn một số bậc để nhảy tới bậc đó.',
+    'Where each address is READ and where it is WRITTEN. Click a rung number to jump to that rung.',
+  ),
+  xrefFilter: L('Lọc địa chỉ…', 'Filter addresses…'),
+  xrefEmpty: L('Chưa có địa chỉ nào trong chương trình.', 'There are no addresses in the program yet.'),
+  colAddress: L('Địa chỉ', 'Address'),
+  colKind: L('Loại', 'Kind'),
+  colWrites: L('Ghi ở bậc', 'Written in rungs'),
+  colReads: L('Đọc ở bậc', 'Read in rungs'),
+  warnNeverWritten: L('được đọc nhưng không bậc nào ghi nó', 'is read but no rung writes it'),
+  warnNeverRead: L('được ghi nhưng không bậc nào đọc nó', 'is written but no rung reads it'),
+  xrefCopy: L('Sao chép bảng', 'Copy the table'),
+  kind: {
+    input: L('ngõ vào', 'input'),
+    output: L('ngõ ra', 'output'),
+    memory: L('bit nhớ', 'memory bit'),
+    word: L('từ nhớ', 'memory word'),
+    timer: L('bộ định thời', 'timer'),
+    counter: L('bộ đếm', 'counter'),
+    'analog-in': L('vào tương tự', 'analog input'),
+    'analog-out': L('ra tương tự', 'analog output'),
+    instance: L('bản thể khối', 'block instance'),
+    formal: L('tham số khối', 'block parameter'),
+    local: L('nhớ riêng của khối', 'block private memory'),
+    other: L('khác', 'other'),
+  } as Record<string, LocalizedText>,
+  words: L('Từ nhớ', 'Words'),
+  analogOutputs: L('Ra tương tự (V)', 'Analog outputs (V)'),
+  mathErrors: L('{n} lần chia cho 0', '{n} division(s) by 0'),
 
   // ---- menus of the sheet tab
   newSheet: L('Trang bậc thang mới', 'New ladder sheet'),
@@ -134,8 +233,16 @@ export function lt(key: TextKey, params?: Record<string, string | number>): stri
 /** One compiler problem as a sentence ("Rung 3: the address “Z9.9” cannot be read"). */
 export function ladderErrorText(e: LadderError): string {
   const body = LADDER_TEXT.err[e.code] ?? LADDER_TEXT.err.badAddress;
-  const text = interpolate(tr(body), { text: e.text ?? '', limit: e.limit ?? 0 });
+  let text = interpolate(tr(body), { text: e.text ?? '', limit: e.limit ?? 0 });
+  if (e.rung === 0 && e.block) return interpolate(tr(LADDER_TEXT.errBlockDef), { block: e.block, text });
+  if (e.block && e.code !== 'blockUnknown') text = interpolate(tr(LADDER_TEXT.errInBlock), { text, block: e.block, inner: e.innerRung ?? 0 });
   return interpolate(tr(LADDER_TEXT.errRung), { n: e.rung, text });
+}
+
+/** Name of an address kind in the cross-reference. */
+export function addressKindText(kind: string): string {
+  const t = LADDER_TEXT.kind[kind];
+  return t ? tr(t) : kind;
 }
 
 /** Name of a contact kind, a comparison or a coil kind. */

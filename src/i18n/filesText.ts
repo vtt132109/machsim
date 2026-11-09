@@ -24,6 +24,26 @@ export const FILES_TEXT = {
   snippetNoCanvas: L('Không vẽ được ảnh xem trước nên snippet dùng một ảnh trắng; mạch vẫn được lưu đầy đủ.', 'The preview picture could not be drawn, so the snippet uses a blank picture; the circuit itself is saved in full.'),
   snippetFilter: L('Snippet mạch (PNG)', 'Circuit snippet (PNG)'),
   snippetSheet: L('Trang 1', 'Sheet 1'),
+  // ---- the system clipboard (Edit > Copy to the system clipboard / Paste from it)
+  clipboardTitle: L('Clipboard của hệ thống', 'System clipboard'),
+  clipboardCopied: L('Đã đưa {parts} linh kiện và {wires} dây vào clipboard của hệ thống: ảnh để dán vào chương trình khác, và dữ liệu mạch để MachSim (cửa sổ khác hay máy khác) dán lại thành mạch.', 'Put {parts} parts and {wires} wires on the system clipboard: a picture for other programs, and the circuit data so MachSim (another window or computer) can paste it back as a circuit.'),
+  clipboardCopiedNoPrivate: L('Đã đưa ảnh của {parts} linh kiện vào clipboard, nhưng nền tảng này không giữ được định dạng riêng của MachSim bên cạnh ảnh: dữ liệu mạch nằm trong phần HTML của clipboard (MachSim vẫn dán lại được), còn chương trình khác chỉ nhận ảnh.', 'Put the picture of {parts} parts on the clipboard, but this platform cannot keep MachSim’s private format next to the picture: the circuit data rides in the HTML part of the clipboard (MachSim can still paste it back) and other programs only get the picture.'),
+  clipboardNoApi: L('Trình duyệt này không cho trang web ghi ảnh vào clipboard (cần API Clipboard bất đồng bộ trên trang https hoặc localhost). Nhấn “Lưu vùng chọn thành snippet” để lưu thành tệp PNG mang theo mạch, rồi gửi tệp đó đi.', 'This browser does not let a web page write pictures to the clipboard (it needs the async Clipboard API on an https or localhost page). Use “Save selection as snippet” to save a PNG file that carries the circuit, and send that file.'),
+  clipboardNoCustom: L('Trình duyệt này chỉ ghi được ảnh (và chữ) vào clipboard, chưa cho ghi định dạng riêng của MachSim. Ảnh dán được vào chương trình khác nhưng trình duyệt thường bỏ dữ liệu mạch khỏi ảnh khi sao chép, nên MachSim có thể không dán lại được thành mạch. Muốn chắc chắn, dùng “Lưu vùng chọn thành snippet” hoặc bản MachSim cho Windows.', 'This browser can only write a picture (and text) to the clipboard, not MachSim’s private format. The picture pastes into other programs, but browsers usually drop the circuit data from a copied picture, so MachSim may not be able to paste it back as a circuit. For certainty use “Save selection as snippet”, or the MachSim desktop app.'),
+  clipboardCopiedPicture: L('Đã đưa ảnh của {parts} linh kiện vào clipboard (không kèm dữ liệu mạch riêng).', 'Put the picture of {parts} parts on the clipboard (without the private circuit data).'),
+  clipboardDenied: L('Trình duyệt không cho MachSim đọc clipboard. Hãy cho phép khi trình duyệt hỏi, hoặc dán bằng tệp snippet PNG (Tệp › Snippet › Dán snippet từ tệp).', 'The browser did not let MachSim read the clipboard. Allow it when the browser asks, or paste from a snippet PNG file (File › Snippets › Paste snippet from file).'),
+  clipboardReadFailed: L('Không đọc được clipboard: {reason}', 'Cannot read the clipboard: {reason}'),
+  pasteLostTitle: L('Clipboard chỉ có ảnh', 'The clipboard only has a picture'),
+  pasteLost: L(
+    'Trên clipboard có một bức ảnh nhưng không có dữ liệu mạch MachSim đi kèm, nên không có gì để dán thành mạch. Thường là vì ảnh đến từ chương trình khác, hoặc ảnh đã bị sao chép qua một nơi bỏ mất dữ liệu (chương trình trò chuyện, tài liệu, trình duyệt).',
+    'The clipboard holds a picture but no MachSim circuit data with it, so there is nothing to paste as a circuit. That usually means the picture came from another program, or passed through somewhere that drops the data (a chat program, a document, a browser).',
+  ),
+  pasteLostHow: L(
+    'Để lấy mạch: nhờ người gửi dùng “Sao chép ra clipboard của hệ thống” trong MachSim (không phải “chụp ảnh màn hình”), hoặc gửi tệp snippet PNG gốc rồi dùng Tệp › Snippet › Dán snippet từ tệp.',
+    'To get the circuit: ask the sender to use “Copy to the system clipboard” in MachSim (not a screenshot), or send the original snippet PNG file and use File › Snippets › Paste snippet from file.',
+  ),
+  pasteDamaged: L('Dữ liệu mạch trên clipboard dùng không được: {reason}', 'The circuit data on the clipboard cannot be used: {reason}'),
+  pasteFromClipboard: L('Đã dán mạch từ clipboard của hệ thống.', 'Pasted the circuit from the system clipboard.'),
   pasteNothing: L('Bộ nhớ tạm không có mạch để dán. Sao chép linh kiện (Ctrl+C) hoặc sao chép một tệp snippet PNG trong trình quản lý tệp rồi dán.', 'The clipboard holds no circuit. Copy parts (Ctrl+C), or copy a snippet PNG file in the file manager, then paste.'),
 
   // ---- file information
@@ -167,7 +187,18 @@ export const FILES_TEXT = {
 
   // ---- Grapher measurement import
   measureTitle: L('Nhập dữ liệu đo', 'Import measurement'),
-  measureFilter: L('Dữ liệu đo (CSV, TXT, LVM)', 'Measurement data (CSV, TXT, LVM)'),
+  measureFilter: L('Dữ liệu đo (CSV, TXT, LVM, TDMS)', 'Measurement data (CSV, TXT, LVM, TDMS)'),
+  tdmsIndexAxis: L('Tệp TDMS không có thông tin thời gian (không có wf_increment, không có kênh thời gian): trục X là số thứ tự mẫu.', 'The TDMS file has no time information (no wf_increment, no time channel): the X axis is the sample number.'),
+  tdmsThinned: L('Kênh dài nên chỉ lấy một mẫu trong mỗi {n} mẫu để đồ thị còn nhẹ.', 'The channels are long, so one sample in every {n} was kept to keep the graph light.'),
+  tdmsSkipped: L('Bỏ qua kênh không vẽ được: {names}.', 'Channels that cannot be plotted were skipped: {names}.'),
+  tdmsScaling: L('Tệp có thang đo (NI_Scale…): MachSim hiện giá trị thô, chưa áp thang đo.', 'The file defines scaling (NI_Scale…): MachSim shows the raw values, the scaling is not applied.'),
+  tdmsTruncated: L('Tệp TDMS bị cắt dở (ghi chưa xong): chỉ đọc được phần đầy đủ.', 'The TDMS file is cut short (it was not finished being written): only the complete part could be read.'),
+  tdmsFailed: L('Không đọc được tệp TDMS “{name}”: {reason}', 'Cannot read the TDMS file “{name}”: {reason}'),
+  tdmsReasonNot: L('đây không phải tệp TDMS', 'it is not a TDMS file'),
+  tdmsReasonDaqmx: L('dữ liệu thô DAQmx chưa được hỗ trợ', 'DAQmx raw data is not supported'),
+  tdmsReasonType: L('có kiểu dữ liệu chưa được hỗ trợ (số phức hoặc số thực mở rộng)', 'it holds a data type that is not supported (complex or extended-precision numbers)'),
+  tdmsReasonOther: L('cấu trúc tệp không hợp lệ hoặc quá lớn', 'the file structure is invalid or too large'),
+  tdmsFileDone: L('TDMS “{name}”: {n} kênh, {rows} dòng.', 'TDMS “{name}”: {n} channels, {rows} rows.'),
   measureDone: L('Đã nhập “{name}”: {n} đường, {points} điểm. Xem trong Grapher.', 'Imported “{name}”: {n} traces, {points} points. See the Grapher.'),
   measureSkipped: L('Bỏ qua {n} dòng không đọc được (dòng {lines}).', 'Skipped {n} unreadable lines (lines {lines}).'),
   measureFailed: L('Không đọc được dữ liệu đo trong “{name}”: cần một cột X (thời gian, tần số hoặc giá trị quét) và ít nhất một cột giá trị, ngăn bằng dấu phẩy, chấm phẩy, Tab hoặc khoảng trắng.', 'Cannot read measurement data in “{name}”: it needs an X column (time, frequency or swept value) and at least one value column, separated by commas, semicolons, tabs or spaces.'),

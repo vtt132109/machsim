@@ -158,6 +158,44 @@ function analogInputModule(channels: number): LibraryPartDef {
   );
 }
 
+function analogOutputModule(channels: number): LibraryPartDef {
+  const pins = channelPins('AQ', channels, 'output');
+  return withMeta(
+    {
+      id: `misc-digital/plc-analog-out-${channels}`,
+      name: `PLC analog output module, ${channels} channels`,
+      group: 'misc-digital',
+      family: 'PLC rack',
+      description:
+        `Analog output module: ${channels} channels AQ0 … AQ${channels - 1} drive their pin (against COM) to the voltage the ladder program last wrote to them. ` +
+        'A MOV, ADD, SUB, MUL or DIV instruction with an AQ destination sets the voltage ("AQ0 = AI0 x 2"), so a ladder program can dim a lamp, set a motor speed reference or follow a level. The output is limited to plus or minus the module range. Set the first channel number to place them.',
+      prefix: 'PLCO',
+      symbol: icSymbol(`AQ ${channels}`, [], pins, { w: 110, bottom: [COM] }),
+      params: [
+        selectParam('chan', 'First channel', '0', Array.from({ length: LADDER_LIMITS.analogOutputs }, (_, k) => [String(k), `AQ${k}`] as [string, string]), {
+          group: 'value',
+          showOnSchematic: true,
+          help: 'Channel number of the first pin: 0 gives AQ0, AQ1 …',
+        }),
+        numParam('vmax', 'Output range', '10', 'V', { min: 0.1, max: 300, group: 'model', help: 'The pin never goes beyond plus or minus this voltage, whatever the program writes' }),
+      ],
+      ladderIo: { kind: 'analog-output', channels, pins: pins.map((p) => p.name), com: 'COM', startParam: 'chan' },
+      optionalPins: pins.map((p) => p.name),
+      keywords: ['plc', 'ladder', 'analog', 'output', 'module', 'plc ra tuong tu', 'bac thang', 'aq', 'dac'],
+      provenance: 'MachSim original: a generic IEC 61131-style analog output module (no brand or part number)',
+    },
+    {
+      vi:
+        `Mô-đun ra tương tự: ${channels} kênh AQ0 … AQ${channels - 1} đưa chân của nó lên đúng điện áp mà chương trình bậc thang vừa ghi vào (so với COM). ` +
+        'Lệnh MOV, ADD, SUB, MUL hay DIV có đích là AQ đặt điện áp (“AQ0 = AI0 x 2”), nên chương trình bậc thang có thể điều sáng đèn, đặt tốc độ chuẩn cho động cơ hay bám theo một mức. Điện áp bị giới hạn trong khoảng ± phạm vi của mô-đun. Chọn số kênh đầu tiên để biết tên kênh.',
+      nameVi: `Mô-đun ra tương tự PLC ${channels} kênh`,
+      specs: { positions: channels },
+      sortKey: channels,
+      series: 'PLC rack',
+    },
+  );
+}
+
 /** The controller itself: it holds the settings of the whole rack. */
 function controller(): LibraryPartDef {
   return withMeta(
@@ -207,4 +245,5 @@ export const PLC_CATALOG: LibraryPartDef[] = [
   outputModule(4),
   outputModule(8),
   analogInputModule(2),
+  analogOutputModule(2),
 ];

@@ -473,7 +473,12 @@ function ladderAddresses(rungs: readonly LadderRung[]): string[] {
   };
   for (const r of rungs) {
     walk(r.logic);
-    for (const o of r.outputs) out.push(o.address);
+    for (const o of r.outputs) {
+      // a function-block call names an instance, not an address
+      if (o.kind !== 'call') out.push(o.address);
+      if (o.a !== undefined) out.push(o.a);
+      if (o.b !== undefined) out.push(o.b);
+    }
   }
   return out;
 }
@@ -495,6 +500,10 @@ export function ladderAddressInRange(text: string): boolean {
   if (m) return Number(m[1]) >= 1 && Number(m[1]) <= LADDER_LIMITS.counters;
   m = /^AI(\d+)$/.exec(t);
   if (m) return Number(m[1]) < LADDER_LIMITS.analogInputs;
+  m = /^AQ(\d+)$/.exec(t);
+  if (m) return Number(m[1]) < LADDER_LIMITS.analogOutputs;
+  m = /^MW(\d+)$/.exec(t);
+  if (m) return Number(m[1]) < LADDER_LIMITS.words;
   // an address shape MachSim does not know at all: the ladder compiler reports it per rung
   return true;
 }

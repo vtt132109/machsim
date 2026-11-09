@@ -11,7 +11,18 @@
  * end, pin, label or junction lying on another wire connects to it (crossing wires without a
  * junction do not); labels with the same name are one net; power symbols name a global net by their
  * Value; hidden power-input pins join the net named after the pin. Units of a multi-unit part are
- * merged by reference. Not read: buses, hierarchical sub-sheets (reported), graphics.
+ * merged by reference. Not read: graphics.
+ *
+ * Buses. A `bus` is read as a bus wire with the name of the bus label on it (`D[0..7]`, `D[7..0]`,
+ * a group `{A B C}` or a bus alias, written as a MachSim bus name); a `bus_entry` becomes a short
+ * wire from the bus to where the entry's wire starts, with a bus-entry label naming the line (the
+ * name is the net label of the wire that touches the entry; an entry whose wire has no label is
+ * reported and left out). Connectivity itself never depends on the bus: KiCad joins lines by label
+ * name, and so does MachSim.
+ *
+ * Hierarchical sheets. `hierarchical_label`s become hierarchical connectors of the sheet (`hierLabels`)
+ * and each `sheet` symbol is returned in `sheets` with its pins connected to the nets of this sheet;
+ * src/model/kicadProject.ts loads the sub-sheet files and turns each into a hierarchical block.
  *
  * Unannotated sheets. KiCad writes "R?" (or a bare "R") for a symbol whose designator has not been
  * assigned yet, and that is "not numbered", never "the same part": merging by reference would
@@ -25,7 +36,8 @@
  * 1.27 mm (KiCad's 50 mil grid) = 10 units (MachSim's grid).
  */
 import { atom, child, children, head, parseSexpr, type SNode } from '../util/sexpr';
-import { importedToDesign, isGroundName, type ImportedComponent, type ImportedNetlist, type SchematicImportResult } from './importSchematic';
+import { importedToDesign, isGroundName, type ImportedComponent, type ImportedNetlist, type ImportedSheet, type SchematicImportResult } from './importSchematic';
+import { parseBusName } from './bus';
 
 /** MachSim units per KiCad millimetre. */
 export const KICAD_SCALE = 10 / 1.27;
@@ -150,6 +162,29 @@ function onSegment(px: number, py: number, s: Segment): boolean {
   return Math.abs(cross) / len < tol;
 }
 
+/**
+ * A KiCad bus label as a MachSim bus name: `D[0..7]` and `D[7..0]` as they are, a group `{A B C}` as
+ * `A,B,C`, a prefixed group `P{A B}` as `PA,PB`, a bus alias as the list of its members. Null when
+ * the result is not a valid bus name.
+ */
+export function kicadBusName(raw: string, aliases: ReadonlyMap<string, readonly string[]> = new Map()): string | null {
+  const t = raw.trim();
+  let name = t;
+  const group = /^([^{}\s]*)\{([^{}]*)\}$/.exec(t);
+  if (group) {
+    name = group[2]
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((m) => `${group[1]}${m}`)
+      .join(',');
+  } else if (aliases.has(t)) {
+    name = (aliases.get(t) ?? []).join(',');
+  }
+  if (!name) return null;
+  return parseBusName(name).error ? null : name;
+}
+
 /** Connectivity of a KiCad schematic as an ImportedNetlist. */
 export function kicadToNetlist(text: string, fileName = ''): ImportedNetlist {
   const root = parseSexpr(text);
@@ -175,8 +210,26 @@ export function kicadToNetlist(text: string, fileName = ''): ImportedNetlist {
       uf.union(id, point('wend', pts[j + 1].x, pts[j + 1].y));
     }
   });
-  if (children(root, 'bus').length) warnings.push('buses are not imported (their bus entries are ignored)');
-  if (children(root, 'sheet').length) warnings.push(`${children(root, 'sheet').length} hierarchical sub-sheet(s) are not imported: open each sub-sheet file separately`);
+  // ---- buses: segments, their connectivity, aliases and entries
+  interface BusSeg extends Segment {
+    line: number;
+  }
+  const busLines: { x: number; y: number }[][] = children(root, 'bus').map((b) => children(child(b, 'pts'), 'xy').map((xy) => ({ x: num(xy[1]), y: num(xy[2]) })));
+  const busSegs: BusSeg[] = [];
+  busLines.forEach((pts, line) => {
+    for (let j = 0; j + 1 < pts.length; j++) busSegs.push({ id: `bus${line}.${j}`, line, ax: pts[j].x, ay: pts[j].y, bx: pts[j + 1].x, by: pts[j + 1].y });
+  });
+  const busAliases = new Map<string, string[]>();
+  for (const a of children(root, 'bus_alias')) busAliases.set(atom(a[1]), children(a, 'members').flatMap((m) => m.slice(1).map(atom)));
+  const busEntries = children(root, 'bus_entry').map((e) => {
+    const at = child(e, 'at');
+    const size = child(e, 'size');
+    const x = num(at?.[1]);
+    const y = num(at?.[2]);
+    return { x, y, x2: x + num(size?.[1]), y2: y + num(size?.[2]) };
+  });
+  const onBus = (x: number, y: number): boolean => busSegs.some((s) => onSegment(x, y, s));
+  const onWire = (x: number, y: number): boolean => segments.some((s) => onSegment(x, y, s));
   for (const j of children(root, 'junction')) {
     const at = child(j, 'at');
     point('junction', num(at?.[1]), num(at?.[2]));
@@ -184,16 +237,61 @@ export function kicadToNetlist(text: string, fileName = ''): ImportedNetlist {
   // labels: same name = same net
   const namedNets = new Set<string>();
   const powerNets = new Set<string>();
+  const hierLabels: string[] = [];
+  const busLabels: { name: string; x: number; y: number }[] = [];
   for (const kind of ['label', 'global_label', 'hierarchical_label']) {
     for (const l of children(root, kind)) {
       const name = atom(l[1]);
       const at = child(l, 'at');
       if (!name) continue;
+      const lx = num(at?.[1]);
+      const ly = num(at?.[2]);
+      // a label that sits on a bus (and on no wire) names the bus; so does a label whose text is a bus name
+      if (onBus(lx, ly) && !onWire(lx, ly)) {
+        busLabels.push({ name, x: lx, y: ly });
+        continue;
+      }
+      if (kind === 'hierarchical_label') hierLabels.push(name);
       namedNets.add(name);
-      uf.union(point('label', num(at?.[1]), num(at?.[2])), `name@${name}`);
+      uf.union(point('label', lx, ly), `name@${name}`);
     }
   }
-  if (children(root, 'hierarchical_label').length) warnings.push('hierarchical labels are imported as net labels of this sheet');
+  // sheet symbols: their pins join the nets of this sheet (a pin on a wire end, a label or a junction)
+  interface SheetRef {
+    name: string;
+    file: string;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    pins: { name: string; type: string; k: string; x: number; y: number }[];
+  }
+  const sheetRefs: SheetRef[] = children(root, 'sheet').map((sh, si) => {
+    const at = child(sh, 'at');
+    const size = child(sh, 'size');
+    const props = new Map(children(sh, 'property').map((p) => [atom(p[1]).replace(/\s+/g, '').toLowerCase(), atom(p[2])]));
+    return {
+      name: props.get('sheetname') ?? `Sheet${si + 1}`,
+      file: props.get('sheetfile') ?? '',
+      x: num(at?.[1]),
+      y: num(at?.[2]),
+      w: num(size?.[1]),
+      h: num(size?.[2]),
+      pins: children(sh, 'pin').map((p) => {
+        const pat = child(p, 'at');
+        const px = num(pat?.[1]);
+        const py = num(pat?.[2]);
+        return { name: atom(p[1]), type: atom(p[2]), k: point(`sheet${si}:${atom(p[1])}`, px, py), x: px, y: py };
+      }),
+    };
+  });
+  const entryKeys = busEntries.map((e, i) => {
+    // the end that is not on a bus is where the entry's wire starts
+    const firstOnBus = onBus(e.x, e.y);
+    const wireEnd = firstOnBus ? { x: e.x2, y: e.y2 } : { x: e.x, y: e.y };
+    const busEnd = firstOnBus ? { x: e.x, y: e.y } : { x: e.x2, y: e.y2 };
+    return { busEnd, wireEnd, k: point(`entry${i}`, wireEnd.x, wireEnd.y), onBus: onBus(busEnd.x, busEnd.y) };
+  });
 
   // placed symbols
   interface Placed {
@@ -318,9 +416,71 @@ export function kicadToNetlist(text: string, fileName = ''): ImportedNetlist {
     });
   }
 
+  // ---- buses and entries in MachSim units
+  const sc = (mm: number) => mm * KICAD_SCALE;
+  const busUf = new UnionFind();
+  for (const s of busSegs) {
+    busUf.find(s.id);
+    for (const o of busSegs) {
+      if (o === s) continue;
+      if (onSegment(s.ax, s.ay, o) || onSegment(s.bx, s.by, o)) busUf.union(s.id, o.id);
+    }
+  }
+  const busNameOfNet = new Map<string, string>();
+  for (const l of busLabels) {
+    const seg = busSegs.find((s) => onSegment(l.x, l.y, s));
+    if (seg) busNameOfNet.set(busUf.find(seg.id), l.name);
+  }
+  const buses: NonNullable<ImportedNetlist['buses']> = [];
+  busLines.forEach((pts, line) => {
+    const seg = busSegs.find((s) => s.line === line);
+    const raw = seg ? busNameOfNet.get(busUf.find(seg.id)) : undefined;
+    const name = raw === undefined ? undefined : kicadBusName(raw, busAliases);
+    if (!name) {
+      warnings.push(raw === undefined ? 'a bus has no label and is left out' : `the bus name "${raw}" is not a name MachSim understands and the bus is left out`);
+      return;
+    }
+    buses.push({ name, points: pts.map((p) => ({ x: sc(p.x), y: sc(p.y) })) });
+  });
+  const entries: NonNullable<ImportedNetlist['busEntries']> = [];
+  entryKeys.forEach((e) => {
+    if (!e.onBus) {
+      warnings.push('a bus entry does not touch a bus and is left out');
+      return;
+    }
+    const name = rootName.get(uf.find(e.k));
+    const member = name !== undefined && !isGroundName(name) ? name : undefined;
+    if (!member) {
+      warnings.push('a bus entry whose wire has no net label is left out (name the wire, for example D3)');
+      return;
+    }
+    entries.push({ name: member, bus: { x: sc(e.busEnd.x), y: sc(e.busEnd.y) }, wire: { x: sc(e.wireEnd.x), y: sc(e.wireEnd.y) } });
+  });
+  const sheets: ImportedSheet[] = sheetRefs.map((s) => ({
+    name: s.name,
+    file: s.file,
+    at: { x: sc(s.x), y: sc(s.y), w: sc(s.w), h: sc(s.h) },
+    pins: s.pins.map((p) => ({ name: p.name, type: p.type, net: netOf(p.k, s.name, p.name), x: sc(p.x), y: sc(p.y) })),
+  }));
+  if (sheets.length) warnings.push(`${sheets.length} hierarchical sub-sheet(s) are not imported: open each sub-sheet file separately`);
+
   const titleBlock = child(root, 'title_block');
   const title = atom(child(titleBlock, 'title')?.[1]) || fileName.replace(/\.kicad_sch$/i, '');
-  return { title, source: 'kicad', fileName, components: [...byRef.values()], namedNets: [...namedNets], powerNets: [...powerNets], diodeNumbering: 'KA', warnings, ...(unannotated > 0 ? { unannotated } : {}) };
+  return {
+    title,
+    source: 'kicad',
+    fileName,
+    components: [...byRef.values()],
+    namedNets: [...namedNets],
+    powerNets: [...powerNets],
+    diodeNumbering: 'KA',
+    warnings,
+    ...(unannotated > 0 ? { unannotated } : {}),
+    ...(buses.length ? { buses } : {}),
+    ...(entries.length ? { busEntries: entries } : {}),
+    ...(hierLabels.length ? { hierLabels } : {}),
+    ...(sheets.length ? { sheets } : {}),
+  };
 }
 
 /** Import a KiCad schematic as a MachSim design. */

@@ -248,7 +248,7 @@ function dependencies(elements: ElementIR[], netlist: Netlist): { models: ModelC
 }
 
 /** SPICE text of model cards and subcircuits (no title, no .end). */
-function cardsText(models: ModelCard[], subckts: SubcktDef[]): string {
+export function cardsText(models: ModelCard[], subckts: SubcktDef[]): string {
   const n = emptyNetlist('cards');
   for (const m of models) n.models[m.name.toLowerCase()] = m;
   for (const s of subckts) n.subckts[s.name.toLowerCase()] = s;
@@ -642,8 +642,10 @@ export function placeAndRoute(items: Item[], notes: ImportNote[], opts: { unname
     const bb = instanceBBox(p.inst, p.item.def);
     return [bb];
   });
-  const minX = Math.min(...all.map((b) => b.x), 0) - 120;
-  const minY = Math.min(...all.map((b) => b.y), 0) - 120;
+  // the routing grid must lie on the same grid as the pins, or a wire would end a few units from its pin
+  // (a part whose bounding box is not a multiple of the grid used to shift every routed wire)
+  const minX = Math.floor((Math.min(...all.map((b) => b.x), 0) - 120) / G) * G;
+  const minY = Math.floor((Math.min(...all.map((b) => b.y), 0) - 120) / G) * G;
   const maxX = Math.max(...all.map((b) => b.x + b.w), 0) + 120;
   const maxY = Math.max(...all.map((b) => b.y + b.h), 0) + 160;
   const W = Math.ceil((maxX - minX) / G) + 1;

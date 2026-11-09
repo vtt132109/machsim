@@ -62,10 +62,52 @@ export const LADDER_GUIDE_PAGES: Record<'ladder' | 'mecha', GuidePage> = {
         ),
       },
       {
+        heading: L('Lệnh số: chuyển, cộng, trừ, nhân, chia', 'Word instructions: move, add, subtract, multiply, divide'),
+        body: L(
+          'Ngoài bit, chương trình còn tính với số. MW0 … MW31 là các “từ nhớ”: số nguyên 16 bit có dấu (−32768 … 32767; kết quả vượt quá thì quay vòng như thanh ghi thật, ví dụ 300 × 200 = 60000 thành −5536). AQ0 … AQ3 là ngõ ra tương tự tính bằng vôn. Cuộn dây loại MOV, ADD, SUB, MUL, DIV vẽ thành một ô: đích = A (+ − × ÷) B, với A và B là một số, MWn, AIn, AQn, T1.ET hay C1.CV. Phép chia vào từ nhớ cắt phần thập phân (7 ÷ 2 = 3); chia cho 0 không ghi gì và bộ đếm “chia cho 0” trong dải trạng thái tăng lên. Các lệnh chạy MỖI vòng quét khi bậc có điện — muốn “mỗi lần nhấn cộng 1” hãy đặt tiếp điểm sườn lên trước lệnh ADD MW0 = MW0 + 1. Tiếp điểm so sánh đọc được từ nhớ: “MW0 ≥ 10”.',
+          'Besides bits, a program can calculate. MW0 … MW31 are “memory words”: signed 16-bit integers (−32768 … 32767; a result outside that range wraps round like a real register, so 300 × 200 = 60000 becomes −5536). AQ0 … AQ3 are analog outputs in volts. The MOV, ADD, SUB, MUL and DIV coil kinds are drawn as a box: destination = A (+ − × ÷) B, where A and B are a number, MWn, AIn, AQn, T1.ET or C1.CV. A division into a word drops the fraction (7 ÷ 2 = 3); dividing by 0 writes nothing and counts in the “division by 0” counter of the status strip. These instructions run on EVERY scan while the rung carries power — for “add 1 per press” put a rising-edge contact in front of ADD MW0 = MW0 + 1. A comparison contact can read words: “MW0 ≥ 10”.',
+        ),
+      },
+      {
+        heading: L('Ngõ ra tương tự (AQ)', 'Analog outputs (AQ)'),
+        body: L(
+          'Mô-đun “Ra tương tự PLC 2 kênh” (nhóm Số linh tinh, họ Giá PLC) đưa chân AQ0, AQ1 lên đúng điện áp chương trình vừa ghi: “MUL AQ0 = AI0 × 2” là một bộ khuếch đại hệ số 2; “MOV AQ1 = T1.ET” biến thời gian của bộ định thời thành điện áp dốc. Điện áp bị giới hạn trong ± “phạm vi ra” của mô-đun (mặc định 10 V), nên chương trình ghi 25 V thì chân vẫn chỉ ở 10 V. Chân COM nối chung 0 V như mọi mô-đun khác của giá.',
+          'The “PLC analog output module, 2 channels” (Misc digital group, PLC rack family) drives its pins AQ0, AQ1 to exactly the voltage the program last wrote: “MUL AQ0 = AI0 × 2” is an amplifier with a gain of 2; “MOV AQ1 = T1.ET” turns the timer’s elapsed time into a ramp voltage. The voltage is limited to ± the module’s “output range” (10 V by default), so a program that writes 25 V still leaves the pin at 10 V. COM is the common 0 V, like every other module of the rack.',
+        ),
+      },
+      {
+        heading: L('Khối hàm do bạn viết', 'Function blocks you write'),
+        body: L(
+          'Một bài toán lặp lại (khởi động / dừng của ba động cơ) không cần chép ba lần. Nhấn “Khối hàm” trên thanh công cụ, “Khối mới”, đặt tên, liệt kê đầu vào (START, STOP) và đầu ra (RUN), rồi vẽ các bậc của khối ngay trong trình soạn. Trong khối: tên đầu vào / đầu ra là tham số hình thức, EN là “cho phép” (bật khi bậc gọi có điện; khi tắt, mọi cuộn dây của khối về 0 và bộ định thời về không), và tên bắt đầu bằng # là bộ nhớ riêng của từng bản thể: #chot là một bit riêng, #T1 một bộ định thời riêng, #C1 một bộ đếm riêng, #W1 một từ nhớ riêng. Hai lời gọi của một khối không bao giờ dùng chung bộ nhớ riêng. Ở bậc chương trình, đổi loại cuộn dây thành “Gọi khối hàm”, chọn khối, đặt tên bản thể (FB1, DONGCO1 …) và nối mỗi tham số với một địa chỉ thật (I0.0, Q0.1, MW3 …). Khối chạy ngay sau bậc gọi, trong cùng vòng quét. Khối được gọi tối đa lồng 4 tầng và không được tự gọi lại; đổi tên khối thì mọi lời gọi tự đổi theo.',
+          'A repeated job (start / stop of three motors) does not need copying three times. Press “Function blocks” on the toolbar, “New block”, name it, list the inputs (START, STOP) and outputs (RUN), then draw the block’s rungs in the same editor. Inside a block the input / output names are the formal parameters, EN is “enable” (on while the calling rung carries power; when off, every coil of the block falls to 0 and its timers reset), and a name starting with # is memory private to each instance: #latch is a private bit, #T1 a private timer, #C1 a private counter, #W1 a private word. Two calls of one block never share their private memory. In a program rung change the coil kind to “Call function block”, pick the block, name the instance (FB1, MOTOR1 …) and tie each parameter to a real address (I0.0, Q0.1, MW3 …). The block runs right after the calling rung, in the same scan. Blocks nest up to 4 deep and may not call themselves; renaming a block renames every call.',
+        ),
+      },
+      {
+        heading: L('Sao chép, cắt, dán', 'Copy, cut and paste'),
+        body: L(
+          'Chọn một bậc, một tiếp điểm hay một cuộn dây rồi nhấn Sao chép / Cắt / Dán (hoặc Ctrl+C, Ctrl+X, Ctrl+V). Giữ Shift khi nhấp để chọn cả một dãy bậc liền nhau. Bậc dán vào ngay dưới bậc đang chọn và được cấp mã mới; tiếp điểm dán nối tiếp sau phần tử đang chọn (“Dán song song” đặt nó bên dưới); cuộn dây dán vào cuối bậc. Nội dung nằm cả trên clipboard của hệ thống ở dạng chữ, nên dán được sang thiết kế khác hoặc cửa sổ MachSim khác.',
+          'Select a rung, a contact or a coil, then press Copy / Cut / Paste (or Ctrl+C, Ctrl+X, Ctrl+V). Hold Shift while clicking to select a whole run of rungs. A pasted rung goes right below the selected rung and gets new ids; a pasted contact goes in series after the selected element (“Paste in parallel” puts it below); a pasted coil goes at the end of the rung. The content also sits on the system clipboard as text, so it pastes into another design or another MachSim window.',
+        ),
+      },
+      {
+        heading: L('Tham chiếu chéo địa chỉ', 'Address cross-reference'),
+        body: L(
+          'Nhấn “Tham chiếu chéo” để xem mỗi địa chỉ được GHI ở những bậc nào và ĐỌC ở những bậc nào (cả trong khối hàm và trong lời gọi khối). Nhấn một số bậc là nhảy tới đúng bậc đó, kể cả sang trang bậc thang khác. Dấu ⚠ báo địa chỉ được đọc mà không bậc nào ghi (thường là gõ nhầm), hoặc được ghi mà không bậc nào đọc. Ngõ vào I và AI do mạch ghi, ngõ ra Q và AQ do mạch đọc, nên không bị báo. Bảng này cũng in được: Tệp › Xem trước khi in › “Bậc thang: ghi chú từng bậc và bảng tham chiếu chéo”.',
+          'Press “Cross-reference” to see in which rungs each address is WRITTEN and in which it is READ (inside function blocks and in the arguments of block calls too). Clicking a rung number jumps to that rung, also on another ladder sheet. A ⚠ marks an address that is read but never written (often a typo), or written but never read. Inputs I and AI are written by the circuit and outputs Q and AQ are read by it, so they are not flagged. The table also prints: File › Print preview › “Ladder: rung comments and cross-reference”.',
+        ),
+      },
+      {
+        heading: L('Ghi chú của bậc khi in', 'Rung comments on paper'),
+        body: L(
+          'Ghi chú của bậc (và của từng tiếp điểm, cuộn dây nếu có) nằm trên đầu bậc, xuống nhiều dòng nếu dài, nên bản in không cắt mất chữ. Trong Xem trước khi in, mục “Bậc thang” thêm một tài liệu liệt kê ghi chú từng bậc theo trang và theo khối hàm, và các bảng tham chiếu chéo.',
+          'The rung comment (and the comment of a contact or a coil, if it has one) sits above the rung and wraps onto more lines when long, so the printout never cuts words off. In the print preview the “Ladder” choice adds a document that lists the comments rung by rung, by sheet and by function block, and the cross-reference tables.',
+        ),
+      },
+      {
         heading: L('Giới hạn hiện nay', 'What is not there yet'),
         body: L(
-          'Một thiết kế có MỘT chương trình: các bậc của mọi trang bậc thang cùng cấp nối tiếp nhau thành một chương trình, chạy trên một giá PLC. Chưa có khối hàm tự viết, chưa có phép toán số (chỉ có so sánh), chưa có ngõ ra tương tự, chưa có xuất sang định dạng của bất kỳ hãng nào. Bậc thang trong thiết kế con (mạch con / khối phân cấp) không được chạy — hãy đặt giá PLC ở cấp gốc.',
-          'A design has ONE program: the rungs of every ladder sheet of a level follow each other into one program that runs on one PLC rack. There are no user-written function blocks yet, no arithmetic (only comparisons), no analog outputs, and no export to any vendor format. A ladder sheet inside a child design (subcircuit / hierarchical block) is not executed — place the rack at the top level.',
+          'Một thiết kế có MỘT chương trình cho mỗi cấp: các bậc của mọi trang bậc thang cùng cấp nối tiếp nhau thành một chương trình, chạy trên một giá PLC. Khối hàm dùng chung cho cả thiết kế (khối đặt ở thiết kế gốc), chưa có số thực 32 bit hay chuỗi, chưa có tiếp điểm nhảy hoặc vòng lặp; trong trình soạn khối hàm chưa tô sáng bậc đang chạy (chỉ tô sáng ở chương trình chính). Chưa xuất ra ngôn ngữ PLC khác.',
+          'A design has ONE program per level: the rungs of every ladder sheet of a level follow each other into one program that runs on one PLC rack. Function blocks are shared by the whole design (they live in the root design), there are no 32-bit reals or strings, and no jump or loop instructions; the block editor does not light up the running rung (only the main program does). There is no export to another PLC language.',
         ),
       },
     ],
@@ -150,6 +192,12 @@ export const LADDER_PART_HELP: Record<string, HelpEntry> = {
     use: L('Điều khiển đèn báo, cuộn dây khởi động từ, van, động cơ hay một mô hình cơ điện tử.', 'Drive indicator lamps, contactor coils, valves, motors or a mechatronics model.'),
     read: addressNote,
     tip: L('Tải nối từ chân kênh xuống COM. Điện áp ra mặc định 24 V như tủ điện công nghiệp; đổi được trong Thuộc tính.', 'The load goes from the channel pin down to COM. The default output voltage is 24 V, as in an industrial cabinet; change it in Properties.'),
+  },
+  'misc-digital/plc-analog-out-2': {
+    what: L('Mô-đun ra tương tự 2 kênh: AQ0 và AQ1 đưa chân của chúng lên đúng điện áp chương trình vừa ghi, tính bằng vôn.', 'A 2-channel analog output module: AQ0 and AQ1 drive their pins to the voltage the program last wrote, in volts.'),
+    use: L('Điều sáng đèn, đặt tốc độ chuẩn cho động cơ hay bám theo một mức: “MUL AQ0 = AI0 × 2”.', 'Dim a lamp, set a motor speed reference or follow a level: “MUL AQ0 = AI0 × 2”.'),
+    read: L('Chỉ lệnh MOV / ADD / SUB / MUL / DIV có đích AQ mới đổi điện áp; tiếp điểm so sánh đọc lại được giá trị đã ghi.', 'Only a MOV / ADD / SUB / MUL / DIV with an AQ destination changes the voltage; a comparison contact can read back the value written.'),
+    tip: L('Điện áp bị giới hạn trong ± “phạm vi ra” (mặc định 10 V). Chân COM nối chung 0 V với các mô-đun khác.', 'The voltage is limited to ± the “output range” (10 V by default). COM joins the common 0 V of the other modules.'),
   },
   'misc-digital/plc-analog-in-2': {
     what: L('Mô-đun vào tương tự 2 kênh: AI0 và AI1 đọc điện áp trên chân của chúng theo vôn.', 'A 2-channel analog input module: AI0 and AI1 read the voltage on their pins in volts.'),

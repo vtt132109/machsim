@@ -1018,7 +1018,7 @@ function emitLevel(a: LevelAnalysis, scope: VariableScope, shared: Shared, set: 
     }
     const { rungs, sheetIds } = ladderRungsOf(a.sheets);
     if (rungs.length > 0 || modules.length > 0) {
-      const built = buildLadder(rungs, sheetIds, modules, (refdes) => set.uniqueName(elementName('A', refdes, 'plc')));
+      const built = buildLadder(rungs, sheetIds, modules, (refdes) => set.uniqueName(elementName('A', refdes, 'plc')), shared.design.ladderBlocks ?? []);
       const owner = built.binding?.refdes ?? modules[0]?.refdes ?? 'PLC';
       const loc: ErcLocation = modules[0] ? { sheetId: modules[0].sheetId, x: modules[0].x, y: modules[0].y } : {};
       for (const el of built.elements) set.add(el, { refdes: owner, ...loc });

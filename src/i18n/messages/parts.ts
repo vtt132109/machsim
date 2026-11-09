@@ -12,6 +12,8 @@ export default {
   'cmd.tools.symbolEditor': ['Trình sửa ký hiệu…', 'Symbol editor…'],
   'cmd.tools.databaseManager': ['Quản lý cơ sở dữ liệu linh kiện…', 'Database manager…'],
   'cmd.tools.importModel': ['Nhập mô hình SPICE…', 'Import SPICE model…'],
+  'cmd.tools.importKicadSymbols': ['Nhập ký hiệu từ thư viện KiCad…', 'Import symbols from a KiCad library…'],
+  'cmd.tools.exportKicadSymbols': ['Xuất linh kiện thành thư viện KiCad…', 'Export parts as a KiCad library…'],
   'cmd.edit.editComponent': ['Sửa ký hiệu / mô hình linh kiện…', 'Edit component symbol / model…'],
   'menu.componentTools': ['Linh kiện tự tạo', 'Component tools'],
   'sim.source.parts': ['Linh kiện tự tạo', 'Component tools'],

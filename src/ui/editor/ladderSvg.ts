@@ -17,9 +17,9 @@
  * No DOM, no React, no store: the function takes rungs and returns markup, which is why it can be
  * tested in the node environment next to the layout it uses.
  */
-import { COMPARE_SYMBOL, OUTPUT_CODE } from '../../ladder/program';
+import { COMPARE_SYMBOL, OUTPUT_CODE, isWordOutput } from '../../ladder/program';
 import { layoutLadder, type LadderCell, type LadderCoil, type RungLayout } from '../../ladder/layout';
-import type { LadderRung } from '../../ladder/types';
+import type { LadderOutput, LadderRung } from '../../ladder/types';
 import { lt } from '../../i18n/ladderText';
 
 /** Width of one logic column (one contact), in schematic units. */
@@ -35,9 +35,50 @@ export const LADDER_HEAD = 22;
 /** Empty space below a rung. */
 export const LADDER_PAD = 12;
 
-/** Height of one rung block (caption, rows and the gap below). */
-export function ladderRungHeight(r: RungLayout): number {
-  return LADDER_HEAD + r.rows * LADDER_ROW + LADDER_PAD;
+/** Height of each caption line after the first. */
+export const LADDER_LINE = 13;
+
+/** Height of one rung block (caption of `lines` lines, rows and the gap below). */
+export function ladderRungHeight(r: RungLayout, lines = 1): number {
+  return LADDER_HEAD + Math.max(0, lines - 1) * LADDER_LINE + r.rows * LADDER_ROW + LADDER_PAD;
+}
+
+/**
+ * The caption of a rung wrapped to the width of the diagram: "Rung 2 — comment", then more lines
+ * when the comment is long, so a comment printed or drawn is never cut off. Words are not split.
+ */
+export function ladderCaptionLines(title: string, comment: string | undefined, cols: number): string[] {
+  const text = comment ? `${title} — ${comment.replace(/\s+/g, ' ').trim()}` : title;
+  // about 6 units per character at the 11 px caption size
+  const max = Math.max(24, Math.floor((ladderDiagramWidth(cols) - LADDER_RAIL_LEFT - 20) / 6));
+  const lines: string[] = [];
+  let line = '';
+  for (const word of text.split(' ')) {
+    if (line && line.length + 1 + word.length > max) {
+      lines.push(line);
+      line = word;
+    } else line = line ? `${line} ${word}` : word;
+  }
+  if (line) lines.push(line);
+  return lines.length ? lines : [title];
+}
+
+/** Width of the box of a word instruction or a block call, and its height. */
+export const LADDER_BOX_W = 92;
+export const LADDER_BOX_H = 30;
+
+/**
+ * The two lines written in the box of a word instruction (`ADD MW2` / `MW0 + MW1`) or of a function
+ * block call (`FB M1` / `StartStop`); null for an ordinary coil, which is drawn as a pair of arcs.
+ */
+export function ladderBoxLines(o: LadderOutput): [string, string] | null {
+  const clip = (t: string): string => (t.length > 15 ? `${t.slice(0, 14)}…` : t);
+  if (o.kind === 'call') return [clip(`FB ${o.address}`), clip(o.block ?? '?')];
+  if (!isWordOutput(o.kind)) return null;
+  const a = o.a?.trim() || '?';
+  const b = o.b?.trim() || '?';
+  const op = o.kind === 'add' ? '+' : o.kind === 'sub' ? '−' : o.kind === 'mul' ? '×' : '÷';
+  return [clip(`${OUTPUT_CODE[o.kind]} ${o.address}`), clip(o.kind === 'mov' ? `= ${a}` : `${a} ${op} ${b}`)];
 }
 
 /** Total width of a ladder diagram with `cols` logic columns. */
@@ -90,6 +131,19 @@ function cellMarkup(cell: LadderCell, x0: number, y0: number): string {
 function coilMarkup(coil: LadderCoil, x: number, y0: number): string {
   const cy = y0 + coil.row * LADDER_ROW + LADDER_ROW / 2;
   const o = coil.output;
+  const box = ladderBoxLines(o);
+  if (box) {
+    // a word instruction / block call is a box against the right rail
+    const right = x + 40;
+    const left = right - LADDER_BOX_W - 6;
+    return [
+      line(x - LADDER_COIL_COL + 40, cy, left, cy, WIRE),
+      `<rect x="${r(left)}" y="${r(cy - LADDER_BOX_H / 2)}" width="${LADDER_BOX_W}" height="${LADDER_BOX_H}" rx="3" style="fill:none;stroke:var(--part);stroke-width:2"/>`,
+      textEl(left + LADDER_BOX_W / 2, cy - 3, 'fill:var(--text);font-size:10px;font-weight:600;text-anchor:middle', box[0]),
+      textEl(left + LADDER_BOX_W / 2, cy + 9, 'fill:var(--text);font-size:10px;text-anchor:middle', box[1]),
+      line(left + LADDER_BOX_W, cy, right, cy, WIRE),
+    ].join('');
+  }
   const code = OUTPUT_CODE[o.kind];
   const cx = x + 40;
   const out = [
@@ -130,10 +184,11 @@ export function ladderSheetSvg(rungs: readonly LadderRung[], opts: LadderSvgOpti
   layout.rungs.forEach((rl, i) => {
     const rung = rungs[i];
     const top = y;
-    const y0 = top + LADDER_HEAD;
+    const captionLines = ladderCaptionLines(`${lt('rung', { n: i + 1 })}${rung.disabled ? ` ${lt('disabled')}` : ''}`, rung.comment, cols).length;
+    const y0 = top + LADDER_HEAD + (captionLines - 1) * LADDER_LINE;
     const x0 = LADDER_RAIL_LEFT;
     const railR = LADDER_RAIL_LEFT + cols * LADDER_COL + LADDER_COIL_COL;
-    parts.push(textEl(x0 + 4, top + 15, CAPTION, `${lt('rung', { n: i + 1 })}${rung.comment ? ` — ${rung.comment}` : ''}${rung.disabled ? ` ${lt('disabled')}` : ''}`));
+    ladderCaptionLines(`${lt('rung', { n: i + 1 })}${rung.disabled ? ` ${lt('disabled')}` : ''}`, rung.comment, cols).forEach((text, k) => parts.push(textEl(x0 + 4, top + 15 + k * LADDER_LINE, CAPTION, text)));
     parts.push(line(x0, y0, x0, y0 + rl.rows * LADDER_ROW, RAIL));
     parts.push(line(railR, y0, railR, y0 + rl.rows * LADDER_ROW, RAIL));
     if (!rung.logic) parts.push(line(x0, y0 + LADDER_ROW / 2, x0 + LADDER_COL / 2, y0 + LADDER_ROW / 2, WIRE));
@@ -143,7 +198,7 @@ export function ladderSheetSvg(rungs: readonly LadderRung[], opts: LadderSvgOpti
     if (rl.coils.length > 1) parts.push(line(railR - LADDER_COIL_COL + 40, y0 + LADDER_ROW / 2, railR - LADDER_COIL_COL + 40, y0 + (rl.coils.length - 1) * LADDER_ROW + LADDER_ROW / 2, WIRE));
     for (const c of rl.cells) parts.push(cellMarkup(c, x0, y0));
     for (const c of rl.coils) parts.push(coilMarkup(c, railR - 40, y0));
-    y += ladderRungHeight(rl);
+    y += ladderRungHeight(rl, captionLines);
   });
   return { markup: parts.join(''), width, height: Math.max(y + 10, 80) };
 }

@@ -154,4 +154,4 @@ export interface SymbolFile {
 }
 
 /** Pin types offered by the pin editor (same set as PinDef.type). */
-export const PIN_TYPES: PinType[] = ['passive', 'input', 'output', 'bidir', 'power', 'nc'];
+export const PIN_TYPES: PinType[] = ['passive', 'input', 'output', 'bidir', 'power', 'nc', 'tristate', 'open-collector', 'power-in', 'power-out'];

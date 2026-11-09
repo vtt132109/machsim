@@ -36,6 +36,8 @@ export interface PrintChoices {
   frame: boolean;
   instruments: boolean;
   grapher: boolean;
+  /** the ladder program's rung comments and address cross-reference (src/ui/print/ladderPrint.ts) */
+  ladder?: boolean;
   /** report id, '' = none */
   report: string;
   /** lesson id, '' = none */
@@ -188,6 +190,10 @@ export async function buildContents(ctx: PrintContext, choices: PrintChoices): P
   const out: PrintContent[] = [];
   if (choices.sheets) out.push(...(await sheetImages(ctx, choices)));
   if (choices.instruments) out.push(instrumentTable(ctx));
+  if (choices.ladder) {
+    const { ladderContents } = await import('./ladderPrint');
+    out.push(...ladderContents(ctx.design));
+  }
   if (choices.grapher) {
     for (const c of contributions.getState()) if (c.available()) out.push(...(await c.pages({ monochrome: ctx.monochrome })));
   }
