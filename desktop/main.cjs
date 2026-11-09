@@ -25,13 +25,15 @@ const SMOKE = process.argv.includes('--smoke');
 const smokeErrors = [];
 
 /**
- * Command-line batch mode (MachSim.exe --batch file.msim --analysis tran --out results.csv, or
- * --help): no visible window; the renderer (index.html?batch) parses the arguments
+ * Command-line batch mode (MachSim.exe --batch file.msim --analysis tran --out results.csv,
+ * MachSim.exe --script file.js, or --help): no visible window; the renderer (index.html?batch) parses the arguments
  * (src/desktop/cli.ts), simulates and reports back through the machsim:batch-* IPC below. It may
  * only read / write the paths named on the command line, plus SPICE include files next to the input.
  */
 const USER_ARGS = process.argv.slice(process.defaultApp ? 2 : 1);
-const BATCH = USER_ARGS.some((a) => a === '--batch' || a.startsWith('--batch=') || a === '--help' || a === '-h' || a === '/?');
+// --script file.js (src/script/cli.ts) runs a user's JavaScript in a sandbox through the same hidden batch window; it may only
+// open / save the files named on the command line, like --batch
+const BATCH = USER_ARGS.some((a) => a === '--batch' || a.startsWith('--batch=') || a === '--script' || a.startsWith('--script=') || a === '--help' || a === '-h' || a === '/?');
 const BATCH_CWD = process.cwd();
 /** Absolute paths named on the command line (option values and bare arguments). */
 const batchPaths = new Set(

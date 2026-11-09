@@ -43,7 +43,8 @@ Có thể đóng gói thành ứng dụng Windows (Electron/Tauri) ở giai đo�
 | Component wizard, model makers, database (`compedit`, `*Ext`) | Trình tạo linh kiện, trình tạo mô hình từ datasheet, cơ sở dữ liệu người dùng / công ty | `src/library/custom`, `src/library/modelmaker`, `src/ui/parts` |
 | Place Component, Database Manager quy mô lớn, Update components, Variant manager | Hộp thoại Chọn linh kiện (chi tiết + Detail report + View model), chỉ mục / danh sách ảo hoá 60 000 part, so thư viện với sơ đồ, phương án lắp ráp, hồ sơ `.msimlib` | `src/ui/parts/PlaceComponentDialog.tsx`, `libraryTools.tsx`, `src/library/partInfo.ts`, `partFingerprint.ts`, `src/ui/store/libraryUpdate.ts`, `src/model/variants.ts`, `src/library/custom/profile.ts` |
 | PCB/Ultiboard (`UB`, `PCB*`, `Gerber`, `RoutKern`) | Ngoài phạm vi v1; chỉ export netlist/BOM | — |
-| Automation COM, LabVIEW, ELVIS | Ngoài phạm vi v1 | — |
+| Automation COM, LabVIEW, ELVIS | COM / LabVIEW ngoài phạm vi; thay bằng tập lệnh JavaScript trong hộp cát + `MachSim.exe --script` | `src/script/*`, `src/ui/script/ScriptPanel.tsx`, `desktop/main.cjs` |
+| MOSFET compact: EKV 2.6, lớp BSIM4 (LEVEL 14 / 54), lõi từ trễ Jiles–Atherton + dòng xoáy | `ekv.ts`, `Bsim3` với cờ BSIM4, lưới điện lõi từ; đồ thị X–Y `vs(y, x)` | `src/sim/devices/semi/ekv.ts`, `bsim3.ts`, `src/library/catalog/compactMos.ts`, `magneticCore.ts`, `src/ui/results/postprocessor.ts` |
 | Giao diện gọn cho người mới (MachSim thêm) | Bộ lọc menu / thanh công cụ / phép phân tích theo danh sách lệnh cho phép; mọi lệnh mà một bài học đi kèm bảo dùng đều phải có trong danh sách (test đọc chữ của bài học) | `src/ui/app/beginner.ts`, `tests/review/round3/beginner-lessons.test.ts` |
 | Tệp bài học do giáo viên soạn (MachSim thêm) | `.msimlesson` với 4 loại bước mô tả; tiến độ `.msimprog` hoặc lưu trong dự án | `src/learn/lessonFile.ts`, `src/ui/learn/LessonEditor.tsx`, `src/ui/learn/customLessons.ts` |
 | IC thật trong bài học (MachSim thêm) | Tìm cổng / flip-flop trong vỏ nhiều phân đoạn, kiểm chân `~PRE` / `~CLR` | `src/learn/gates.ts` |
@@ -989,6 +990,38 @@ giáo viên báo đúng chứ không báo "không có gì".
 
 **Ba mạch mẫu** (`src/ui/integration/electroSamples.ts`, tệp `examples/70…72`): mở – dừng công-tắc-tơ hai trang, rơ-le thời gian, loa sau lọc RC. Test: `src/library/catalog/electro.test.ts` (liên kết cuộn – tiếp điểm giữa các trang, thời gian rơ-le thời gian, I²t, đường cong áp-tô-mát và rơ-le nhiệt, điều áp biến áp, thời gian xả pin, từ thông, tệp đo lường, WAV), `src/audio/*.test.ts`, `src/sim/devices/linear/pcm.test.ts`, `src/ui/integration/{audio,electroSamples}.test.ts`.
 
+## Tập lệnh, EKV, lớp BSIM4 và lõi từ trễ (vòng 4 bước 8)
+
+### Tập lệnh JavaScript (`src/script/`, `src/ui/script/ScriptPanel.tsx`, `src/i18n/scriptText.ts`)
+
+- **Hộp cát.** Mã của người dùng chạy trong một Web Worker tạo từ Blob (`runner.ts` `browserWorkerFactory`). Chương trình trong worker là hàm tự chứa
+  `workerProgram.ts` (được `toString()` rồi nạp; không import, không class field): nó gỡ các tên toàn cục nguy hiểm (`SCRUBBED_GLOBALS`: fetch,
+  XMLHttpRequest, WebSocket, importScripts, indexedDB, localStorage, Worker, postMessage, require, process …), che chúng thành `undefined` ở tham số của
+  hàm async chạy mã, rồi chỉ còn một đường ra: gọi `MachSim.<hàm>()`. Mỗi lời gọi là một thông điệp `{t:'call'}` JSON; host trả lời lần lượt, theo thứ tự
+  script gọi (`protocol.ts`). Worker cũng có `Result` bọc kết quả (get, at, max, rms, crossing, bandwidth, toCsv …), `sweep`, `linspace`, `eng` …
+  Nút Dừng gọi `worker.terminate()` (vòng lặp vô hạn không chặn được), quá `SCRIPT_LIMITS.timeoutMs` (10 phút) tự dừng.
+- **Host không giao diện.** `session.ts` `ScriptSession` giữ MỘT bản sao thiết kế và trả lời mọi phương thức trong `SCRIPT_METHODS`. Mọi thứ chạm bên ngoài
+  đi qua `ScriptIO`: `openFile` / `saveFile` (thẻ xin phép trong cửa sổ, hoặc chỉ các tệp nêu trên dòng lệnh), `runNetlist` (SimClient trong cửa sổ,
+  `runAnalyses` trong CLI và test), `currentDesign` / `showDesign` (trình soạn; `showDesign` đi qua `openGeneratedDesign`, nên thiết kế mở thành thẻ mới và
+  được lớp toàn vẹn xử lý). Thêm một phương thức: thêm tên vào `SCRIPT_METHODS`, hàm vào `ScriptSession.methods`, mục vào `SCRIPT_DOCS` (scriptText.ts, cả hai ngôn ngữ).
+- **Dòng lệnh.** `cli.ts` (`parseScriptArgs`, `runScriptCli`, `isScriptInvocation`) dùng chung cửa sổ ẩn và IPC `machsim:batch-*` với `--batch`
+  (`desktop/main.cjs`: `BATCH` cũng đúng với `--script`; `batchRenderer.ts` rẽ nhánh). Quyền tệp = các đường dẫn nêu trên dòng lệnh (main.cjs `batchPaths`).
+  Mã thoát là `EXIT` của `--batch`. Test chạy cùng mã worker trên `worker_threads` (`nodeWorker.ts`, `kind: 'node'`).
+- **Đồ thị.** `plotSvg.ts` `plotToSvg` (trục 1-2-5 tuyến tính / log, nhiều đường, chú giải) dùng cho cả cửa sổ và `MachSim.plot()` (trả SVG để `saveText`).
+- **Trợ giúp / người mới.** Lệnh `tools.script` (không nằm trong danh sách người mới), F1 trên cửa sổ mở trang hướng dẫn `scripting`.
+
+### Mô hình linh kiện
+
+- **EKV 2.6** (`src/sim/devices/semi/ekv.ts`, LEVEL 44, chọn trong `mosdevice.ts`): xem đầu tệp cho từng công thức. Khác báo cáo EKV 2.6 ở ba chỗ, đều
+  ghi trong mã: suy giảm độ linh động `1/(1 + THETA'·Vp)`, bão hoà vận tốc `1/(1 + VDE/Vc)` (không dùng kẹp VDSS, vì kẹp đó không về đồng nhất khi Vc → ∞
+  và phá nghịch đảo yếu), điều biến độ dài kênh dạng log quanh `VDSAT = VP − VS + 4Vt`. Điện tích theo dạng đóng của hồ sơ điện tích EKV
+  (`∫q dx` và mômen bậc một, suy ra từ i = q² + q) — test so với tích phân số.
+- **Lớp BSIM4** (`bsim3.ts`): cùng lớp `Bsim3` với cờ `b4` chọn từ LEVEL 14 / 54; `BSIM4_DEFAULTS` + `ALIASES4`; khác lõi BSIM3 ở nhiệt độ ngưỡng
+  (LPE0/LPEB, K1ox/K2ox), ba công thức độ linh động, hình học tụ `leffQ/weffQ`, CGSO/CGDO/CF mặc định. BSIM3 không đổi (test cũ giữ nguyên).
+- **Jiles–Atherton** (`src/library/catalog/magneticCore.ts`): lưới điện điều khiển bằng từ thông; nút `<ref>.flux .mirr .b .h .m .x .s` (đọc được trong Grapher
+  bằng “hiện vector nội bộ”), đầu vào của bộ tích phân từ thông bị cổng hoá `u(time)+u(hertz)` để điểm làm việc DC không “nạp” lõi. Dòng xoáy = một điện trở.
+- **Đồ thị X–Y**: `vs(y, x)` trong bộ xử lý sau trả `Vector` có `xValues`; `buildPlotData` vẽ theo `PlotTrace.ownX`; nút “Đường B–H” cho mọi lõi có `V(R.b)` và `V(R.h)`.
+
 ## Hợp đồng dùng chung (chỉ thêm, không đổi nghĩa)
 
 - `src/sim/netlist.ts` — Netlist IR, analysis specs, options.
@@ -1006,6 +1039,7 @@ giáo viên báo đúng chứ không báo "không có gì".
 - `src/model/steps.ts` — quét tham số trên sơ đồ (`applySteps`, `customStepWrapper`, `StepMessage`); `src/model/hierarchy.ts` — đường dẫn bản đặt (`resolveLivePart` / `resolveLiveName`, `withLiveParam`, `innerKey`, `liveKey`, `scopedLive`, `copyPaths`); `src/learn/readings.ts` — phép đo quá độ / AC của bước bài học (thuần).
 - `src/model/sanitize.ts` — lớp toàn vẹn dùng chung: mọi nội dung vào một thiết kế đi qua đây (`sanitizeIncoming`, `sanitizeIncomingSheets`, `sanitizeDesign`, `parseDesignSafely` / `validateDesignSafely` / `repairRawDesign`, `neededVariables` / `referencedVariables`, `SanitizeNote`). Thuần; `src/i18n/sanitize.ts` dịch ghi chú.
 - `src/audio/*` — WAV, lấy mẫu lại, phát thời gian thực và nguồn micrô (thuần trừ `webAudioSink.ts` / `input.ts`); `ToSpiceContextExt.linkTarget` / `warn` và `followDriver` (`src/library/partkit.ts`) cho phần tử nối bằng tên.
+- `src/script/protocol.ts` (`SCRIPT_METHODS`, thông điệp worker ↔ host, `ScriptResult`), `session.ts` (`ScriptIO`), `runner.ts` (`startScript`), `cli.ts`; `src/sim/results.ts` `Vector.xValues / xName / xUnit` (đồ thị X–Y, chỉ thêm); `LibraryPartDef` không đổi — lõi từ trễ và MOSFET compact chỉ thêm linh kiện.
 
 ## Luồng dữ liệu
 

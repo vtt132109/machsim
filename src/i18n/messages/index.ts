@@ -5,6 +5,7 @@
 import analysis from './analysis';
 import app from './app';
 import audio from './audio';
+import script from './script';
 import beginner from './beginner';
 import catalog from './catalog';
 import common from './common';
@@ -33,6 +34,6 @@ import tips from './tips';
 import wizards from './wizards';
 
 /** Every section, by name (the i18n tests check each one for duplicates and placeholder parity). */
-export const SECTIONS = { analysis, app, audio, beginner, catalog, common, digital, documents, editor, erc, files, help, instruments, integration, ladder, learn, library, mcu, parts, placement, results, schematic, schematicTools, shell, sim, simtools, store, tips, wizards } as const;
+export const SECTIONS = { analysis, app, audio, beginner, catalog, common, digital, documents, editor, erc, files, help, instruments, integration, ladder, learn, library, mcu, parts, placement, results, schematic, schematicTools, script, shell, sim, simtools, store, tips, wizards } as const;
 
-export const MESSAGES = { ...analysis, ...app, ...audio, ...beginner, ...catalog, ...common, ...digital, ...documents, ...editor, ...erc, ...files, ...help, ...instruments, ...integration, ...ladder, ...learn, ...library, ...mcu, ...parts, ...placement, ...results, ...schematic, ...schematicTools, ...shell, ...sim, ...simtools, ...store, ...tips, ...wizards } as const;
+export const MESSAGES = { ...analysis, ...app, ...audio, ...beginner, ...catalog, ...common, ...digital, ...documents, ...editor, ...erc, ...files, ...help, ...instruments, ...integration, ...ladder, ...learn, ...library, ...mcu, ...parts, ...placement, ...results, ...schematic, ...schematicTools, ...script, ...shell, ...sim, ...simtools, ...store, ...tips, ...wizards } as const;

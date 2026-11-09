@@ -14,6 +14,7 @@
 import { DesignBuilder, type PartHandle } from '../../model/designkit';
 import { LADDER_SAMPLE_BUILDERS } from './ladderSamples';
 import { ELECTRO_SAMPLE_BUILDERS } from './electroSamples';
+import { DEVICE_SAMPLE_BUILDERS } from './deviceSamples';
 import type { AnalysisSpec, AnalysisType } from '../../sim/netlist';
 import type { Design, Point } from '../../model/types';
 
@@ -1385,6 +1386,7 @@ export function mcuSerialSample(): Design {
 export const SAMPLE_BUILDERS: Record<string, () => Design> = {
   ...LADDER_SAMPLE_BUILDERS,
   ...ELECTRO_SAMPLE_BUILDERS,
+  ...DEVICE_SAMPLE_BUILDERS,
   '11-ohms-law.msim': ohmsLawSample,
   '12-series-parallel.msim': seriesParallelSample,
   '13-rc-charging.msim': rcChargingSample,

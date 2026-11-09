@@ -1,0 +1,273 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "CMOS inverter with EKV and BSIM4 transistors",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "1.8"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/dc-voltage",
+          "refdes": "V2",
+          "x": 100,
+          "y": 380,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "0.9"
+          }
+        },
+        {
+          "id": "p7",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 470,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p8",
+          "partId": "transistors/ekv-pmos",
+          "refdes": "Q1",
+          "x": 360,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "w": "2.8u"
+          }
+        },
+        {
+          "id": "p13",
+          "partId": "transistors/ekv-nmos",
+          "refdes": "Q2",
+          "x": 360,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "w": "1u"
+          }
+        },
+        {
+          "id": "p18",
+          "partId": "transistors/bsim4-pmos",
+          "refdes": "Q3",
+          "x": 620,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "w": "2.5u"
+          }
+        },
+        {
+          "id": "p23",
+          "partId": "transistors/bsim4-nmos",
+          "refdes": "Q4",
+          "x": 620,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "w": "1u"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 100,
+          "y": 170,
+          "name": "VDD",
+          "rotation": 0
+        },
+        {
+          "id": "l3",
+          "x": 100,
+          "y": 230,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l5",
+          "x": 100,
+          "y": 350,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 100,
+          "y": 410,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 370,
+          "y": 120,
+          "name": "OUTE",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 330,
+          "y": 150,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 370,
+          "y": 180,
+          "name": "VDD",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 390,
+          "y": 150,
+          "name": "VDD",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 370,
+          "y": 290,
+          "name": "OUTE",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 330,
+          "y": 320,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 370,
+          "y": 350,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 390,
+          "y": 320,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 630,
+          "y": 120,
+          "name": "OUT4",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 590,
+          "y": 150,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 630,
+          "y": 180,
+          "name": "VDD",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 650,
+          "y": 150,
+          "name": "VDD",
+          "rotation": 0
+        },
+        {
+          "id": "l24",
+          "x": 630,
+          "y": 290,
+          "name": "OUT4",
+          "rotation": 0
+        },
+        {
+          "id": "l25",
+          "x": 590,
+          "y": 320,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l26",
+          "x": 630,
+          "y": 350,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l27",
+          "x": 650,
+          "y": 320,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 60,
+          "y": 520,
+          "text": "EKV (Q1, Q2) và BSIM4 (Q3, Q4) cùng W/L: PMOS rộng gấp 2,5–2,8 lần NMOS để hai bên cân bằng. Phân tích: quét DC V2 từ 0 đến 1,8 V.",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet1",
+          "x": 60,
+          "y": 540,
+          "text": "Xem IC(Q2) (hệ số nghịch đảo) trong kết quả OP: dưới 0,1 là nghịch đảo yếu, trên 10 là mạnh.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "dc",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "dc": {
+        "type": "dc",
+        "src": "V2",
+        "start": 0,
+        "stop": 1.8,
+        "step": 0.01
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Hai cổng đảo CMOS cùng điện áp vào: trên là MOSFET EKV 2.6 (LEVEL 44), dưới là MOSFET BSIM4 (LEVEL 54), tham số kiểu 0.18 µm. Chạy quét DC của V2 từ 0 đến 1,8 V và vẽ V(OUTE), V(OUT4): cả hai đặc tuyến truyền đạt đều giảm từ 1,8 V xuống 0 V quanh 0,9 V. Hai mô hình khác nhau ở chi tiết (ngưỡng, dốc, dòng dưới ngưỡng) — đổi VTO / VTH0 để so sánh. Two CMOS inverters with the same input: the top one uses EKV 2.6 MOSFETs (LEVEL 44), the bottom one BSIM4 MOSFETs (LEVEL 54), 0.18 µm-style parameters. Run the DC sweep of V2 from 0 to 1.8 V and plot V(OUTE), V(OUT4): both transfer curves fall from 1.8 V to 0 V around 0.9 V. The two models differ in details (threshold, slope, sub-threshold current) — change VTO / VTH0 to compare."
+}

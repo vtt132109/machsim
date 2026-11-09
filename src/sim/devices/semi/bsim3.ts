@@ -78,7 +78,7 @@ import {
   type DepletionCoeffs,
 } from './common';
 import { DEFAULT_MOS_L, DEFAULT_MOS_W } from './mosfet';
-import { add, addc, dconst, dexp, div, dmax, dmin, dsoftplus, dsqrt, dual, mul, neg, scale, sub, type Dual } from './dual';
+import { add, addc, dconst, dexp, div, dmax, dmin, dpow, dsoftplus, dsqrt, dual, mul, neg, scale, sub, type Dual } from './dual';
 
 /** Model levels evaluated by this file. */
 export const BSIM3_LEVELS: ReadonlySet<number> = new Set([7, 8, 49, 53]);
@@ -191,13 +191,56 @@ export const BSIM3_DEFAULTS = {
   tnom: Number.NaN,
 } as const;
 
-export type Bsim3Param = keyof typeof BSIM3_DEFAULTS;
+/**
+ * BSIM4-class parameter set (LEVEL 14 / 54): the shared core parameters with the BSIM4.8 defaults
+ * (electrical oxide thickness TOXE is stored under `tox`, doping NDEP under `nch`) plus the parameters
+ * BSIM4 adds to the core: lateral non-uniform doping LPE0 / LPEB, the mobility exponent EU, the
+ * oxide thickness TOXM the body-effect parameters were extracted at, and the capacitance geometry
+ * DLC / DWC. NaN means "derived from other parameters when not given".
+ */
+export const BSIM4_DEFAULTS = {
+  ...BSIM3_DEFAULTS,
+  level: 54,
+  version: 4.8,
+  mobmod: 0,
+  capmod: 2,
+  tox: 3e-9,
+  toxm: Number.NaN,
+  lpe0: 1.74e-7,
+  lpeb: 0,
+  eu: Number.NaN,
+  ua: Number.NaN,
+  ub: 1e-19,
+  uc: Number.NaN,
+  ua1: 1e-9,
+  ub1: -1e-18,
+  uc1: Number.NaN,
+  rdsw: 200,
+  prwg: 1,
+  prwb: 0,
+  pvag: 1,
+  dlc: Number.NaN,
+  dwc: Number.NaN,
+  cgsl: 0,
+  cgdl: 0,
+  cf: Number.NaN,
+} as const;
+
+export type Bsim3Param = keyof typeof BSIM4_DEFAULTS;
 type Bsim3Values = Record<Bsim3Param, number>;
 
-const ALIASES: Readonly<Record<string, Bsim3Param>> = {
+const ALIASES3: Readonly<Record<string, Bsim3Param>> = {
   vtho: 'vth0',
   toxe: 'tox',
   toxm: 'tox',
+  npeak: 'nch',
+  ndep: 'nch',
+  uo: 'u0',
+  tref: 'tnom',
+};
+const ALIASES4: Readonly<Record<string, Bsim3Param>> = {
+  vtho: 'vth0',
+  toxe: 'tox',
   npeak: 'nch',
   ndep: 'nch',
   uo: 'u0',
@@ -210,7 +253,7 @@ const BINNABLE = new Set<string>([
   'u0', 'ua', 'ub', 'uc', 'vsat', 'a0', 'ags', 'b0', 'b1', 'keta', 'a1', 'a2', 'rdsw', 'prwg', 'prwb', 'wr', 'voff',
   'nfactor', 'cdsc', 'cdscb', 'cdscd', 'cit', 'pclm', 'pdiblc1', 'pdiblc2', 'pdiblcb', 'drout', 'pscbe1', 'pscbe2', 'pvag',
   'delta', 'nch', 'nsub', 'xj', 'xt', 'vbm', 'vfb', 'kt1', 'kt1l', 'kt2', 'ute', 'ua1', 'ub1', 'uc1', 'at', 'prt', 'dwg', 'dwb',
-  'cgso', 'cgdo', 'cf',
+  'cgso', 'cgdo', 'cf', 'lpe0', 'lpeb', 'eu',
 ]);
 
 /** Card parameters that are recognised but have no effect here (no warning). */
@@ -280,6 +323,15 @@ interface B3Inst {
   cgso: number;
   cgdo: number;
   cgbo: number;
+  /** BSIM4 flavour: threshold LPE terms, mobility model, charge geometry (BSIM3: neutral values) */
+  b4: boolean;
+  k1eff: number;
+  k2eff: number;
+  lpe0F: number;
+  lpebF: number;
+  vtfbphi1: number;
+  leffQ: number;
+  weffQ: number;
 }
 
 /** DC core result (mode-local) as duals of the global terminal voltages. */
@@ -328,10 +380,15 @@ function bsim3Dc(vgs: Dual, vds: Dual, vbs: Dual, t: B3Inst): B3Dc {
   const thetaW = mul(ew, addc(scale(ew, 2), 1));
   const ed = Math.exp((-0.5 * p.dsub * leff) / lt0);
   const thetaDibl = ed * (1 + 2 * ed);
+  // body effect: BSIM3 K1 (sqrt(Phis) - sqrt(Phi)) with the NLX term; BSIM4 K1ox sqrt(Phis) - K1 sqrt(Phi), scaled by
+  // sqrt(1 + LPEB/Leff), plus K1ox (sqrt(1 + LPE0/Leff) - 1) sqrt(Phi) (lateral non-uniform doping), K2ox for the linear term
+  const body = t.b4
+    ? addc(scale(sqrtPhis, t.k1eff * t.lpebF), t.vth0 + t.k1eff * (t.lpe0F - 1) * t.sqrtPhi - t.k1 * t.sqrtPhi * t.lpebF)
+    : addc(scale(sub(sqrtPhis, dconst(t.sqrtPhi)), t.k1), t.vth0 + t.k1 * (Math.sqrt(1 + p.nlx / leff) - 1) * t.sqrtPhi);
   const vth = add(
     add(
-      addc(scale(sub(sqrtPhis, dconst(t.sqrtPhi)), t.k1), t.vth0 + t.k1 * (Math.sqrt(1 + p.nlx / leff) - 1) * t.sqrtPhi),
-      scale(vbseff, -t.k2),
+      body,
+      scale(vbseff, -t.k2eff),
     ),
     add(
       add(scale(addc(scale(vbseff, p.k3b), p.k3), (p.tox * t.phi) / (t.weff + p.w0)), scale(theta0, -p.dvt0 * (t.vbi - t.phi))),
@@ -363,7 +420,7 @@ function bsim3Dc(vgs: Dual, vds: Dual, vbs: Dual, t: B3Inst): B3Dc {
   }
 
   // bulk-charge factor
-  const t1 = div(dconst(0.5 * t.k1), sqrtPhis);
+  const t1 = div(dconst(0.5 * t.k1eff), sqrtPhis);
   const t9 = dsqrt(scale(xdep, p.xj));
   const t5 = div(dconst(leff), addc(scale(t9, 2), leff));
   const bw = div(dconst(p.b0), addc(weffB, p.b1));
@@ -377,7 +434,20 @@ function bsim3Dc(vgs: Dual, vds: Dual, vbs: Dual, t: B3Inst): B3Dc {
   const tox = p.tox;
   let denomU: Dual;
   const vth2 = scale(vthT, 2);
-  if (p.mobmod === 2) {
+  if (t.b4) {
+    // BSIM4 mobMod 0 / 1 / 2 (BSIM4 manual): 1 + (UA + UC Vbs) E + UB E^2 ; 1 + (UA E + UB E^2)(1 + UC Vbs) ; 1 + (UA + UC Vbs) E2^EU
+    const mm = Math.round(p.mobmod);
+    if (mm === 1) {
+      const e = scale(add(vgsteff, vth2), 1 / tox);
+      denomU = addc(mul(add(scale(e, t.ua), scale(mul(e, e), t.ub)), addc(scale(vbseff, t.uc), 1)), 1);
+    } else if (mm === 2) {
+      const e2 = scale(addc(vgsteff, t.vtfbphi1), 1 / tox);
+      denomU = addc(mul(addc(scale(vbseff, t.uc), t.ua), dpow(e2, p.eu)), 1);
+    } else {
+      const e = scale(add(vgsteff, vth2), 1 / tox);
+      denomU = addc(add(mul(addc(scale(vbseff, t.uc), t.ua), e), scale(mul(e, e), t.ub)), 1);
+    }
+  } else if (p.mobmod === 2) {
     const e = scale(vgsteff, 1 / tox);
     denomU = addc(add(mul(addc(scale(vbseff, t.uc), t.ua), e), scale(mul(e, e), t.ub)), 1);
   } else if (p.mobmod === 3) {
@@ -456,9 +526,9 @@ function bsim3Dc(vgs: Dual, vds: Dual, vbs: Dual, t: B3Inst): B3Dc {
 
 /** Intrinsic charges (BSIM3 capMod 0 form) in mode-local coordinates. */
 function bsim3Charges(vgs: Dual, vds: Dual, vbs: Dual, dc: B3Dc, t: B3Inst): B3Charges {
-  const cwl = t.cox * t.weff * t.leff * t.m;
+  const cwl = t.cox * t.weffQ * t.leffQ * t.m;
   if (!(cwl > 0)) return { qg: dconst(0), qd: dconst(0), qb: dconst(0) };
-  const k1 = t.k1;
+  const k1 = t.k1eff;
   const vfb = sub(sub(dc.vth, dc.phis), scale(dc.sqrtPhis, k1));
   const vgb = sub(vgs, dc.vbseff);
   const arg1 = sub(vgb, vfb);
@@ -534,7 +604,11 @@ export class Bsim3 implements Device {
   private card: ModelCard | undefined;
   private readonly inst: Record<string, number>;
   private readonly overrides: Record<string, number> = {};
-  private base: Bsim3Values = { ...BSIM3_DEFAULTS };
+  private base: Bsim3Values = { ...BSIM4_DEFAULTS, ...BSIM3_DEFAULTS };
+  /** BSIM4 flavour (LEVEL 14 / 54): own defaults, aliases and equations where BSIM4 differs */
+  private b4 = false;
+  private defaults: Readonly<Record<string, number>> = BSIM3_DEFAULTS;
+  private aliases: Readonly<Record<string, Bsim3Param>> = ALIASES3;
   private given = new Set<string>();
   private bins: Record<string, { l: number; w: number; p: number }> = {};
   private pol = 1;
@@ -597,9 +671,8 @@ export class Bsim3 implements Device {
       warned.add(m);
       ctx.warn(m);
     };
+    this.useFlavour(card && Number.isFinite(card.params.level) ? Math.round(card.params.level) : 49);
     warnUnknownParams(ctx, card, this.resolve());
-    const lv = Math.round(this.base.level);
-    if (BSIM4_LEVELS.has(lv)) ctx.warn(`${this.name}: BSIM4 model (level ${lv}) evaluated with the BSIM3v3 core equations`);
     this.nD = ctx.node(this.nodeNames[0]);
     this.nG = ctx.node(this.nodeNames[1]);
     this.nS = ctx.node(this.nodeNames[2]);
@@ -612,15 +685,27 @@ export class Bsim3 implements Device {
     this.st = ctx.state(N_STATES);
   }
 
+  /** Choose the BSIM3 or the BSIM4 parameter set from the model level. */
+  private useFlavour(level: number): void {
+    this.b4 = BSIM4_LEVELS.has(level);
+    this.defaults = this.b4 ? BSIM4_DEFAULTS : BSIM3_DEFAULTS;
+    this.aliases = this.b4 ? ALIASES4 : ALIASES3;
+  }
+
+  /** True for a BSIM4 (LEVEL 14 / 54) model card. */
+  get isBsim4(): boolean {
+    return this.b4;
+  }
+
   /** Resolve the card: canonical names, aliases, binning terms; returns unknown keys. */
   private resolve(): string[] {
-    const p: Bsim3Values = { ...BSIM3_DEFAULTS };
+    const p: Bsim3Values = { ...BSIM4_DEFAULTS, ...this.defaults };
     const given = new Set<string>();
     const bins: Record<string, { l: number; w: number; p: number }> = {};
     const unknown: string[] = [];
     const canon = (k: string): Bsim3Param | undefined => {
-      if (Object.prototype.hasOwnProperty.call(BSIM3_DEFAULTS, k)) return k as Bsim3Param;
-      return Object.prototype.hasOwnProperty.call(ALIASES, k) ? ALIASES[k] : undefined;
+      if (Object.prototype.hasOwnProperty.call(this.defaults, k)) return k as Bsim3Param;
+      return Object.prototype.hasOwnProperty.call(this.aliases, k) ? this.aliases[k] : undefined;
     };
     const apply = (src: Readonly<Record<string, number>>, report: boolean) => {
       for (const [key, value] of Object.entries(src)) {
@@ -689,16 +774,28 @@ export class Bsim3 implements Device {
       weff = w;
     }
     const p = {} as Bsim3Values;
-    for (const k of Object.keys(BSIM3_DEFAULTS) as Bsim3Param[]) p[k] = BINNABLE.has(k) ? this.binned(k, leff, weff) : b[k];
+    for (const k of Object.keys(this.defaults) as Bsim3Param[]) p[k] = BINNABLE.has(k) ? this.binned(k, leff, weff) : b[k];
     // unit conventions
     if (p.nch > 1e20) p.nch *= 1e-6;
     if (p.nsub > 1e20) p.nsub *= 1e-6;
-    if (!Number.isFinite(p.u0)) p.u0 = type > 0 ? 670 : 250;
+    if (this.b4) {
+      // BSIM4 defaults that depend on the polarity and on the mobility model
+      if (!Number.isFinite(p.u0)) p.u0 = type > 0 ? 0.067 : 0.025;
+      if (!Number.isFinite(p.eu)) p.eu = type > 0 ? 1.67 : 1;
+      const mm = Math.round(p.mobmod);
+      if (!Number.isFinite(p.ua)) p.ua = mm === 2 ? 1e-15 : 1e-9;
+      if (!Number.isFinite(p.uc)) p.uc = mm === 1 ? -0.0465 : mm === 2 ? -0.0465e-15 : -0.0465e-9;
+      if (!Number.isFinite(p.uc1)) p.uc1 = mm === 1 ? -0.056 : -5.6e-11;
+      if (!(p.tox > 0)) p.tox = 3e-9;
+      if (!(p.toxm > 0)) p.toxm = p.tox;
+    } else {
+      if (!Number.isFinite(p.u0)) p.u0 = type > 0 ? 670 : 250;
+      if (!Number.isFinite(p.uc)) p.uc = p.mobmod === 3 ? -0.0465 : -4.65e-11;
+      if (!Number.isFinite(p.uc1)) p.uc1 = p.mobmod === 3 ? -0.056 : -5.6e-11;
+      if (!(p.tox > 0)) p.tox = 1.5e-8;
+    }
     const u0 = p.u0 > 1 ? p.u0 * 1e-4 : p.u0;
-    if (!Number.isFinite(p.uc)) p.uc = p.mobmod === 3 ? -0.0465 : -4.65e-11;
-    if (!Number.isFinite(p.uc1)) p.uc1 = p.mobmod === 3 ? -0.056 : -5.6e-11;
     if (!Number.isFinite(p.dsub)) p.dsub = p.drout;
-    if (!(p.tox > 0)) p.tox = 1.5e-8;
     const tnom = celsiusToKelvin(Number.isFinite(p.tnom) ? p.tnom : this.tnomDefaultC);
     const cox = EPS_OX / p.tox;
     const vtm0 = K_OVER_Q * tnom;
@@ -750,8 +847,17 @@ export class Bsim3 implements Device {
     const iss = (p.js * as + p.jsw * ps) * satFactor * m;
     const jb = junctionTemperature(p.pb, p.mj, tnom, T_);
     const jsw = junctionTemperature(p.pbsw, p.mjsw, tnom, T_);
-    const cgso = Number.isFinite(p.cgso) ? p.cgso : 0.6 * p.xj * cox;
-    const cgdo = Number.isFinite(p.cgdo) ? p.cgdo : 0.6 * p.xj * cox;
+    // BSIM4: capacitance geometry from DLC / DWC (default LINT / WINT), overlap CGSO = DLC Cox - CGSL when DLC > 0,
+    // fringing CF = 2 eps_ox / pi ln(1 + 4e-7 / TOXE)
+    const dlcV = this.b4 ? (Number.isFinite(p.dlc) ? p.dlc : p.lint) : 0;
+    const dwcV = this.b4 ? (Number.isFinite(p.dwc) ? p.dwc : p.wint) : 0;
+    const leffQ = this.b4 && l - 2 * dlcV > 0 ? l - 2 * dlcV : leff;
+    const weffQ = this.b4 && w - 2 * dwcV > 0 ? w - 2 * dwcV : weff;
+    const overlapDefault = (cgl: number): number => (this.b4 && dlcV > 0 ? Math.max(dlcV * cox - cgl, 0) : 0.6 * p.xj * cox);
+    const cgso = Number.isFinite(p.cgso) ? p.cgso : overlapDefault(p.cgsl);
+    const cgdo = Number.isFinite(p.cgdo) ? p.cgdo : overlapDefault(p.cgdl);
+    const cfV = Number.isFinite(p.cf) ? p.cf : this.b4 ? ((2 * EPS_OX) / Math.PI) * Math.log(1 + 4e-7 / p.tox) : 0;
+    const toxRatio = this.b4 ? p.tox / p.toxm : 1;
     let rd = 0;
     let rs = 0;
     if (p.rsh > 0) {
@@ -795,9 +901,17 @@ export class Bsim3 implements Device {
       depBdSw: depletionCoeffs(p.cjsw * pd * m * jsw.capFactor, jsw.pot, p.mjsw, p.fc),
       depBs: depletionCoeffs(p.cj * as * m * jb.capFactor, jb.pot, p.mj, p.fc),
       depBsSw: depletionCoeffs(p.cjsw * ps * m * jsw.capFactor, jsw.pot, p.mjsw, p.fc),
-      cgso: (cgso + p.cf) * weff * m,
-      cgdo: (cgdo + p.cf) * weff * m,
-      cgbo: p.cgbo * leff * m,
+      cgso: (cgso + cfV) * weffQ * m,
+      cgdo: (cgdo + cfV) * weffQ * m,
+      cgbo: p.cgbo * leffQ * m,
+      b4: this.b4,
+      k1eff: k1 * toxRatio,
+      k2eff: k2 * toxRatio,
+      lpe0F: this.b4 ? Math.sqrt(1 + p.lpe0 / leff) : 1,
+      lpebF: this.b4 ? Math.sqrt(1 + p.lpeb / leff) : 1,
+      vtfbphi1: (type > 0 ? 2 : 2.5) * k1 * toxRatio * sqrtPhi,
+      leffQ,
+      weffQ,
     };
     this.tcache = t;
     return t;
@@ -1110,7 +1224,7 @@ export class Bsim3 implements Device {
       this.tcache = undefined;
       return;
     }
-    const c = Object.prototype.hasOwnProperty.call(BSIM3_DEFAULTS, k) ? k : ALIASES[k];
+    const c = Object.prototype.hasOwnProperty.call(this.defaults, k) ? k : this.aliases[k];
     if (c === undefined) throw runtimeParamError(this.name, param);
     this.overrides[c] = value;
     this.resolve();
@@ -1128,12 +1242,12 @@ export class Bsim3 implements Device {
       if (k === 'm') return 1;
       return undefined;
     }
-    const c = (Object.prototype.hasOwnProperty.call(BSIM3_DEFAULTS, k) ? k : ALIASES[k]) as Bsim3Param | undefined;
+    const c = (Object.prototype.hasOwnProperty.call(this.defaults, k) ? k : this.aliases[k]) as Bsim3Param | undefined;
     return c !== undefined ? this.base[c] : undefined;
   }
 
   /** Channel current and charges at device-polarity voltages (diagnostics / tests). */
-  evaluateAt(vgs: number, vds: number, vbs: number, tempK: number): { id: number; gm: number; gds: number; gmbs: number; vth: number; vdsat: number; qg: number; qd: number; qb: number; cgg: number; cgd: number; cdg: number } {
+  evaluateAt(vgs: number, vds: number, vbs: number, tempK: number): { id: number; gm: number; gds: number; gmbs: number; vth: number; vdsat: number; qg: number; qd: number; qb: number; cgg: number; cgd: number; cdg: number; cgso: number; cgdo: number; cgbo: number } {
     const e = this.evaluate(vgs, vds, vbs, this.temps(tempK), true);
     return {
       id: e.cd.v,
@@ -1148,6 +1262,9 @@ export class Bsim3 implements Device {
       cgg: e.q.qg.g,
       cgd: e.q.qg.d,
       cdg: e.q.qd.g,
+      cgso: this.temps(tempK).cgso,
+      cgdo: this.temps(tempK).cgdo,
+      cgbo: this.temps(tempK).cgbo,
     };
   }
 

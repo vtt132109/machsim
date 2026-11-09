@@ -41,6 +41,8 @@ export interface PlotTrace {
   digital?: boolean;
   /** line width in CSS px (default 1.5) */
   width?: number;
+  /** X-Y trace (postprocessor vs(y, x)): x holds its own horizontal quantity */
+  ownX?: { name: string; unit: string };
 }
 
 export interface PlotPane {
@@ -239,21 +241,35 @@ export function buildPlotData(result: AnalysisResult, opts: BuildPlotOptions = {
         });
       } else {
         const id = `u:${unit}`;
+        // X-Y vectors (postprocessor vs(y, x)) bring their own horizontal values
+        const own = v.xValues && v.xValues.length === v.re.length ? v.xValues : undefined;
         const p = paneIndex.has(id) || panes.filter((q) => q.kind === 'analog').length < 3 ? pane(id, UNIT_TITLES[unit] ?? (unit ? `(${unit})` : t('common.value')), unit, 'analog') : panes.findIndex((q) => q.kind === 'analog');
-        traces.push({ key: keyBase, label, vector: v.name, run: run.label, x, y: v.re, unit, pane: p, color });
+        traces.push({ key: keyBase, label, vector: v.name, run: run.label, x: own ?? x, y: v.re, unit, pane: p, color, ...(own ? { ownX: { name: v.xName ?? '', unit: v.xUnit ?? '' } } : {}) });
       }
     }
   });
   if (!traces.length) return null;
+  // X-Y mode: while a postprocessor vs(y, x) trace exists the plot shows only the X-Y traces (a shared horizontal axis cannot
+  // hold both time and a field strength); removing the expression brings the time plot back
+  if (traces.some((q) => q.ownX) && traces.some((q) => !q.ownX)) {
+    for (let i = traces.length - 1; i >= 0; i--) if (!traces[i].ownX) traces.splice(i, 1);
+    const used = [...new Set(traces.map((q) => q.pane))];
+    const keep = used.map((i) => panes[i]);
+    for (const q of traces) q.pane = used.indexOf(q.pane);
+    panes.length = 0;
+    panes.push(...keep);
+  }
   // Order panes: magnitude, phase, unit panes, digital last.
   const rank = (p: PlotPane) => (p.id.startsWith('mag') ? 0 : p.id === 'phase' ? 1 : p.kind === 'digital' ? 3 : 2);
   const order = panes.map((p, i) => i).sort((a, b) => rank(panes[a]) - rank(panes[b]) || a - b);
   const remap = new Map(order.map((old, i) => [old, i] as const));
   for (const t of traces) t.pane = remap.get(t.pane)!;
+  // every trace has its own horizontal quantity (an X-Y plot): the axis is named after it
+  const xy = traces.every((q) => q.ownX) ? traces[0].ownX : undefined;
   return {
-    xLabel: scaleLabel(firstScale),
-    xUnit: firstScale.unit,
-    xLog: isLogFrequency(result, firstScale),
+    xLabel: xy ? xy.name || t('results.plotModel.xy') : scaleLabel(firstScale),
+    xUnit: xy ? xy.unit : firstScale.unit,
+    xLog: xy ? false : isLogFrequency(result, firstScale),
     panes: order.map((i) => panes[i]),
     traces,
   };

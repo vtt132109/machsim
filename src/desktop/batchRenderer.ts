@@ -5,16 +5,62 @@
  * which only reads / writes the paths named on the command line (and SPICE includes next to the
  * input).
  */
-import { getDesktopBridge } from './bridge';
+import { getDesktopBridge, type MachsimDesktopBridge } from './bridge';
 import { parseCliArgs, ANALYSIS_NAMES, EXIT } from './cli';
 import { runBatch } from './batch';
 import { CLI_TEXT, ct, type CliKey } from '../i18n/cliText';
 import { interpolate, setLang } from '../i18n';
 
+/** `MachSim.exe --script file.js`: the script sandbox (src/script/cli.ts) instead of a batch analysis. */
+async function runScriptFromBridge(bridge: MachsimDesktopBridge, args: string[]): Promise<void> {
+  const { parseScriptArgs, runScriptCli } = await import('../script/cli');
+  const { sx } = await import('../i18n/scriptText');
+  const parsed = parseScriptArgs(args);
+  if (!parsed.ok) {
+    const detail = sx(parsed.error === 'missingScript' ? 'cliNoScript' : 'cliBadArgs', { detail: parsed.detail });
+    bridge.batchDone!(EXIT.usage, '', `${detail}\n\n${sx('cliUsage')}`);
+    return;
+  }
+  if (parsed.help) {
+    bridge.batchDone!(EXIT.ok, sx('cliUsage'), '');
+    return;
+  }
+  const o = parsed.options;
+  setLang(o.lang ?? 'vi');
+  const sim = await import('../sim');
+  const out: string[] = [];
+  const err: string[] = [];
+  const code = await runScriptCli(o, {
+    readFile: async (p) => {
+      const r = await bridge.batchRead!(p);
+      if (r.error !== undefined || r.text === undefined) throw new Error(r.error ?? 'read failed');
+      return r.text;
+    },
+    writeFile: async (p, text) => {
+      const r = await bridge.batchWrite!(p, text);
+      if (r.error !== undefined) throw new Error(r.error);
+    },
+    runNetlist: (n) => sim.runAnalyses(n),
+    log: (line, stream) => (stream === 'out' ? out : err).push(line),
+  });
+  if (o.log) {
+    try {
+      await bridge.batchWrite!(o.log, [...out, ...err].join('\r\n') + '\r\n');
+    } catch {
+      /* the log file is optional */
+    }
+  }
+  bridge.batchDone!(code, out.join('\n'), err.join('\n'));
+}
+
 export async function runBatchFromBridge(): Promise<void> {
   const bridge = getDesktopBridge();
   const job = await bridge?.batchJob?.();
   if (!bridge || !job || !bridge.batchDone) return;
+  if (job.args.some((a) => a === '--script' || a.startsWith('--script='))) {
+    await runScriptFromBridge(bridge, job.args);
+    return;
+  }
   const out: string[] = [];
   const err: string[] = [];
   const log = (line: string, level: 'info' | 'error') => (level === 'error' ? err : out).push(line);

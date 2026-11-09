@@ -63,6 +63,7 @@ export default {
   'results.resultTables.n1stQuartile': ['Tứ phân vị thứ 1', '1st quartile'],
   'results.resultTables.n3rdQuartile': ['Tứ phân vị thứ 3', '3rd quartile'],
   'results.plotModel.digital': ['Số', 'Digital'],
+  'results.plotModel.xy': ['Đại lượng trục ngang', 'Horizontal quantity'],
   'results.plotModel.magnitudeDb': ['Biên độ (dB)', 'Magnitude (dB)'],
   'results.plotModel.phaseDeg': ['Pha (độ)', 'Phase (deg)'],
   'results.plotModel.variable': ['Biến', 'Variable'],

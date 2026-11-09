@@ -10,6 +10,7 @@ import type { HelpEntry } from './help';
 import { BASIC_EXTRA_PART_HELP } from './basicExtrasHelp';
 import { LADDER_PART_HELP } from './ladderHelp';
 import { ELECTRO_PART_HELP } from './electroHelp';
+import { AUTOMATION_PART_HELP } from './automationHelp';
 
 const laplace = (out: 'V' | 'I', ctl: 'V' | 'I'): HelpEntry => ({
   what: L(
@@ -141,3 +142,5 @@ Object.assign(PART_HELP, BASIC_EXTRA_PART_HELP);
 Object.assign(PART_HELP, LADDER_PART_HELP);
 // round-4 sound and electromechanical parts (src/i18n/electroHelp.ts)
 Object.assign(PART_HELP, ELECTRO_PART_HELP);
+// round-4 compact device models and hysteresis cores (src/i18n/automationHelp.ts)
+Object.assign(PART_HELP, AUTOMATION_PART_HELP);

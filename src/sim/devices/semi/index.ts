@@ -24,4 +24,5 @@ export { Jfet, createJfet, JFET_DEFAULTS, JFET_ALIASES } from './jfet';
 export { Mosfet, createMosfet, MOS_DEFAULTS, MOS_ALIASES, DEFAULT_MOS_L, DEFAULT_MOS_W } from './mosfet';
 export { Mesfet, createMesfet, MESFET_DEFAULTS, MESFET_ALIASES } from './mesfet';
 export { Bsim3, createBsim3, BSIM3_DEFAULTS, BSIM3_LEVELS, BSIM4_LEVELS } from './bsim3';
-export { MosDevice, createMosDevice, isBsimLevel } from './mosdevice';
+export { Ekv, createEkv, EKV_DEFAULTS, EKV_LEVELS } from './ekv';
+export { MosDevice, createMosDevice, isBsimLevel, isEkvLevel } from './mosdevice';

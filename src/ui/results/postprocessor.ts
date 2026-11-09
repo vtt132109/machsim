@@ -20,6 +20,7 @@
  *     mean(x)                    -- scalar scale-weighted mean
  *     max(x) min(x)              -- scalar maximum / minimum (real part, magnitude if complex)
  *     max(a,b) min(a,b)          -- element-wise
+ *     vs(y, x)                   -- X-Y plot: y drawn against x instead of the scale (B-H loop: vs(V(L1.b), V(L1.h)))
  *     digital(x, th)             -- logic level 1 where x >= th, else 0 (a digital trace)
  *     digital(x, lo, hi)         -- with hysteresis: 1 above hi, 0 below lo, the previous level between
  *   avg and rms are RUNNING values (average / RMS from the first point up to each point).
@@ -89,6 +90,7 @@ export const POSTPROCESSOR_FUNCTIONS: Record<string, FnDef> = {
   max: { min: 1, max: 2 },
   min: { min: 1, max: 2 },
   digital: { min: 2, max: 3 },
+  vs: { min: 2, max: 2 },
 };
 
 const SHORTHAND: Record<string, string> = { vdb: 'db', vm: 'mag', vp: 'ph', vr: 'real', vi: 'imag' };
@@ -292,6 +294,20 @@ interface Val {
   re: Float64Array;
   im: Float64Array | null;
   unit: VectorUnit;
+  /** vs(y, x): the horizontal values and their name / unit */
+  xs?: { values: Float64Array; name: string; unit: VectorUnit };
+}
+
+/**
+ * Physical unit of the internal nodes of a magnetic core (src/library/catalog/magneticCore.ts): they are
+ * simulator node voltages, but V(<ref>.b) holds the flux density in tesla, V(<ref>.h) and V(<ref>.m) the
+ * field and magnetisation in A/m and V(<ref>.flux) the flux linkage in weber-turns. Undefined for every other vector.
+ */
+export function magneticUnit(name: string): VectorUnit | undefined {
+  const m = /^v\((.+)\.(b|h|m|flux)\)$/i.exec(name.trim());
+  if (!m) return undefined;
+  const k = m[2].toLowerCase();
+  return k === 'b' ? 'T' : k === 'flux' ? 'Wb' : 'A/m';
 }
 
 export interface PostprocessorContext {
@@ -509,7 +525,7 @@ class Evaluator {
   private lookup(name: string, pos: number): Val {
     const key = name.toLowerCase().replace(/\s+/g, '');
     const direct = this.map.get(key);
-    if (direct) return { re: direct.re, im: direct.im ?? null, unit: direct.unit };
+    if (direct) return { re: direct.re, im: direct.im ?? null, unit: magneticUnit(direct.name) ?? direct.unit };
     const s = this.scale;
     if (s && (key === s.name.toLowerCase() || key === 'scale' || key === 'x' || key === 'time' || key === 'frequency')) {
       if (key === 'time' && s.unit !== 's' && s.name.toLowerCase() !== 'time') throw new PostprocessorError(t('results.postprocessor.thisResultHasNoTime'), pos);
@@ -558,8 +574,12 @@ class Evaluator {
       }
       case 'bin':
         return binary(n.op, this.eval(n.a), this.eval(n.b), -1);
-      case 'call':
-        return this.call(n.fn, n.args.map((a) => this.eval(a)), n.pos);
+      case 'call': {
+        const out = this.call(n.fn, n.args.map((a) => this.eval(a)), n.pos);
+        // vs(y, x): remember the name of the x vector for the axis label
+        if (out.xs && n.args[1]?.k === 'ref') out.xs.name = n.args[1].name;
+        return out;
+      }
     }
   }
 
@@ -685,6 +705,14 @@ class Evaluator {
         for (let i = 0; i < vals.length; i++) if (!Number.isNaN(vals[i])) best = pick(best, vals[i]);
         return scalarVal(best, null, x.unit);
       }
+      case 'vs': {
+        // X-Y plot: y drawn against x (a B-H loop is vs(V(L1.b), V(L1.h)))
+        const xv = args[1];
+        requireReal(x, fn, pos);
+        requireReal(xv, fn, pos);
+        if (x.re.length !== xv.re.length || x.re.length < 2) throw new PostprocessorError(t('results.postprocessor.vsLengths'), pos);
+        return { re: x.re, im: null, unit: x.unit, xs: { values: xv.re, name: '', unit: xv.unit } };
+      }
       case 'digital': {
         requireReal(x, fn, pos);
         const lo = args[1].re[0];
@@ -728,6 +756,11 @@ export function evaluateExpression(expr: string | CompiledExpression, ctx: Postp
   const vector: Vector = { name: name ?? compiled.text, unit: val.unit, re };
   if (im) vector.im = im;
   if (compiled.ast.k === 'call' && compiled.ast.fn === 'digital') vector.digital = true;
+  if (val.xs) {
+    vector.xValues = Float64Array.from(val.xs.values);
+    if (val.xs.name) vector.xName = val.xs.name;
+    vector.xUnit = val.xs.unit;
+  }
   return {
     vector,
     scalar,

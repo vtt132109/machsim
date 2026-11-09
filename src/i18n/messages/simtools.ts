@@ -29,6 +29,10 @@ export default {
   'analysis.specs.userHeadline': ['{n} lệnh SPICE: {first}…', '{n} SPICE {n|card|cards}: {first}…'],
   'tip.user.text': ['Mỗi dòng một lệnh SPICE, ví dụ .tran 10u 1m (bước 10 µs, đến 1 ms). Dòng bắt đầu bằng * là chú thích.', 'One SPICE card per line, e.g. .tran 10u 1m (10 µs step, up to 1 ms). Lines starting with * are comments.'],
   'tip.user.snippet': ['Thêm dòng {card} vào cuối', 'Append the line {card}'],
+  'results.postprocessor.bhLoop': ['Đường B–H của {ref}', 'B–H loop of {ref}'],
+  'results.postprocessor.bhLoopTip': ['Vẽ cảm ứng từ B theo từ trường H của lõi {ref} (đồ thị X–Y): diện tích vòng là tổn hao từ trễ', 'Plot the flux density B against the field H of core {ref} (X–Y plot): the loop area is the hysteresis loss'],
+  'results.postprocessor.vsTip': ['vs(y, x): vẽ y theo x thay vì theo thời gian (đồ thị X–Y)', 'vs(y, x): plot y against x instead of against time (X–Y plot)'],
+  'results.postprocessor.vsLengths': ['vs(y, x): y và x phải là hai vector cùng độ dài (từ cùng một kết quả)', 'vs(y, x): y and x must be vectors of the same length (from the same result)'],
   'results.postprocessor.digitalThresholds': ['digital(x, mức thấp, mức cao): ngưỡng phải là số và mức cao không nhỏ hơn mức thấp', 'digital(x, low, high): thresholds must be numbers with high >= low'],
   // Grapher workspace
   'grapher.runN': ['Lần {n}', 'Run {n}'],

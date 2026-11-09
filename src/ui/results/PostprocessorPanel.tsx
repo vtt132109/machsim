@@ -16,7 +16,18 @@ export interface PostprocessorPanelProps {
   onRemove: (index: number) => void;
 }
 
-const FUNCTION_BUTTONS = ['db', 'mag', 'ph', 'real', 'imag', 'deriv', 'integ', 'avg', 'rms', 'max', 'min', 'abs', 'sqrt', 'log10', 'sin', 'cos'];
+const FUNCTION_BUTTONS = ['db', 'mag', 'ph', 'real', 'imag', 'deriv', 'integ', 'avg', 'rms', 'max', 'min', 'abs', 'sqrt', 'log10', 'sin', 'cos', 'vs'];
+
+/** Magnetic cores in the result: the references R whose nodes V(R.b) and V(R.h) exist (Jiles–Atherton cores). */
+export function bhCores(names: readonly string[]): string[] {
+  const lower = new Set(names.map((n) => n.toLowerCase()));
+  const out: string[] = [];
+  for (const n of names) {
+    const m = /^v\((.+)\.b\)$/i.exec(n);
+    if (m && lower.has(`v(${m[1].toLowerCase()}.h)`)) out.push(m[1]);
+  }
+  return out;
+}
 const OPERATOR_BUTTONS = ['+', '-', '*', '/', '^', '(', ')'];
 
 export function PostprocessorPanel({ names, expressions, onAdd, onRemove }: PostprocessorPanelProps) {
@@ -77,6 +88,11 @@ export function PostprocessorPanel({ names, expressions, onAdd, onRemove }: Post
           {FUNCTION_BUTTONS.map((f) => (
             <button key={f} type="button" className="msr-chip" onClick={() => insert(`${f}()`, 1)}>
               {f}()
+            </button>
+          ))}
+          {bhCores(names).map((ref) => (
+            <button key={`bh-${ref}`} type="button" className="msr-chip msr-chip-op" title={t('results.postprocessor.bhLoopTip', { ref })} onClick={() => onAdd(`vs(V(${ref}.b), V(${ref}.h))`)}>
+              {t('results.postprocessor.bhLoop', { ref })}
             </button>
           ))}
           {OPERATOR_BUTTONS.map((op) => (

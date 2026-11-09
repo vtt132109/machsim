@@ -35,6 +35,7 @@ export const GrapherWindow = lazyComponent(() => import('./GrapherWindow').then(
 export const McuPanel = lazyComponent(() => import('../mcu/McuPanel').then((m) => m.McuPanel));
 /** The Audio window (Simulate › Audio) loads on first use. */
 export const AudioPanel = lazyComponent(() => import('./AudioPanel').then((m) => m.AudioPanel));
+export const ScriptPanel = lazyComponent(() => import('../script/ScriptPanel').then((m) => m.ScriptPanel));
 
 // ---------------------------------------------------------------------------
 // Simulation tab

@@ -21,6 +21,8 @@ có lỗi đã tái hiện), **missing** (không có), **n/a** (ngoài phạm vi
 
 Đường dẫn tính từ `machsim/`.
 
+Vòng 4 bước 8 (tự động hoá và mô hình linh kiện): Công cụ › Tập lệnh và `--script`, EKV 2.6, lớp BSIM4, lõi từ trễ Jiles–Atherton với dòng xoáy và đồ thị X–Y trong Grapher; nhóm 12 và các hàng liên quan ở nhóm 4 và 7 đã cập nhật, bảng tóm tắt tính lại từ các hàng (223 mục).
+
 ## Tóm tắt
 
 | Nhóm | implemented | partial | missing | n/a |
@@ -28,18 +30,18 @@ có lỗi đã tái hiện), **missing** (không có), **n/a** (ngoài phạm vi
 | 1. Project / document | 18 | 2 | 0 | 0 |
 | 2. Schematic editing | 30 | 1 | 0 | 0 |
 | 3. Component library & editing | 28 | 4 | 0 | 1 |
-| 4. Simulation core | 19 | 0 | 0 | 0 |
+| 4. Simulation core | 21 | 0 | 0 | 0 |
 | 5. Analyses | 26 | 0 | 0 | 0 |
 | 6. Instruments | 20 | 0 | 0 | 2 |
-| 7. Results / postprocessing | 8 | 1 | 0 | 0 |
+| 7. Results / postprocessing | 9 | 1 | 0 | 0 |
 | 8. Engineering tools / wizards | 9 | 1 | 0 | 1 |
 | 9. File interop | 8 | 2 | 4 | 0 |
 | 10. Reports | 9 | 0 | 0 | 0 |
 | 11. PCB transfer | 3 | 1 | 0 | 1 |
-| 12. Automation | 1 | 1 | 2 | 1 |
+| 12. Automation | 3 | 1 | 0 | 1 |
 | 13. Education | 9 | 4 | 0 | 0 |
 | 14. Hardware | 0 | 0 | 0 | 3 |
-| **Tổng (220 mục)** | **188** | **17** | **6** | **9** |
+| **Tổng (223 mục)** | **193** | **17** | **4** | **9** |
 
 Điểm mạnh: lõi mô phỏng (MOSFET level 2, BSIM3, đường truyền tổn hao LTRA, LAPLACE), đủ 20 analysis của Multisim (kể cả User-defined) với giá trị mặc định chạy được ngay, Grapher nhiều trang có lịch sử, 19 thiết bị ảo (kể cả 4 thiết bị để bàn), mô phỏng
 interactive, breadboard 3D, desktop app có dòng lệnh, giao diện tiếng Việt, 32 bài học tự kiểm tra trong 6 cấp kèm trình tự soạn bài học, chế độ người mới, vi điều khiển 8051 mô phỏng cùng mạch kèm trình dịch hợp ngữ, sơ đồ bậc thang (PLC) với mô hình cơ điện tử, công cụ sơ đồ chuyên nghiệp (ma trận loại chân ERC, dấu NC, cài đặt net, ký hiệu nhiều phân đoạn, danh mục chân vỏ, tuỳ biến phím tắt). Lỗi F1–F5, các lỗi review vòng 1–2 và toàn bộ 15 lỗi vòng 3 (R3-1 … R3-12, C3-1 … C3-3) đã được sửa. Điểm yếu còn lại: quy mô thư viện (4 738 so với
@@ -212,7 +214,9 @@ R3-x: review đúng đắn vòng 3. C3-x: review hoàn chỉnh vòng 3. Tất c�
 | AC small-signal | implemented | `src/sim/engine/ac.ts` | |
 | Phần tử tuyến tính R C L K V I E F G H S W T | implemented | `src/sim/devices/linear/*` | |
 | Diode SPICE3, BJT Gummel-Poon, JFET level 1, MESFET Statz | implemented | `src/sim/devices/semi/*` | |
-| MOSFET | implemented | `src/sim/devices/semi/mosfet.ts`, `mos2.ts`, `mos3.ts`, `bsim3.ts`, `mosdevice.ts` | Level 1, 2 (Grove-Frohman), 3 và BSIM3v3 (LEVEL 7/8/49/53: lõi DC, binning, nhiệt độ, mô hình điện tích capMod 0, XPART). BSIM4 (LEVEL 14/54) chạy bằng lõi BSIM3 kèm cảnh báo; không có EKV, dòng đế, GIDL, NQS. |
+| MOSFET | implemented | `src/sim/devices/semi/mosfet.ts`, `mos2.ts`, `mos3.ts`, `bsim3.ts`, `mosdevice.ts` | Level 1, 2 (Grove-Frohman), 3 và BSIM3v3 (LEVEL 7/8/49/53: lõi DC, binning, nhiệt độ, mô hình điện tích capMod 0, XPART). BSIM4-class (LEVEL 14/54, vòng 4 bước 8): lõi BSIM3 với bộ tham số BSIM4 (mặc định BSIM4.8, TOXE/TOXM/NDEP), ba công thức độ linh động mobMod 0/1/2, pha tạp ngang LPE0/LPEB, hệ số K1ox/K2ox theo TOXE/TOXM, hình học tụ DLC/DWC, CGSO/CGDO/CF mặc định theo BSIM4; **chưa có** GIDL, dòng đế (ALPHA0/BETA0), dòng cổng, DVTP0/FPROUT/PDITS, RGATEMOD/RBODYMOD, capMod 2 đầy đủ, NQS. EKV 2.6 (LEVEL 44) có dòng riêng bên dưới. |
+| EKV 2.6 (LEVEL 44) | implemented | `src/sim/devices/semi/ekv.ts`, `mosdevice.ts`, `src/library/catalog/compactMos.ts` | MOSFET dựa trên điện tích, một công thức liền mạch từ nghịch đảo yếu đến mạnh, đối xứng nguồn–máng, hệ số nghịch đảo `IC(M1)`; suy giảm độ linh động, bão hoà vận tốc, điều biến độ dài kênh (dạng đơn giản hoá, ghi trong mã), điện tích dạng đóng, nhiệt độ, nhiễu. Kiểm bằng giá trị tính từ chính công thức (giới hạn yếu / mạnh, đối xứng, điện tích, Jacobian, cổng đảo CMOS). Chưa có WETA/LETA/Q0/LK, ion hoá va chạm, NQS. |
+| Lõi từ có trễ Jiles–Atherton + tổn hao dòng xoáy, đồ thị B–H | implemented | `src/library/catalog/magneticCore.ts`, `src/ui/results/postprocessor.ts` (`vs`), `PostprocessorPanel.tsx` | Cuộn cảm lõi từ trễ (thép silic, ferrite, từ cứng) và biến áp lõi từ trễ: phương trình Jiles–Atherton dạng lưới điện điều khiển bằng từ thông, dòng xoáy cổ điển là điện dẫn l·d²/(12ρN²A); nút “Đường B–H” trong Grapher. Kiểm với bộ tích phân RK4 độc lập của cùng phương trình (B lệch < 1,5 % đỉnh), điện cảm AC ban đầu theo công thức, giới hạn k → 0, công thức tổn hao xoáy. Bộ ferrite / từ cứng chỉ minh hoạ bậc độ lớn. |
 | Nguồn hành vi B, POLY, VALUE, TABLE, .func | implemented | `src/sim/devices/behavioral.ts`, `src/sim/spice/expr.ts`, `elements.ts`, `src/sim/spice/laplace.ts`, `chebyshev.ts`, `src/sim/devices/linear/laplace.ts`, `freqTable.ts` | Nguồn E / G LAPLACE (hàm hữu tỉ của s, đầu vào V(a), V(a,b)), FREQ (bảng f / dB / độ, MAG / RAD / R_I, DELAY; AC nội suy chính xác theo log f, quá độ tích chập với đáp ứng xung tính bằng IFFT, chỉ giữ phần nhân quả), CHEBYSHEV LP / HP / BP / BR (thiết kế Chebyshev loại I bậc nhỏ nhất, thành chuỗi khâu LAPLACE bậc ≤ 2). LTspice Rser= / Lser= / Rpar= / Cpar= trên V / C / L thành phần tử thật (`splitParasitics`). Test: `dialect.test.ts`. |
 | Subcircuit + tham số (.subckt PARAMS, .param) | implemented | `src/sim/spice/flatten.ts`, `params.ts` | |
 | Digital / mixed-signal kiểu XSPICE | implemented | `src/sim/devices/digital/*`, `src/library/parts/digital/kit.ts` | Thêm cài đặt mô phỏng số (Mô phỏng › Cài đặt mô phỏng số): chế độ tự động / lý tưởng / thực tế (bắt buộc có nguồn, ERC `digitalNoPower`) và trễ điển hình / lớn nhất / bằng 0 (`Design.digital`). |
@@ -290,6 +294,7 @@ R3-x: review đúng đắn vòng 3. C3-x: review hoàn chỉnh vòng 3. Tất c�
 |---|---|---|---|
 | Grapher: tab theo analysis, họ đường cong, 2 cursor, zoom/pan, log, dB/pha, kênh digital, CSV/PNG, bảng OP/TF/sens/PZ/Fourier/WC/MC | implemented | `src/ui/results/Grapher.tsx`, `plotModel.ts`, `ResultTables.tsx` | Hiển thị đủ 19 loại kết quả (capabilities.test.ts). |
 | Xuất bảng kết quả CSV | implemented | `src/ui/results/Grapher.tsx`, `canvas.ts` | |
+| Đồ thị X–Y (`vs(y, x)`, nút “Đường B–H”) | implemented | `src/ui/results/postprocessor.ts`, `plotModel.ts` (`PlotTrace.ownX`), `PostprocessorPanel.tsx`, `src/sim/results.ts` (`Vector.xValues`) | Vẽ một vector theo một vector khác thay vì theo thời gian / tần số (đường B–H, Lissajous, đặc tuyến I–V từ quá độ); trục ngang đặt tên theo đại lượng. |
 | Postprocessor (biểu thức vector: db, ph, deriv, integ, rms, avg, max/min…) | implemented | `src/ui/results/postprocessor.ts`, `PostprocessorPanel.tsx`, `history.ts` `crossPageResolver` | Tham chiếu trang khác `tran1.V(out)` qua mọi lần chạy / phân tích (lấy mẫu lại theo trục), `digital(x, ngưỡng[, ngưỡng cao])`. |
 | Đo tự động .meas / .measure (TRAN / AC / DC / OP / TF / nhiễu) | implemented | `src/sim/spice/measure.ts`, `src/sim/analyses/meas.ts`, `src/ui/results/plotModel.ts` `resultTables`, `src/desktop/batch.ts` | FIND … AT / WHEN, WHEN, DERIV, TRIG / TARG (VAL= hoặc expr=, RISE / FALL / CROSS = n / LAST, TD), AVG / RMS / MIN / MAX / PP / INTEG với FROM / TO (hoặc TRIG / TARG làm khoảng), PARAM; AC tính số phức (vdb, vm, vp, vr, vi, idb, ip). Kết quả: `AnalysisResult.measurements`, bảng "Phép đo (.meas)" dưới đồ thị Grapher, bảng theo từng lần chạy của `.step`, dòng log và bảng / trường `measurements` của chế độ dòng lệnh. Dùng trong netlist SPICE, văn bản SPICE riêng của thiết kế hoặc phân tích Tự định nghĩa. `.step param` (list / lin / dec / oct) = `paramsweep` với `global: true`, đánh giá lại netlist trước khi phẳng hoá cho mỗi giá trị. Trong AC, **mọi** phasor được đo bằng độ lớn (kể cả khi phần ảo đúng bằng 0, ví dụ tầng đảo có hệ số −10 đo ra 10); các lượng vốn là số thực (vdb, vp, re, im, phép so sánh, hàm thực) giữ dấu — `CVec.real` phân biệt hai loại (R3-9 đã sửa). Các phép đo theo khoảng lấy mẫu theo x tăng, nên đúng cả khi quét DC chạy xuống (`.dc V1 5 0 -0.5`, R3-10 đã sửa). Vòng 4 bước 3: `.meas OP` / `.meas TF` (một điểm: `FIND <biểu thức>`, `PARAM`; tên `gain`, `rin`, `rout` dùng được) và `.meas NOISE` (đo như quét tần số, nội suy log f; `FIND onoise_spectrum AT=`, `INTEG onoise_psd FROM= TO=` = công suất nhiễu ra, `PARAM onoise_total`). Test: `dialect.test.ts`, `batch.test.ts`, `tests/review/round3/meas-results.test.ts`, `src/sim/analyses/measSingle.test.ts` (so với phân áp 1 k / 3 k và nhiễu nhiệt 4kT·R). |
 | Trang/lịch sử Grapher qua nhiều lần chạy, overlay, dialog thuộc tính trục/trace/page, in | implemented | `src/ui/results/history.ts`, `GrapherWorkspace.tsx`, `src/ui/integration/GrapherWindow.tsx` | 20 lần chạy gần nhất, trang theo lần chạy, nhân bản / xoá trang, vẽ chồng, thuộc tính trang / trục / đường, bảng con trỏ cho mọi đường, In. |
@@ -361,11 +366,11 @@ R3-x: review đúng đắn vòng 3. C3-x: review hoàn chỉnh vòng 3. Tất c�
 
 | Năng lực Multisim | Trạng thái | MachSim (file) | Ghi chú |
 |---|---|---|---|
-| API lập trình nội bộ (DesignBuilder, runAnalyses, parseSpice) | partial | `src/model/designkit.ts`, `src/sim/index.ts`, `src/sim/spice/index.ts` | Chỉ dùng từ mã/test, người dùng không truy cập. |
-| COM automation (MultisimApp / MultisimCircuit) | missing | — | |
+| API lập trình nội bộ (DesignBuilder, runAnalyses, parseSpice) | implemented | `src/model/designkit.ts`, `src/sim/index.ts`, `src/sim/spice/index.ts` | Chỉ dùng từ mã/test, người dùng không truy cập. | **Vòng 4 bước 8**: người dùng truy cập qua Công cụ › Tập lệnh và `MachSim.exe --script` (hàng “Scripting”).
+| COM automation (MultisimApp / MultisimCircuit) | partial | `src/script/*` | Không có máy chủ COM / OLE. Việc COM làm được (dựng mạch, đặt giá trị, chạy phân tích, đọc kết quả, vòng lặp) làm được bằng tập lệnh JavaScript và `--script`; chương trình ngoài (Excel, Python, MATLAB) gọi `MachSim.exe --script` hoặc `--batch` qua dòng lệnh. |
 | LabVIEW co-simulation, VI làm nguồn/instrument | n/a | — | Cần LabVIEW của NI: ngoài phạm vi có chủ đích. |
 | Dòng lệnh / batch (kiểu XSPICE command line) | implemented | `src/desktop/cli.ts`, `batch.ts`, `batchRenderer.ts`, `desktop/main.cjs` | `MachSim.exe --batch tệp.msim|tệp.cir --analysis … --out kết quả.csv|.txt|.json`, `--set`, `--tstop`, `--netlist`, `--erc`, `--log`; mã thoát 0 / 1 / 2 / 3; hướng dẫn trong Trợ giúp. |
-| Scripting | missing | — | |
+| Scripting (JavaScript trong hộp cát; Công cụ › Tập lệnh; `MachSim.exe --script`) | implemented | `src/script/` (`protocol.ts`, `workerProgram.ts`, `runner.ts`, `session.ts`, `cli.ts`, `plotSvg.ts`), `src/ui/script/ScriptPanel.tsx`, `src/i18n/scriptText.ts`, `desktop/main.cjs`, `src/desktop/batchRenderer.ts` | Tập lệnh chạy trong Web Worker (không DOM, mạng, kho lưu trữ; các tên toàn cục nguy hiểm bị gỡ), gọi API `MachSim.*` bất đồng bộ: dựng / mở / lưu thiết kế, tìm linh kiện, đặt linh kiện, nối bằng chân hoặc tên nút, đặt giá trị / tham số / biến, ERC, netlist, chạy mọi phân tích (kể cả `runSpice`), đọc kết quả (`get`, `at`, `max`, `rms`, `crossing`, `bandwidth`, CSV), vẽ đồ thị SVG, vòng lặp `MachSim.sweep`. Mọi mở / lưu tệp phải qua thẻ xin phép trong cửa sổ (hoặc chỉ các tệp nêu trên dòng lệnh); nút Dừng kết thúc cả vòng lặp vô hạn; quá 10 phút tự dừng. Có hướng dẫn tiếng Việt / Anh, 5 ví dụ chạy được (kể cả “quét R1 và vẽ độ lợi”). Mã thoát 0 / 1 / 2 / 3. Chưa có: gỡ lỗi từng dòng, tự hoàn thành mã, bố trí tự động, API cho thiết bị đo ảo và vi điều khiển. |
 
 ## 13. Education
 
@@ -412,10 +417,10 @@ R3-x: review đúng đắn vòng 3. C3-x: review hoàn chỉnh vòng 3. Tất c�
 
 **P2 — hoàn thiện**
 1. Nhập KiCad: bus, trang con, KiCad 5; nhập thư viện ký hiệu (.kicad_sym / .oecl); TDMS nhị phân.
-2. BSIM4 / EKV riêng; lõi từ có trễ B-H và tổn hao xoáy.
+2. ~~BSIM4 / EKV riêng; lõi từ có trễ B-H và tổn hao xoáy~~ — đã làm ở vòng 4 bước 8 (EKV 2.6, lớp BSIM4, Jiles–Atherton + dòng xoáy + đường B–H). Còn lại cho BSIM4: GIDL, dòng đế, dòng cổng, capMod 2 đầy đủ.
 3. (đã xong ở vòng 4: màu net tự áp cho dây mới; vòng 4 bước 2: Order, Lớp hiển thị, Dán đặc biệt, Reference Designator Prefix Setup.)
 4. Footprint để chế tạo (lớp, mặt nạ hàn, 3D); ma trận loại chân cho chân ba trạng thái / cực thu hở của thư viện 74xx.
-5. API script / COM automation (hiện chỉ có dòng lệnh `--batch`).
+5. ~~API script / COM automation~~ — đã làm ở vòng 4 bước 8: tập lệnh JavaScript trong hộp cát (Công cụ › Tập lệnh) và `MachSim.exe --script`. Không có máy chủ COM / OLE.
 
 **P3 — ngoài lõi**
 1. Nhập file Multisim (.ms14…) — chỉ khi có fixture tự tạo và round-trip được (định dạng đóng).

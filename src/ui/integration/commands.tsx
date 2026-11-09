@@ -139,6 +139,10 @@ export function registerIntegrationCommands(ctrl: SimulationIntegration): () => 
       // the Audio window (master volume, level, microphone state) loads on first use
       openFloatingWindow('audio', {});
     }),
+    registerCommand('tools.script', () => {
+      // the Scripts window (editor, sandbox runner, API reference) loads on first use
+      openFloatingWindow('script', {});
+    }),
     registerCommand('tools.pldWizard', async () => {
       const { PldWizard } = await import('../mcu/PldWizard');
       openCustomDialog((close) => <PldWizard close={close} />);

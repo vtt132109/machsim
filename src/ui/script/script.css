@@ -1,0 +1,41 @@
+/* The Scripts window (Tools > Scripts). Uses the shared theme tokens (src/ui/theme.css). */
+.msx-script { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; height: 100%; min-height: 0; box-sizing: border-box; font-size: var(--font-size-small, 13px); }
+.msx-script .msx-dim { color: var(--text-dim); }
+.msx-script-intro { margin: 0; line-height: 1.45; color: var(--text-dim); }
+.msx-script-main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 10px; flex: 1; min-height: 0; }
+.msx-script-left { display: flex; flex-direction: column; gap: 6px; min-width: 0; min-height: 0; }
+.msx-script-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.msx-script-btn, .msx-script-select { font: inherit; padding: 4px 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); color: var(--text); cursor: pointer; }
+.msx-script-btn:hover:not(:disabled) { background: var(--panel-2); }
+.msx-script-btn:disabled { opacity: 0.5; cursor: default; }
+.msx-script-btn.is-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.msx-script-btn.is-primary:hover:not(:disabled) { filter: brightness(1.08); background: var(--accent); }
+.msx-script-editor { flex: 1 1 45%; min-height: 120px; resize: none; font-family: var(--mono); font-size: 13px; line-height: 1.45; tab-size: 2; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); color: var(--text); white-space: pre; overflow: auto; }
+.msx-script-ask { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border: 1px solid var(--warn); border-left-width: 5px; border-radius: var(--radius); background: var(--accent-weak); }
+.msx-script-ask small { color: var(--text-dim); }
+.msx-script-ask-buttons { display: flex; gap: 6px; margin-top: 2px; }
+.msx-script-tabs { display: flex; align-items: center; gap: 2px; border-bottom: 1px solid var(--border); }
+.msx-script-tabs button[role='tab'] { font: inherit; padding: 4px 12px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-dim); cursor: pointer; }
+.msx-script-tabs button[role='tab'].is-active { color: var(--text); border-bottom-color: var(--accent); }
+.msx-script-spacer { flex: 1; }
+.msx-script-link { font: inherit; border: 0; background: transparent; color: var(--accent); cursor: pointer; padding: 0 4px; text-decoration: underline; }
+.msx-script-link:disabled { opacity: 0.4; cursor: default; }
+.msx-script-log, .msx-script-plots { flex: 1 1 35%; min-height: 80px; overflow: auto; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); font-family: var(--mono); font-size: 12.5px; }
+.msx-script-line { white-space: pre-wrap; word-break: break-word; padding: 1px 0; }
+.msx-script-line.is-warn { color: var(--warn); }
+.msx-script-line.is-error { color: var(--danger); }
+.msx-script-line.is-status { color: var(--text-dim); font-style: italic; }
+.msx-script-line.is-ok { color: var(--ok); }
+.msx-script-plots { display: flex; flex-wrap: wrap; gap: 10px; font-family: var(--font); }
+.msx-script-plot { margin: 0; max-width: 100%; }
+.msx-script-plot img { max-width: 100%; height: auto; border: 1px solid var(--border); background: #fff; }
+.msx-script-api { display: flex; flex-direction: column; gap: 4px; overflow: auto; padding-right: 4px; min-height: 0; }
+.msx-script-api h3 { margin: 0; font-size: 14px; }
+.msx-script-api h4 { margin: 8px 0 2px; font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.msx-script-api p { margin: 0; line-height: 1.4; }
+.msx-script-search { font: inherit; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); color: var(--text); }
+.msx-script-doc { display: flex; flex-direction: column; gap: 2px; text-align: left; font: inherit; padding: 4px 6px; border: 1px solid transparent; border-radius: var(--radius); background: transparent; color: var(--text); cursor: pointer; }
+.msx-script-doc:hover { background: var(--panel-2); border-color: var(--border); }
+.msx-script-doc code { font-family: var(--mono); font-size: 12px; color: var(--accent); word-break: break-word; }
+.msx-script-doc span { color: var(--text-dim); line-height: 1.35; }
+@media (max-width: 760px) { .msx-script-main { grid-template-columns: minmax(0, 1fr); } .msx-script-api { max-height: 40%; } }

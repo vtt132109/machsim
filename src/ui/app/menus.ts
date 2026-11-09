@@ -369,6 +369,7 @@ export function buildMenus(ctx: MenuContext): TopMenu[] {
       items: [item('tools.exportLibraryProfile'), item('tools.importLibraryProfile')],
     },
     item('tools.updateComponents'),
+    item('tools.script'),
     SEP,
     item('tools.variants'),
     { type: 'submenu', id: 'menu.activeVariant', label: t('menu.activeVariant'), items: variantItems },

@@ -1,0 +1,117 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "B-H loop of an iron core (Jiles-Atherton hysteresis)",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 120,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "4.712",
+            "freq": "50",
+            "phase": "90"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/inductor-hysteresis",
+          "refdes": "L1",
+          "x": 360,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "turns": "100",
+            "area": "100",
+            "length": "100",
+            "rser": "0"
+          }
+        },
+        {
+          "id": "p7",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 120,
+          "y": 330,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 120,
+          "y": 190,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l3",
+          "x": 120,
+          "y": 250,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l5",
+          "x": 330,
+          "y": 220,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 390,
+          "y": 220,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 60,
+          "y": 400,
+          "text": "V1 bắt đầu từ đỉnh (pha 90°) nên từ thông đối xứng ±1,5 T/(100 vòng·1 cm²). Đổi “Hệ số ghim k” của L1 (400 A/m) để thấy vòng rộng ra hoặc hẹp lại; k = 0 là không có từ trễ.",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet1",
+          "x": 60,
+          "y": 420,
+          "text": "Đổi “Bề dày lá thép” (350 µm) để thấy tổn hao dòng xoáy: dòng điện tăng thêm đúng bằng V·G với G = l·d²/(12·ρ·N²·A). Thử mẫu lõi ferrite và lõi từ cứng trong nhóm Cơ bản.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.00002,
+        "tstop": 0.06,
+        "tmax": 0.00002
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Cuộn dây 100 vòng quấn trên lõi thép silic (1 cm², đường sức dài 10 cm) có mô hình từ trễ Jiles–Atherton và tổn hao dòng xoáy. Nguồn sin 50 Hz đặt thẳng lên cuộn, đỉnh 4,71 V, nên từ thông là tích phân của điện áp và cảm ứng từ đỉnh là 1,5 T. Chạy phân tích quá độ rồi mở Grapher › Bộ xử lý sau › “Đường B–H của L1”: vòng trễ có từ trường kháng cỡ 300 A/m; diện tích vòng nhân tần số là tổn hao từ trễ. A 100-turn winding on a silicon-steel core (1 cm², 10 cm path) with the Jiles–Atherton hysteresis model and eddy-current loss. A 50 Hz sine source sits directly across the winding, peak 4.71 V, so the flux is the integral of the voltage and the peak flux density is 1.5 T. Run the transient, then open Grapher › Postprocessor › “B–H loop of L1”: the loop has a coercive field of about 300 A/m; the loop area times the frequency is the hysteresis loss."
+}
