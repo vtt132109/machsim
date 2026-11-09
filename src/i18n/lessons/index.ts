@@ -18,6 +18,8 @@ import { DIGITAL_TEXT } from './digital';
 import { MCU_TEXT } from './mcu';
 import { LADDER_LESSON_TEXT } from './ladder';
 import { ROUND3_TEXT } from './round3';
+import { ROUND4_NOTES, ROUND4_TEXT } from './round4';
+import { ROUND4B_NOTES, ROUND4B_TEXT } from './round4b';
 
 export interface LessonStepText {
   task: LocalizedText;
@@ -39,7 +41,7 @@ export interface LessonText {
   quiz: Record<string, QuizText>;
 }
 
-export const LESSON_TEXT: Record<string, LessonText> = { ...BASICS_TEXT, ...SEMIS_TEXT, ...AMPS_TEXT, ...DIGITAL_TEXT, ...MCU_TEXT, ...LADDER_LESSON_TEXT, ...ROUND3_TEXT };
+export const LESSON_TEXT: Record<string, LessonText> = { ...BASICS_TEXT, ...SEMIS_TEXT, ...AMPS_TEXT, ...DIGITAL_TEXT, ...MCU_TEXT, ...LADDER_LESSON_TEXT, ...ROUND3_TEXT, ...ROUND4_TEXT, ...ROUND4B_TEXT };
 
 export const LEVELS: Record<LessonLevel, LocalizedText> = {
   basics: L('Mạch điện cơ bản', 'Circuit basics'),
@@ -364,6 +366,9 @@ export const NOTES: Record<string, LocalizedText> = {
   dacRef: L('DAC phải dùng cùng điện áp chuẩn VREF+ với ADC.', 'The DAC must use the same VREF+ as the ADC.'),
   backOk: L('DAC cho lại {value}, sai khác không quá 1 LSB ({lsb}).', 'The DAC gives back {value}, within 1 LSB ({lsb}).'),
   backWrong: L('DAC cho {value}, trong khi Vin = {vin}.', 'The DAC gives {value} while Vin = {vin}.'),
+  // round-4 lessons (src/i18n/lessons/round4.ts, round4b.ts)
+  ...ROUND4_NOTES,
+  ...ROUND4B_NOTES,
 };
 
 /** Text of a feedback id ("okValue" or "note:<key>"); undefined for an unknown id. */

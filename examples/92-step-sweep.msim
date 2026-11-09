@@ -1,0 +1,133 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Parameter sweep of a schematic with a .step card",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 80,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "1",
+            "freq": "1k"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 260,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "{Rx}"
+          }
+        },
+        {
+          "id": "p7",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 400,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "100n"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 80,
+          "y": 220,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l3",
+          "x": 80,
+          "y": 280,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l5",
+          "x": 230,
+          "y": 160,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 290,
+          "y": 160,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 370,
+          "y": 250,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 430,
+          "y": 250,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 60,
+          "y": 350,
+          "text": "fc = 1/(2π·Rx·C1): Rx = 1k → 1,59 kHz; 2,2k → 723 Hz; 4,7k → 339 Hz. Đường cong có R lớn hơn nằm bên trái.",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet1",
+          "x": 60,
+          "y": 370,
+          "text": "Chọn phân tích AC rồi Chạy: Máy vẽ hiện ba đường, chú giải ghi Rx=1000, Rx=2200, Rx=4700. Cũng làm được bằng Mô phỏng › Thiết lập phân tích › Quét tham số, chọn “Tham số toàn cục (biến)”.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "ac",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "ac": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 40,
+        "fstart": 10,
+        "fstop": 100000
+      }
+    }
+  },
+  "options": {},
+  "variables": {
+    "Rx": "1k"
+  },
+  "description": "Bộ lọc RC có điện trở R1 = {Rx}, với Rx là tham số toàn cục của mạch (bảng Thuộc tính của mạch, mục Tham số toàn cục). Dòng “.step param Rx list 1k 2.2k 4.7k” trong ô SPICE của mạch làm phân tích AC chạy ba lần, mỗi lần một giá trị Rx, và vẽ ba đường chồng lên nhau: fc ≈ 1,59 kHz, 723 Hz và 339 Hz. An RC filter with R1 = {Rx}, where Rx is a global parameter of the circuit (the circuit Properties panel, under Global parameters). The line \".step param Rx list 1k 2.2k 4.7k\" in the circuit's SPICE box makes the AC analysis run three times, once per Rx, and draws the three curves on top of each other: fc ≈ 1.59 kHz, 723 Hz and 339 Hz.",
+  "customSpice": ".step param Rx list 1k 2.2k 4.7k"
+}

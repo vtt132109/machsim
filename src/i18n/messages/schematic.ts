@@ -148,7 +148,7 @@ export default {
   'schematic.prop.saveBlockTip': ['Lưu mạch bên trong khối thành một file .msim riêng', 'Save the circuit inside the block as its own .msim file'],
   'schematic.prop.parameters': ['Tham số của khối (giá trị mặc định)', 'Block parameters (defaults)'],
   'schematic.prop.parametersPlaceholder': ['gain = 10', 'gain = 10'],
-  'schematic.prop.parametersHint': ['Mỗi dòng một “tên = giá trị”. Bên trong khối dùng {gain} (tên tham số trong ngoặc nhọn) làm giá trị linh kiện; mỗi bản đặt có thể đổi giá trị trong tab Giá trị.', 'One “name = value” per line. Inside the block use {gain} (the parameter name in braces) as a part value; each placed block can change it in its Value tab.'],
+  'schematic.prop.parametersHint': ['Mỗi dòng một “tên = giá trị”. Bên trong khối dùng {gain} (tên tham số trong ngoặc nhọn) làm giá trị linh kiện; mỗi bản đặt có thể đổi giá trị trong thẻ Giá trị.', 'One “name = value” per line. Inside the block use {gain} (the parameter name in braces) as a part value; each placed block can change it in its Value tab.'],
   'schematic.prop.portOrder': ['Thứ tự chân', 'Pin order'],
   'schematic.prop.portOrderHint': ['Tên các cổng cách nhau bằng dấu phẩy, theo thứ tự trên ký hiệu khối.', 'Port names separated by commas, in the order on the block symbol.'],
   'schematic.prop.sourceFile': ['Tạo từ file: {file}', 'Made from file: {file}'],

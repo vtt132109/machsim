@@ -183,7 +183,7 @@ export const CATALOG_FAMILY_HELP: Record<string, HelpEntry> = {
   },
   'Audio/video connector': {
     what: L('Giắc âm thanh 3.5 / 6.35 mm và giắc RCA.', 'Audio jacks (3.5 / 6.35 mm) and RCA jacks.'),
-    use: L('Nối tai nghe, micro, nhạc cụ, đầu phát vào mạch âm thanh.', 'Connect headphones, microphones, instruments and players to audio circuits.'),
+    use: L('Nối tai nghe, micrô, nhạc cụ, đầu phát vào mạch âm thanh.', 'Connect headphones, microphones, instruments and players to audio circuits.'),
   },
   'RF connector': {
     what: L('Đầu nối đồng trục BNC và SMA trở kháng 50 Ω.', '50 Ω coaxial BNC and SMA connectors.'),

@@ -1,0 +1,154 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "8051 delay loop of exactly 1000 machine cycles",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "5"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "misc-digital/mcu-8051-p1",
+          "refdes": "U1",
+          "x": 360,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "program": "; P1.0 doi trang thai sau dung 1000 chu ky may / toggle P1.0 every 1000 machine cycles\n        ORG  0\nMAIN:   CPL  P1.0          ; 1 chu ky\n        ACALL DELAY        ; 2 chu ky\n        SJMP MAIN          ; 2 chu ky\n\nDELAY:  MOV  R7,#32        ; 1 chu ky\nD1:     MOV  R6,#14        ; 1 chu ky\nD2:     DJNZ R6,D2         ; 2 chu ky, lap 14 lan\n        DJNZ R7,D1         ; 2 chu ky, lap 32 lan\n        RET                ; 2 chu ky\n        END",
+            "fosc": "12M"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 560,
+          "y": 180,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p8",
+          "partId": "diodes/led-red",
+          "refdes": "LED1",
+          "x": 660,
+          "y": 240,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 100,
+          "y": 230,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l3",
+          "x": 100,
+          "y": 290,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 530,
+          "y": 180,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 590,
+          "y": 180,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 630,
+          "y": 240,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 690,
+          "y": 240,
+          "name": "P1_0",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 430,
+          "y": 190,
+          "name": "P1_0",
+          "rotation": 0
+        }
+      ],
+      "probes": [
+        {
+          "id": "pr12",
+          "kind": "voltage",
+          "x": 430,
+          "y": 190,
+          "name": "P1.0",
+          "color": "#e53935"
+        }
+      ],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 60,
+          "y": 400,
+          "text": "Một nửa chu kỳ: CPL 1 + ACALL 2 + SJMP 2 + MOV 1 + 32 × (MOV 1 + 14 × DJNZ 2 + DJNZ 2) + RET 2 = 1000 chu kỳ máy = 1 ms ở 12 MHz.",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet1",
+          "x": 60,
+          "y": 420,
+          "text": "Trong gỡ lỗi, cột “Chu kỳ” của Bảng dịch và dòng trạng thái cho biết mỗi lệnh mất bao lâu; thử thêm một NOP rồi xem nửa chu kỳ thành 1001 chu kỳ.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.00001,
+        "tstop": 0.01
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Chương trình 8051 đổi trạng thái P1.0 sau đúng 1000 chu kỳ máy = 1 ms (thạch anh 12 MHz), nên LED nháy 500 Hz. Mở Trình soạn mã (nhấp đúp U1), bấm “Bắt đầu gỡ lỗi”, đặt điểm dừng ở dòng ACALL rồi đi từng dòng (F10): sau CPL đồng hồ mạch chỉ 1 µs, sau ACALL DELAY… RET chỉ 1 ms. An 8051 program toggles P1.0 after exactly 1000 machine cycles = 1 ms (12 MHz crystal), so the LED blinks at 500 Hz. Open the code editor (double-click U1), press \"Start debugging\", set a breakpoint on the ACALL line and step by line (F10): after CPL the circuit clock reads 1 µs, after ACALL DELAY … RET it reads 1 ms."
+}

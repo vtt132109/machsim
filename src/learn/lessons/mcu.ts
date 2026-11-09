@@ -31,15 +31,34 @@ export const BLINK_PROGRAM = [
   '        END',
 ].join('\n');
 
+/**
+ * The program of the debugging lesson (and of sample 93): P1.0 toggles after exactly 1000 machine
+ * cycles. Half period = CPL 1 + ACALL 2 + SJMP 2 + MOV 1 + 32 x (MOV 1 + 14 x DJNZ 2 + DJNZ 2) + RET 2.
+ */
+export const EXACT_DELAY_PROGRAM = [
+  '; P1.0 doi trang thai sau dung 1000 chu ky may / toggle P1.0 every 1000 machine cycles',
+  '        ORG  0',
+  'MAIN:   CPL  P1.0          ; 1 chu ky',
+  '        ACALL DELAY        ; 2 chu ky',
+  '        SJMP MAIN          ; 2 chu ky',
+  '',
+  'DELAY:  MOV  R7,#32        ; 1 chu ky',
+  'D1:     MOV  R6,#14        ; 1 chu ky',
+  'D2:     DJNZ R6,D2         ; 2 chu ky, lap 14 lan',
+  '        DJNZ R7,D1         ; 2 chu ky, lap 32 lan',
+  '        RET                ; 2 chu ky',
+  '        END',
+].join('\n');
+
 /** The microcontroller of the design (any of the 8051 parts). */
-function mcuOf(c: LessonCircuit): CheckResult | PartRef {
+export function mcuOf(c: LessonCircuit): CheckResult | PartRef {
   const found = need(c, M.mcu, 'mcu');
   if (isResult(found)) return found;
   return found[0];
 }
 
 /** Does the program change P1.0 and loop for ever? */
-function programProblem(text: string): { note: string; params?: Record<string, string | number> } | null {
+export function programProblem(text: string): { note: string; params?: Record<string, string | number> } | null {
   const build = buildProgram(text);
   const first = build.asmErrors[0] ?? build.hexErrors[0];
   if (first) return { note: 'note:asmError', params: { line: first.line } };
@@ -53,7 +72,7 @@ function programProblem(text: string): { note: string; params?: Record<string, s
 }
 
 /** A resistor in series with an LED between a net above 3 V and the P1.0 pin. */
-function ledPath(c: LessonCircuit, mcu: PartRef): CheckResult {
+export function ledPath(c: LessonCircuit, mcu: PartRef): CheckResult {
   const pin = c.net(mcu, 'P1.0');
   if (pin === undefined) return fail('note:noPinNet');
   const leds = c.parts(M.led);

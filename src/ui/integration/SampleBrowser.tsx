@@ -10,7 +10,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { serializeDesign } from '../../model/serialize';
 import { parseDesignSafely } from '../../model/sanitize';
-import { localizeSample } from './sampleLocalize';
+import { localizeNotes, localizeSample, sampleNotePairs } from './sampleLocalize';
 import { SAMPLE_TEXT, SAMPLE_TOPIC_TEXT, SAMPLE_UI } from '../../i18n/samples';
 import { interpolate, t, tr } from '../../i18n';
 import { Dialog } from '../common/Dialog';
@@ -64,7 +64,8 @@ function usePreview(entry: ExampleEntry | undefined): { url: string | null; busy
     void (async () => {
       try {
         const [{ sheetToSvg }, text] = await Promise.all([import('../editor/exportImage'), entry.load()]);
-        const design = parseDesignSafely(text).design;
+        // the notes on the sheet follow the interface language, as they will in the opened design
+        const design = localizeNotes(parseDesignSafely(text).design, await sampleNotePairs(entry.file));
         // a ladder sample is about its rungs: preview the ladder sheet, not the rack that feeds it
         const sheet = design.sheets.find((x) => x.kind === 'ladder' && (x.ladder?.length ?? 0) > 0) ?? design.sheets[0];
         const r = sheetToSvg(design, sheet.id, partLookup, { area: 'content', margin: 20 });

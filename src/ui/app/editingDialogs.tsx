@@ -59,6 +59,7 @@ function LayerSettingsDialog({ close }: { close: () => void }) {
   return (
     <Dialog
       title={dt('layersTitle')}
+      guide="editingTools"
       onClose={close}
       width={460}
       footer={
@@ -190,6 +191,7 @@ function PrefixRulesDialog({ close }: { close: () => void }) {
   return (
     <Dialog
       title={dt('prefixTitle')}
+      guide="editingTools"
       onClose={close}
       width={520}
       footer={

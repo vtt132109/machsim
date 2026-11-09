@@ -10,6 +10,7 @@ export default {
   'common.cancel': ['Huỷ', 'Cancel'],
   'common.clear': ['Xoá', 'Clear'],
   'common.close': ['Đóng', 'Close'],
+  'common.helpDialog': ['Giải thích hộp thoại này (F1)', 'Explain this box (F1)'],
   'common.colour': ['Màu', 'Colour'],
   'common.copy': ['Chép', 'Copy'],
   'common.delete': ['Xoá', 'Delete'],

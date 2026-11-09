@@ -1,0 +1,283 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Hand-out: low-pass and high-pass on two sheets",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Lọc thông thấp",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 80,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "1",
+            "freq": "1k"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 260,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p7",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 400,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "159n"
+          }
+        },
+        {
+          "id": "p10",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 600,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "timebase": "500u",
+            "A.scale": "500m",
+            "B.scale": "500m"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 80,
+          "y": 220,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l3",
+          "x": 80,
+          "y": 280,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l5",
+          "x": 230,
+          "y": 160,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 290,
+          "y": 160,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 370,
+          "y": 250,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 430,
+          "y": 250,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 550,
+          "y": 230,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 590,
+          "y": 230,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 60,
+          "y": 360,
+          "text": "Trang 1, lọc thông thấp: fc = 1/(2π·R1·C1) ≈ 1,0 kHz. Ở fc biên độ ra còn 0,707 và trễ pha 45°.",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet1",
+          "x": 60,
+          "y": 380,
+          "text": "Bấm Ctrl+P: chọn “Trang sơ đồ và trang bậc thang” và “Bảng cài đặt thiết bị đo”, đặt khổ giấy và xem trước. Cài đặt trang được lưu trong tệp.",
+          "size": 11
+        }
+      ],
+      "layers": {
+        "netNames": true
+      }
+    },
+    {
+      "id": "sheet2",
+      "name": "Bài tập",
+      "parts": [
+        {
+          "id": "p13",
+          "partId": "sources/ac-voltage",
+          "refdes": "V2",
+          "x": 80,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "1",
+            "freq": "1k"
+          }
+        },
+        {
+          "id": "p16",
+          "partId": "basic/capacitor",
+          "refdes": "C2",
+          "x": 260,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "159n"
+          }
+        },
+        {
+          "id": "p19",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 400,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l14",
+          "x": 80,
+          "y": 220,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 80,
+          "y": 280,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 230,
+          "y": 160,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 290,
+          "y": 160,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 370,
+          "y": 250,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 430,
+          "y": 250,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "note1_sheet2",
+          "x": 60,
+          "y": 360,
+          "text": "Trang 2, lọc thông cao: đổi chỗ R và C. Cũng fc ≈ 1,0 kHz nhưng tần số thấp bị chặn thay vì tần số cao.",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet2",
+          "x": 60,
+          "y": 380,
+          "text": "Bài tập: chạy phân tích AC và so sánh biên độ V(OUT) của hai trang ở 100 Hz và 10 kHz.",
+          "size": 11
+        }
+      ],
+      "layers": {
+        "netNames": true
+      }
+    }
+  ],
+  "analysis": {
+    "active": "ac",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "ac": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 20,
+        "fstart": 10,
+        "fstop": 100000
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.00001,
+        "tstop": 0.005
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Một phiếu bài tập hai trang đã đặt sẵn để in: trang 1 là mạch lọc thông thấp, trang 2 là mạch lọc thông cao cùng R và C. Bấm Ctrl+P để xem trang in: khổ A4 nằm ngang, vừa trang, có chân trang và danh sách dụng cụ đo; tên net được bật bằng Sửa › Lớp hiển thị. Cả hai mạch có fc ≈ 1,0 kHz. A two-sheet worksheet that is already set up for printing: sheet 1 is a low-pass filter, sheet 2 a high-pass filter with the same R and C. Press Ctrl+P for the print preview: A4 landscape, fitted to the page, with a footer and the instrument list; net names are switched on in Edit › Layer settings. Both circuits have fc ≈ 1.0 kHz.",
+  "printSetup": {
+    "paper": "A4",
+    "orientation": "landscape",
+    "scale": "fit",
+    "sheets": "all",
+    "includeInstruments": true,
+    "footer": true,
+    "marginMm": 12
+  }
+}

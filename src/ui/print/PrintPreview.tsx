@@ -39,6 +39,7 @@ function choicesFor(design: Design): PrintChoices {
     // a report or a lesson hand-out is chosen for one printout, not remembered
     report: '',
     lesson: '',
+    quickRef: false,
     scope: remembered ? base.scope : ps?.sheets === 'active' ? 'current' : 'all',
     children: remembered ? base.children : !!ps?.includeChildren,
     instruments: remembered ? base.instruments : !!ps?.includeInstruments,
@@ -76,7 +77,7 @@ function PrintPreviewDialog({ close, initialChoices }: { close: () => void; init
     const s = getState();
     const timer = setTimeout(() => {
       setBusy(true);
-      buildContents({ design: s.design, activeSheetId: s.activeSheetId, selection: s.selection, probeValues: s.probeValues, monochrome }, choices)
+      buildContents({ design: s.design, activeSheetId: s.activeSheetId, selection: s.selection, probeValues: s.probeValues, monochrome, beginner: s.ui.beginner === true }, choices)
         .then((c) => live && setContents(c))
         .catch((err) => live && setMessage(err instanceof Error ? err.message : String(err)))
         .finally(() => live && setBusy(false));
@@ -148,6 +149,7 @@ function PrintPreviewDialog({ close, initialChoices }: { close: () => void; init
   return (
     <Dialog
       title={pt('title')}
+      guide="printing"
       onClose={close}
       width="min(1120px, 96vw)"
       footer={
@@ -196,6 +198,8 @@ function PrintPreviewDialog({ close, initialChoices }: { close: () => void; init
             <CheckField label={pt('grapher')} checked={choices.grapher && grapherAvailable} disabled={!grapherAvailable} onChange={(v) => choose({ grapher: v })} />
             {!grapherAvailable ? <p className="ms-hint">{pt('grapherNone')}</p> : null}
             <SelectField label={pt('report')} value={choices.report} options={[{ value: '', label: pt('none') }, ...reports.map((r) => ({ value: r.id, label: r.title }))]} onChange={(v) => choose({ report: v })} />
+            <CheckField label={pt('qrChoice')} checked={!!choices.quickRef} onChange={(v) => choose({ quickRef: v })} />
+            {choices.quickRef ? <p className="ms-hint">{pt('qrChoiceHint')}</p> : null}
             <SelectField label={pt('lesson')} value={choices.lesson} options={[{ value: '', label: pt('none') }, ...lessons.map((l) => ({ value: l.id, label: l.title }))]} onChange={(v) => choose({ lesson: v })} />
           </fieldset>
           <fieldset>

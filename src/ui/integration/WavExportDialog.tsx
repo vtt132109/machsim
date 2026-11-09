@@ -62,6 +62,7 @@ function ExportBody({ result, close }: { result: AnalysisResult; close: () => vo
   return (
     <Dialog
       title={aut('exportTitle')}
+      guide="audio"
       onClose={close}
       width={480}
       footer={

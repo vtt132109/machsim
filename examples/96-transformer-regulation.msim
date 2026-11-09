@@ -1,0 +1,232 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Line transformer regulation: loaded and unloaded",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 80,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "325.27",
+            "freq": "50"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "electromechanical/line-transformer-230v-12v-25va",
+          "refdes": "T1",
+          "x": 340,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p9",
+          "partId": "basic/resistor",
+          "refdes": "RL",
+          "x": 560,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "5.76"
+          }
+        },
+        {
+          "id": "p12",
+          "partId": "electromechanical/line-transformer-230v-12v-25va",
+          "refdes": "T2",
+          "x": 340,
+          "y": 360,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p17",
+          "partId": "instruments/multimeter",
+          "refdes": "XMM1",
+          "x": 700,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "mode": "v",
+            "coupling": "ac"
+          }
+        },
+        {
+          "id": "p20",
+          "partId": "instruments/multimeter",
+          "refdes": "XMM2",
+          "x": 700,
+          "y": 360,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "mode": "v",
+            "coupling": "ac"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 80,
+          "y": 220,
+          "name": "PRI",
+          "rotation": 0
+        },
+        {
+          "id": "l3",
+          "x": 80,
+          "y": 280,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l5",
+          "x": 300,
+          "y": 150,
+          "name": "PRI",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 300,
+          "y": 170,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 380,
+          "y": 150,
+          "name": "S1",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 380,
+          "y": 170,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 530,
+          "y": 160,
+          "name": "S1",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 590,
+          "y": 160,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 300,
+          "y": 350,
+          "name": "PRI",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 300,
+          "y": 370,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 380,
+          "y": 350,
+          "name": "S2",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 380,
+          "y": 370,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 690,
+          "y": 190,
+          "name": "S1",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 710,
+          "y": 190,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 690,
+          "y": 390,
+          "name": "S2",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 710,
+          "y": 390,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 60,
+          "y": 480,
+          "text": "Đầy tải: Vs = 12 V hiệu dụng = 16,97 V đỉnh. Không tải: Vs0 = 12 V · (1 + 15 %) = 13,8 V hiệu dụng = 19,5 V đỉnh.",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet1",
+          "x": 60,
+          "y": 500,
+          "text": "Độ lệch điện áp = (Vs0 − Vs)/Vs. Đổi “Độ lệch điện áp” hoặc “Công suất định mức” của T1, T2 rồi chạy lại; hãy thử RL = 12 Ω (nửa tải).",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.0002,
+        "tstop": 0.12
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Hai biến áp nguồn giống nhau 230 V → 12 V, 25 VA (độ lệch điện áp 15 %). T1 mang tải định mức 5,76 Ω (12 V / 2,08 A) nên thứ cấp đúng 12 V hiệu dụng; T2 không tải nên thứ cấp lên 12 V · 1,15 = 13,8 V. Hai đồng hồ XMM1 và XMM2 (xoay chiều, hiệu dụng) đọc V(S1) và V(S2). Two identical line transformers, 230 V to 12 V, 25 VA (regulation 15 %). T1 carries the rated load of 5.76 Ω (12 V / 2.08 A) so its secondary reads exactly 12 V RMS; T2 is unloaded so its secondary rises to 12 V · 1.15 = 13.8 V. The two meters XMM1 and XMM2 (AC, RMS) read V(S1) and V(S2)."
+}

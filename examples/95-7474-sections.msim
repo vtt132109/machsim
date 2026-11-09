@@ -1,0 +1,227 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "A 7474 drawn as two sections: divide by four",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/digital-clock",
+          "refdes": "V1",
+          "x": 80,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "freq": "1k",
+            "vhigh": "5"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "sources/logic-high",
+          "refdes": "V2",
+          "x": 80,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "vhigh": "5"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "ttl/7474-a",
+          "refdes": "U1",
+          "x": 320,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p12",
+          "partId": "ttl/7474-b",
+          "refdes": "U1",
+          "x": 560,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p19",
+          "partId": "instruments/logic-analyzer",
+          "refdes": "XLA1",
+          "x": 820,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "clockrate": "20k",
+            "pre": "20",
+            "post": "180"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 120,
+          "y": 200,
+          "name": "CLK",
+          "rotation": 0
+        },
+        {
+          "id": "l4",
+          "x": 120,
+          "y": 320,
+          "name": "H",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 280,
+          "y": 170,
+          "name": "N1",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 280,
+          "y": 190,
+          "name": "CLK",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 280,
+          "y": 210,
+          "name": "H",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 280,
+          "y": 230,
+          "name": "H",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 360,
+          "y": 170,
+          "name": "Q1",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 360,
+          "y": 190,
+          "name": "N1",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 520,
+          "y": 170,
+          "name": "N2",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 520,
+          "y": 190,
+          "name": "Q1",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 520,
+          "y": 210,
+          "name": "H",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 520,
+          "y": 230,
+          "name": "H",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 600,
+          "y": 170,
+          "name": "Q2",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 600,
+          "y": 190,
+          "name": "N2",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 780,
+          "y": 180,
+          "name": "CLK",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 780,
+          "y": 190,
+          "name": "Q1",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 780,
+          "y": 200,
+          "name": "Q2",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 60,
+          "y": 420,
+          "text": "D = QN biến mỗi flip-flop thành bộ chia 2: Q1 = f/2 = 500 Hz, Q2 = f/4 = 250 Hz. Hai bộ chia hợp lại là bộ đếm nhị phân 2 bit.",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet1",
+          "x": 60,
+          "y": 440,
+          "text": "U1A và U1B là cùng một vi mạch (cùng tên U1). Dùng Thuộc tính › Vi mạch để chuyển một phần sang chip khác hoặc sang một chip mới.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.00001,
+        "tstop": 0.01
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Một vi mạch 7474 vẽ thành hai phần cùng tên U1: U1A (flip-flop 1) và U1B (flip-flop 2). Mỗi flip-flop có D nối với QN nên chia đôi tần số; Q của U1A cấp xung cho U1B. Từ xung nhịp 1 kHz: Q1 = 500 Hz, Q2 = 250 Hz. Xem trên máy phân tích logic; Báo cáo › Cổng còn trống báo không còn phần nào để trống. One 7474 drawn as two sections with the same name U1: U1A (flip-flop 1) and U1B (flip-flop 2). Each flip-flop has D tied to QN, so it halves the frequency; Q of U1A clocks U1B. From a 1 kHz clock: Q1 = 500 Hz, Q2 = 250 Hz. See the logic analyzer; Reports › Spare gates reports that no section is left unused."
+}
