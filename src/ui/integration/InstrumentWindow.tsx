@@ -15,7 +15,7 @@ import { hasInstrumentPanel, lazyInstrumentPanel } from '../instruments/lazyPane
 import { InstrumentStream, type InstrumentHost } from '../instruments/types';
 import { saveInstrumentDefaults } from '../instruments/defaults';
 import { partLookup, useEditor } from '../store';
-import { findPartByRefdes } from '../store/designOps';
+import { innerKey, resolveLiveName } from '../../model/hierarchy';
 import type { SimulationIntegration } from './controller';
 import { t } from '../../i18n';
 import { instrumentAllowed } from '../../model/restrictions';
@@ -48,13 +48,16 @@ export function InstrumentWindow({ refdes, kind, ctrl }: InstrumentWindowProps) 
     [refdes],
   );
   const design = useEditor((s) => s.design);
-  const found = findPartByRefdes(design, refdes);
+  // `refdes` is a top-level refdes or the path of an instrument inside a block ("X2.XMM1"): its
+  // settings are the saved ones plus what this copy of the block changed (PartInstance.inner)
+  const found = resolveLiveName(design, refdes);
   const partParams = found?.part.params;
+  const copyParams = found?.rootBlock?.inner?.[innerKey(found.path, found.local)];
   const partId = found?.part.partId;
   const params = useMemo(() => {
     const def = partId ? partLookup(partId) : undefined;
-    return { ...(def ? defaultParams(def) : {}), ...(partParams ?? {}) };
-  }, [partId, partParams]);
+    return { ...(def ? defaultParams(def) : {}), ...(partParams ?? {}), ...(copyParams ?? {}) };
+  }, [partId, partParams, copyParams]);
   const liveBinding = live.build?.instruments.find((b) => b.refdes.toUpperCase() === refdes.toUpperCase()) ?? null;
   // preview netlist only while there is no simulation binding (re-derived when the design changes)
   const exists = found !== null;

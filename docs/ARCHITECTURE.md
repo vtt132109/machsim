@@ -415,7 +415,8 @@ Có thể đóng gói thành ứng dụng Windows (Electron/Tauri) ở giai đo�
 - **Ký sinh LTspice** (`elements.ts splitParasitics`): V Rser / Cpar, C Rser / Lser / Rpar / Cpar, L Rser / Rpar / Cpar thành
   phần tử `R<tên>_rser`, `L<tên>_lser`, `R<tên>_rpar`, `C<tên>_cpar` (phần tử chính dời sang nút sau phần nối tiếp).
 - **Nhập SPICE thành sơ đồ**: `.func` / `.ic` / `.nodeset` / `.meas` thành thẻ của `Design.customSpice` (ghi chú `carried`);
-  `.step param` không mang sang (giữ phân tích được quét, ghi chú `unsupported`).
+  `.step param` không mang sang (giữ phân tích được quét, ghi chú `unsupported`). Trên sơ đồ: xem mục vòng 4 bước 3
+  (`src/model/steps.ts`: biến thiết kế dựng lại netlist cho từng giá trị, thẻ `.step` trong văn bản SPICE riêng).
 - **Bước thời gian**: `TransientEngine.planStep` không kéo dài bước lên breakpoint quá 50 % — khi LTE đòi bước nhỏ hơn
   `minBreak` (hằng số thời gian rất nhỏ ngay sau một sườn) bước ngắn được dùng và breakpoint quá gần bị gộp (trước đây có
   thể lặp vô hạn).
@@ -858,6 +859,57 @@ giáo viên báo đúng chứ không báo "không có gì".
   `src/ui/app/files.test.ts`, `src/model/fileInfo.test.ts`, `src/model/ercNetlist.test.ts`,
   `tests/review/round4/{invariants,beginner-menu-paths,logic-pin-types}.test.ts`.
 
+## Phần tử sống trong khối, quét tham số trên sơ đồ, `.meas` OP / TF / nhiễu (vòng 4 bước 3)
+
+- **Mỗi bản đặt của một khối có bộ phận sống riêng.** Khối (`hier:<id>`) vẫn là MỘT thiết kế con, nhưng netlister
+  (`emitLevel`) nay gắn thiết bị đo (`InstrumentBinding`), chỉ thị (`IndicatorBinding`), đầu dò (`ProbeBinding`) và chương
+  trình bậc thang (`LadderBinding`) của thiết kế con bằng tên CỤC BỘ rồi `expandInstances` nhân ra cho TỪNG bản đặt: node
+  qua `mapInstanceNode`, phần tử qua `mapElementName` (`V_XFG1_p` trong `XHB1` → `V.XHB1.V_XFG1_p`, đúng tên sau khi phẳng
+  hoá). Tên hiển thị là đường dẫn có dấu chấm (`X2.XMM1`, `HB1.X9.XMM1`); `binding.scope = { path, local, childId }`.
+  Hai bản đặt đọc điện áp RIÊNG của mình (hai multimeter ở hai khối `X1`, `X2` có biến `RB` khác nhau đọc 2,5 V và 3,75 V).
+  Đầu dò trong khối đo bản đặt chứa nó (`ProbeBinding.path`; khối đặt nhiều lần thì tên đầu dò có tiền tố đường dẫn).
+  Bốn cảnh báo ERC chỉ có vì chưa hỗ trợ (`instrumentInBlock`, `indicatorInBlock`, `interactiveInBlock`,
+  `probeFirstInstance`) đã bỏ cùng chữ giải thích.
+- **Trạng thái riêng từng bản đặt** = `PartInstance.inner` (chỉ có ở khối): `{ "S1": { "closed": "true" }, "X2/S1": … }`,
+  khoá = đường refdes TƯƠNG ĐỐI so với khối cấp trên cùng (`innerKey`). Bấm công tắc, phím, chiết áp, chỉnh thiết bị đo
+  trong khối ghi vào đây (`withLiveParam` / `editorStore.setInteractiveParam(refdes, param, value, path)`), thiết kế con và
+  các bản đặt khác không đổi. Netlister áp `inner` lên tham số đã lưu (`emitLevel(..., overrides)`, `childOverrides`);
+  hai bản đặt có trạng thái khác nhau cho hai `.subckt` (`HB_X`, `HB_X_2`: khoá của `emitChild` có thêm `overridesKey`).
+  Đổi công tắc khi đang chạy KHÔNG khởi động lại: `elementValueChanges` so sánh lại trên netlist đã phẳng hoá khi netlist
+  chưa phẳng khác nhau (tên phần tử `R.XHB1.S1` không phụ thuộc tên biến thể). Lưu/mở: `serialize.ts` đọc `inner`; nằm trong
+  chuỗi thao tác của `tests/review/round4/invariants.test.ts` (`block copy state`).
+- **Mở khối = xem một bản đặt.** `EditorState.viewPath` (đường refdes các khối từ gốc), `activeViewPath(state)` (đường còn
+  hợp lệ, không thì bản đầu tiên), `openBlock` / `goToParent` / `findAndShow('X2.LED1')` / `setViewPath`; breadcrumb ghi
+  refdes của bản đang xem. Giá trị sống (`indicatorLevels`, `probeValues`) khoá bằng `liveKey(path, local)` (`X2/LED1`,
+  `X2/<id đầu dò>`); `SchematicCanvas` lấy đúng khoá của bản đang xem bằng `scopedLive`. Bấm / phím trên khối: `interact(…,
+  path)`; phím tác động mọi bản đặt (`interactiveControlTargets` trả `path`). Cửa sổ thiết bị đo gọi theo đường dẫn
+  (`resolveLiveName`, `InstrumentWindow`, `controller.instrumentParams`), tab Mô phỏng liệt kê thiết bị theo đường dẫn.
+  Bậc thang trong khối: `NetlistBuildEx.ladders` (mỗi bản một `LadderBinding` có `scope`), `flushLive` hiển thị chương trình
+  của bản đang xem. Phân tích phụ của thiết bị đo trong khối (Bode, mạng …) chạy trên netlist đã phẳng hoá.
+- **Quét tham số trên sơ đồ — một đường chung với `.step`** (`src/model/steps.ts`, `applySteps`): Parameter sweep có
+  `global: true` trên một BIẾN THIẾT KẾ (`Design.variables`) và thẻ `.step` trong văn bản SPICE riêng của thiết kế đều
+  thành `ParamSweepAnalysis { global: true }`; sơ đồ ghi giá trị linh kiện thành số nên netlist được DỰNG LẠI cho từng giá
+  trị (`ParamSweepAnalysis.netlists`, không lưu vào tệp) rồi chạy qua cùng `runParamSweep` với `.step param` của deck SPICE.
+  Mọi loại phân tích quét được (nhãn mỗi lần chạy `Rx=1000` là chú giải của Grapher; OP/TF/… thành đường cong theo giá trị).
+  Thẻ `.step` (`param` list/lin/dec/oct, phần tử, `temp`) gói quanh phân tích sắp chạy; netlister bỏ thẻ khỏi văn bản
+  (`blankStepCards`, giữ số dòng) và `customStepWrapper` đọc bằng bộ đọc SPICE với biến thiết kế + `.param` được khai
+  báo. Thẻ thứ hai bị bỏ qua có ghi chú, thẻ trên phân tích đã là họ đường cong có ghi chú, giá trị làm hỏng mạch báo lỗi
+  (`StepMessage` → `src/i18n/steps.ts`). `.param` chỉ có trong văn bản SPICE vẫn dùng cách cũ (`ctx.source`); phân tích
+  Tự định nghĩa nay truyền `source` đã áp thẻ điều khiển. Controller gọi `applySteps` trong `specFor`; dòng lệnh trong
+  `batch.ts`. Biểu mẫu Parameter sweep có thêm lựa chọn "Tham số toàn cục (biến)" (`SpecContext.variables`).
+- **`.meas` cho OP, TF và nhiễu**: `MeasAnalysis` có thêm `'op' | 'tf' | 'noise'`. OP / TF là MỘT điểm: `FIND <biểu thức>`
+  (không cần AT) và `PARAM`; tên vô hướng của kết quả (`gain`, `rin`, `rout`, `onoise_total` …) và tên vector trần
+  (`onoise_spectrum`) dùng được trong biểu thức; nhiễu đo như quét tần số (nội suy log f): `INTEG onoise_psd FROM= TO=` là
+  công suất nhiễu ra. Kết quả vào `AnalysisResult.measurements`, bảng "Phép đo" của Grapher, từng bước của `.step`.
+- **Bước đo của bài học chọn phân tích** (`src/learn/readings.ts`, `lessonFile.ts`): `measure.analysis` = `op` (mặc định, mọi
+  tệp cũ) | `tran` (`tstop`, `reading`: final / at / peak / min / pp / rms / mean / frequency, `at`, `from`) | `ac` (`freq`,
+  `reading`: mag / db / phase). Quá độ đo bằng đúng bộ `.meas` (`measureResult`), AC bằng pha-xơ của `acsingle`. Chỉ đo điện
+  áp của net có nhãn hoặc trên một linh kiện (đồng hồ / dòng chỉ ở điểm làm việc: lỗi `combination`). Trình soạn bài học có
+  chọn phân tích và các ô tương ứng (`ed.analysis*`, `ed.reading*`).
+- **Test**: `src/model/blockLive.test.ts`, `src/ui/store/blockView.test.ts`, `src/model/steps.test.ts`,
+  `src/sim/analyses/measSingle.test.ts`, `src/learn/lessonMeasure.test.ts`; `tests/review/round2/block-live-parts.test.ts` viết
+  lại theo hành vi mới.
+
 ## Hợp đồng dùng chung (chỉ thêm, không đổi nghĩa)
 
 - `src/sim/netlist.ts` — Netlist IR, analysis specs, options.
@@ -871,6 +923,7 @@ giáo viên báo đúng chứ không báo "không có gì".
 - `src/ladder/types.ts` — bậc thang trong tệp thiết kế (`Sheet.kind`, `Sheet.ladder`); `program.ts`, `machine.ts`, `probes.ts`, `layout.ts`, `edit.ts` — biên dịch, vòng quét, biến số liệu, hình vẽ và thao tác sửa (thuần, dùng chung giữa engine và giao diện).
 - `src/mecha/models.ts` — mô hình máy (chân vào / chân cảm biến / nút báo trạng thái), dùng bởi code model `A_MECHA` và bởi giao diện để vẽ chuyển động.
 - `src/model/ercMatrix.ts`, `ercReport.ts`, `netSettings.ts`, `sections.ts`, `src/library/footprints.ts` — tuỳ chọn ERC + ma trận loại chân, phạm vi / báo cáo ERC, cài đặt theo net, vi mạch nhiều phần, danh mục chân vỏ (thuần).
+- `src/model/steps.ts` — quét tham số trên sơ đồ (`applySteps`, `customStepWrapper`, `StepMessage`); `src/model/hierarchy.ts` — đường dẫn bản đặt (`resolveLivePart` / `resolveLiveName`, `withLiveParam`, `innerKey`, `liveKey`, `scopedLive`, `copyPaths`); `src/learn/readings.ts` — phép đo quá độ / AC của bước bài học (thuần).
 - `src/model/sanitize.ts` — lớp toàn vẹn dùng chung: mọi nội dung vào một thiết kế đi qua đây (`sanitizeIncoming`, `sanitizeIncomingSheets`, `sanitizeDesign`, `parseDesignSafely` / `validateDesignSafely` / `repairRawDesign`, `neededVariables` / `referencedVariables`, `SanitizeNote`). Thuần; `src/i18n/sanitize.ts` dịch ghi chú.
 
 ## Luồng dữ liệu

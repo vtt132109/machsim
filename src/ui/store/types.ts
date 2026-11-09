@@ -142,6 +142,14 @@ export interface EditorState {
   /** file name shown in the title bar, e.g. "Amplifier.msim" */
   fileName: string;
   activeSheetId: string;
+  /**
+   * Which placed copy of the open block the learner looks at: the refdes of each block on the way
+   * down from the top level. A block placed twice is the same child design; the path says whose
+   * live values (LED glow, probe read-outs, switch states) the canvas shows. Empty at the top level;
+   * a stale path (it no longer leads to the open design) falls back to the first copy
+   * (`activeViewPath` in editorStore.ts).
+   */
+  viewPath: string[];
   /** selected items on the active sheet */
   selection: SelItem[];
   tool: ToolState;
@@ -158,6 +166,11 @@ export interface EditorState {
   simMessages: SimMessage[];
   /** live probe read-outs: probe id -> text (may contain "\n" for several lines) */
   probeValues: Record<string, string>;
+  /**
+   * Probes and parts inside a placed block copy are keyed by their path in both maps
+   * (`X2/<probe id>`, `X2/LED1`, see `liveKey` in src/model/hierarchy.ts); the canvas picks the
+   * keys of the copy it shows.
+   */
   /** indicator brightness by refdes: LEDs / lamps glow when > 0 (1 = full) */
   indicatorLevels: Record<string, number>;
   /**

@@ -64,6 +64,12 @@ export interface LadderBinding {
   debug: boolean;
   /** rungs that did not compile */
   errors: LadderError[];
+  /**
+   * A program inside a block: the placed copy it belongs to (refdes of each block from the top
+   * level down) and the child design that holds its sheets. `element` is then the flattened name
+   * ("A.XHB1.A_PLC1"). Absent for the top-level program.
+   */
+  scope?: { path: string[]; childId: string };
 }
 
 export interface LadderBuildResult {

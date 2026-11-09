@@ -103,13 +103,13 @@ function requireTarget(what: string, n: Netlist, target: string, param: string, 
 }
 
 /** One modified-netlist run per value. */
-function sweepRuns(ctx: AnalysisContext, values: number[], make: (v: number) => Netlist, label: (v: number) => string, base: ParamSweepAnalysis['base']): SweepRun[] {
+function sweepRuns(ctx: AnalysisContext, values: number[], make: (v: number, k: number) => Netlist, label: (v: number) => string, base: ParamSweepAnalysis['base']): SweepRun[] {
   const runs: SweepRun[] = [];
   values.forEach((v, k) => {
     ctx.checkAbort();
     let result: AnalysisResult;
     try {
-      result = runNested(ctx, base, make(v), k / values.length, (k + 1) / values.length);
+      result = runNested(ctx, base, make(v, k), k / values.length, (k + 1) / values.length);
     } catch (e) {
       // modification errors (bad target) are reported per run
       const message = e instanceof Error ? e.message : String(e);
@@ -133,10 +133,17 @@ export function withGlobalParam(n: Netlist, name: string, value: number): Netlis
 export function runParamSweep(spec: ParamSweepAnalysis, ctx: AnalysisContext): AnalysisResult {
   const what = analysisTitle('paramsweep');
   const values = requireValues(what, spec.values);
-  let make: (v: number) => Netlist;
+  let make: (v: number, k: number) => Netlist;
   let label: (v: number) => string;
   let scaleName: string;
-  if (spec.global) {
+  if (spec.global && spec.netlists !== undefined) {
+    // a schematic's design variable: the caller rebuilt the netlist for every value
+    if (spec.netlists.length !== values.length) throw new SimulationError(`${what}: ${spec.netlists.length} netlists for ${values.length} values of '${spec.target}'`, 'netlist');
+    const built = spec.netlists;
+    make = (_v, k) => flattenNetlist(built[k]);
+    label = (v) => `${spec.target}=${formatNumber(v)}`;
+    scaleName = spec.target;
+  } else if (spec.global) {
     // .step param: every run re-evaluates the netlist's expressions with the new value
     const source = ctx.source;
     if (!source) throw new SimulationError(`${what}: the global parameter '${spec.target}' can only be swept at the top level of a run`, 'netlist');

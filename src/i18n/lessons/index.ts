@@ -126,6 +126,8 @@ export const NOTES: Record<string, LocalizedText> = {
   fileConnect: L('Chưa nối {from} với {to}.', '{from} is not connected to {to} yet.'),
   fileConnectMissing: L('Chưa đủ linh kiện để kiểm tra chỗ nối {from} – {to}.', 'Not enough parts yet to check the connection {from} – {to}.'),
   fileNet: L('Chưa có net nào tên “{net}”: hãy đặt nhãn đó lên dây cần đo.', 'No net is named “{net}” yet: put that label on the wire to measure.'),
+  fileReading: L('Không đọc được “{reading}” từ mạch: {message}.', 'Cannot take the “{reading}” reading from the circuit: {message}.'),
+  fileReadingProbe: L('Phép đo này cần điện áp của một net có nhãn hoặc trên một linh kiện.', 'This measurement needs the voltage of a named net or across a part.'),
   fileErcOk: L('Mạch không còn lỗi điện.', 'The circuit has no electrical errors.'),
   fileErcEmpty: L('Trang sơ đồ còn trống: hãy vẽ mạch trước đã.', 'The sheet is still empty: draw the circuit first.'),
 

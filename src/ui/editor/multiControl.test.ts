@@ -40,7 +40,7 @@ describe('multi-control parts', () => {
     expect(ix.interactiveTargets('q')).toEqual([]);
     ed.actions.setInteractiveParam('S1', 'keys', 'q - w');
     expect(controlKeys(def.interactive!, part().params)).toEqual(['q', '2', 'w', '4']);
-    expect(ix.interactiveControlTargets('w')).toEqual([{ refdes: 'S1', control: 2 }]);
+    expect(ix.interactiveControlTargets('w')).toEqual([{ refdes: 'S1', control: 2, path: [] }]);
     ix.interactiveKey({ key: 'W' }, 'down');
     expect(part().params.s3).toBe('false');
     expect(ed.getState().history.past.length).toBe(depth);

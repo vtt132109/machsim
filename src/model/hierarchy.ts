@@ -355,3 +355,199 @@ export function uniqueChildName(design: Pick<Design, 'children'>, base: string):
   if (!used.has(clean.toLowerCase())) return clean;
   for (let n = 2; ; n++) if (!used.has(`${clean}${n}`.toLowerCase())) return `${clean}${n}`;
 }
+
+// ---------------------------------------------------------------------------
+// placed copies of a block: live parts by path, per-copy state (PartInstance.inner)
+// ---------------------------------------------------------------------------
+
+/** Separator of the refdes path inside an `inner` key ("X2/S1") and in live-map keys. */
+export const INNER_SEP = '/';
+
+/**
+ * Key of PartInstance.inner for part `local` of the copy `path` (refdes of each block from the
+ * top level down): relative to the first block of the path, so ["X1"] + "S1" -> "S1" and
+ * ["X1","X2"] + "S1" -> "X2/S1".
+ */
+export function innerKey(path: readonly string[], local: string): string {
+  return [...path.slice(1), local].join(INNER_SEP);
+}
+
+/**
+ * Parameter overrides one placed block hands down to its child design: its own `inner` entries
+ * plus the entries a block above it addressed to parts below this one (`levelOverrides` keys that
+ * start with this block's refdes, stripped of it). Keys are relative to the child.
+ */
+export function childOverrides(blockRefdes: string, blockInner: PartInstance['inner'], levelOverrides?: Record<string, Record<string, string>>): Record<string, Record<string, string>> | undefined {
+  const out: Record<string, Record<string, string>> = {};
+  const prefix = `${blockRefdes}${INNER_SEP}`;
+  for (const [k, v] of Object.entries(levelOverrides ?? {})) if (k.startsWith(prefix)) out[k.slice(prefix.length)] = { ...v };
+  for (const [k, v] of Object.entries(blockInner ?? {})) out[k] = { ...(out[k] ?? {}), ...v };
+  return Object.keys(out).length ? out : undefined;
+}
+
+/** Stable text of an override table, for the specialisation key of an emitted subcircuit. */
+export function overridesKey(o: Record<string, Record<string, string>> | undefined): string {
+  if (!o) return '';
+  return JSON.stringify(Object.keys(o).sort().map((k) => [k, Object.keys(o[k]).sort().map((p) => [p, o[k][p]])]));
+}
+
+/** A part reached through a path of block copies. */
+export interface LiveRef {
+  part: PartInstance;
+  sheetId: string;
+  /** refdes of the block copies from the top level down ([] = a top-level part) */
+  path: string[];
+  /** refdes of the part inside its design */
+  local: string;
+  /** child design that holds the part (undefined = top level) */
+  childId?: string;
+  /** the top-level block that carries the copy's state (undefined for a top-level part) */
+  rootBlock?: PartInstance;
+}
+
+const sameRef = (a: string, b: string): boolean => a.trim().toUpperCase() === b.trim().toUpperCase();
+
+/** The part `local` reached through the block copies `path` (null when any step does not exist). */
+export function resolveLivePart(design: Pick<Design, 'sheets' | 'children'>, path: readonly string[], local: string): LiveRef | null {
+  let sheets: Sheet[] = design.sheets;
+  let childId: string | undefined;
+  let rootBlock: PartInstance | undefined;
+  for (const name of path) {
+    let next: string | undefined;
+    for (const s of sheets) {
+      const inst = s.parts.find((p) => sameRef(p.refdes, name) && childIdOfPart(p.partId) !== undefined);
+      if (inst) {
+        next = childIdOfPart(inst.partId);
+        if (!rootBlock) rootBlock = inst;
+        break;
+      }
+    }
+    const child = next !== undefined ? getChild(design, next) : undefined;
+    if (!child) return null;
+    sheets = child.sheets;
+    childId = child.id;
+  }
+  for (const s of sheets) {
+    const part = s.parts.find((p) => sameRef(p.refdes, local));
+    if (part) return { part, sheetId: s.id, path: [...path], local: part.refdes, ...(childId !== undefined ? { childId } : {}), ...(rootBlock ? { rootBlock } : {}) };
+  }
+  return null;
+}
+
+/**
+ * Part named like a live binding: a top-level refdes ("XMM1") or a dotted path through blocks
+ * ("X2.XMM1", "X1.X2.XMM1"). A top-level refdes wins over a path.
+ */
+export function resolveLiveName(design: Pick<Design, 'sheets' | 'children'>, name: string): LiveRef | null {
+  const direct = resolveLivePart(design, [], name);
+  if (direct) return direct;
+  const segs = name.split('.');
+  if (segs.length < 2) return null;
+  return resolveLivePart(design, segs.slice(0, -1), segs[segs.length - 1]);
+}
+
+/** Saved parameters of a live part with the copy's overrides on top (PartInstance.inner). */
+export function liveParams(ref: LiveRef): Record<string, string> {
+  const own = ref.rootBlock?.inner?.[innerKey(ref.path, ref.local)];
+  return own ? { ...ref.part.params, ...own } : ref.part.params;
+}
+
+function mapPartById(sheets: Sheet[], partId: string, fn: (p: PartInstance) => PartInstance): Sheet[] | null {
+  for (let i = 0; i < sheets.length; i++) {
+    const k = sheets[i].parts.findIndex((p) => p.id === partId);
+    if (k < 0) continue;
+    const parts = sheets[i].parts.slice();
+    parts[k] = fn(parts[k]);
+    const out = sheets.slice();
+    out[i] = { ...sheets[i], parts };
+    return out;
+  }
+  return null;
+}
+
+/**
+ * Design with one parameter of a live part changed: a top-level part gets the value in its own
+ * `params`, a part inside a block copy gets it in the top-level block's `inner` table, so the other
+ * copies and the block design stay as they are.
+ */
+export function withLiveParam(design: Design, ref: LiveRef, param: string, value: string): Design {
+  if (!ref.rootBlock) {
+    const sheets = mapPartById(design.sheets, ref.part.id, (p) => ({ ...p, params: { ...p.params, [param]: value } }));
+    return sheets ? { ...design, sheets } : design;
+  }
+  const key = innerKey(ref.path, ref.local);
+  const bump = (p: PartInstance): PartInstance => ({ ...p, inner: { ...(p.inner ?? {}), [key]: { ...(p.inner?.[key] ?? {}), [param]: value } } });
+  const sheets = mapPartById(design.sheets, ref.rootBlock.id, bump);
+  return sheets ? { ...design, sheets } : design;
+}
+
+/** Refdes paths of every placed copy of child `childId` (a block placed twice gives two paths). */
+export function copyPaths(design: Pick<Design, 'sheets' | 'children'>, childId: string): string[][] {
+  const out: string[][] = [];
+  const walk = (n: HierarchyNode, path: string[]) => {
+    for (const c of n.children) {
+      const here = [...path, c.block?.inst.refdes ?? ''];
+      if (c.child?.id === childId) out.push(here);
+      if (!c.cyclic) walk(c, here);
+    }
+  };
+  walk(hierarchyTree(design), []);
+  return out;
+}
+
+/** True when `path` leads (through placed blocks) to a copy of child `childId`. */
+export function pathLeadsTo(design: Pick<Design, 'sheets' | 'children'>, path: readonly string[], childId: string | undefined): boolean {
+  if (childId === undefined) return path.length === 0;
+  if (path.length === 0) return false;
+  let sheets: Sheet[] = design.sheets;
+  let last: string | undefined;
+  for (const name of path) {
+    let next: string | undefined;
+    for (const s of sheets) {
+      const inst = s.parts.find((p) => sameRef(p.refdes, name) && childIdOfPart(p.partId) !== undefined);
+      if (inst) {
+        next = childIdOfPart(inst.partId);
+        break;
+      }
+    }
+    const child = next !== undefined ? getChild(design, next) : undefined;
+    if (!child) return false;
+    sheets = child.sheets;
+    last = child.id;
+  }
+  return last === childId;
+}
+
+/** Key of a live value (indicator level, probe read-out) of a part / probe in the copy `path`. */
+export function liveKey(path: readonly string[] | undefined, local: string): string {
+  return path && path.length ? `${path.join(INNER_SEP)}${INNER_SEP}${local}` : local;
+}
+
+/**
+ * The part of a live map (indicator levels, probe read-outs) that belongs to the copy `path`:
+ * keys written with {@link liveKey} for exactly that copy, stripped of the path; for the top level
+ * (`path` empty) the keys that carry no path. Returns `map` itself when nothing has to change.
+ */
+export function scopedLive<T>(map: Record<string, T>, path: readonly string[]): Record<string, T> {
+  const prefix = path.length ? `${path.join(INNER_SEP)}${INNER_SEP}` : '';
+  let any = false;
+  const out: Record<string, T> = {};
+  for (const [k, v] of Object.entries(map)) {
+    if (prefix) {
+      if (!k.startsWith(prefix)) continue;
+      const rest = k.slice(prefix.length);
+      // a deeper copy ("X2/X3/LED1" seen from "X2") is not this level's
+      const head = rest.split('#')[0];
+      if (head.includes(INNER_SEP)) continue;
+      out[rest] = v;
+      any = true;
+    } else {
+      if (k.includes(INNER_SEP)) {
+        any = true;
+        continue;
+      }
+      out[k] = v;
+    }
+  }
+  return prefix || any ? out : map;
+}

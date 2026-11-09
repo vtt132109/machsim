@@ -1,8 +1,8 @@
 /**
  * Evaluation of `.meas` directives (src/sim/spice/measure.ts) on analysis results.
  *
- *   applyMeasurements(results, netlist)   fills AnalysisResult.measurements of every tran / ac / dc
- *                                         result (also inside sweeps, Monte Carlo, batches, user
+ *   applyMeasurements(results, netlist)   fills AnalysisResult.measurements of every tran / ac / dc /
+ *                                         op / noise / tf result (also inside sweeps, Monte Carlo, batches, user
  *                                         analyses: each run gets its own values)
  *   measureResult(result, directives, params) the values for one result
  *
@@ -16,6 +16,11 @@
  *               vdb(n) vm(n) vp(n) vr(n) vi(n) (also with two nodes) and idb(dev) ip(dev);
  *               frequency is a variable. A complex result is measured by its magnitude
  *               (use vdb / vp for dB and phase).
+ * OP and TF results are ONE point (no x): `.meas op name FIND V(out)`, `.meas tf gain FIND gain`,
+ * and PARAM expressions see the result's scalars by name (gain, rin, rout; for noise onoise_total,
+ * inoise_total ...). NOISE results are measured like a frequency sweep (log x) over their vectors
+ * (onoise_spectrum, inoise_spectrum, onoise_psd, inoise_psd, gain, which expressions may name
+ * directly): `.meas noise vn INTEG onoise_psd FROM=10 TO=10k` is the output noise power.
  * Points between samples are interpolated linearly in x (in log10 x for AC sweeps). Crossings:
  * RISE counts lhs − rhs going from < 0 to >= 0, FALL from > 0 to <= 0, CROSS either; TD skips
  * crossings before it. Range kinds integrate with the trapezoidal rule between FROM and TO
@@ -106,6 +111,17 @@ function realSeries(result: AnalysisResult, text: string, params: Record<string,
         return { ...node, left: rewrite(node.left), right: rewrite(node.right) };
       case 'cond':
         return { kind: 'cond', test: rewrite(node.test), then: rewrite(node.then), otherwise: rewrite(node.otherwise) };
+      case 'ident': {
+        // a bare name that is a vector of the result (gain, rin, onoise_spectrum ...), unless a
+        // .param / earlier measurement of that name exists
+        const key = node.name.toLowerCase();
+        const v = key === 'time' || key in params ? undefined : findVec(result, node.name);
+        if (!v) return node;
+        const name = `__mv${vectors.length}`;
+        vectors.push(v);
+        varNames.push(name);
+        return { kind: 'ident', name };
+      }
       default:
         return node;
     }
@@ -367,7 +383,7 @@ function applyAc(fn: string, a: CVec): CVec {
 
 function seriesOf(result: AnalysisResult, text: string, params: Record<string, number>): Series {
   const x = result.scale!.re;
-  const logX = result.type === 'ac' && x.length > 0 && x[0] > 0;
+  const logX = (result.type === 'ac' || result.type === 'noise') && x.length > 0 && x[0] > 0;
   if (result.type === 'ac') {
     const c = complexSeries(result, text, params);
     const y = new Float64Array(x.length);
@@ -490,7 +506,8 @@ function evaluate(env: Env, d: MeasDirective): { value: number; at?: number } {
   if (!r.scale || r.scale.re.length === 0) throw new MeasError('the result has no data points');
   switch (d.kind) {
     case 'find': {
-      const x = d.at ?? conditionX(env, d.when!);
+      // an OP / TF result is a single point: FIND without AT / WHEN reads it
+      const x = d.at ?? (d.when ? conditionX(env, d.when) : r.scale.re[0]);
       return { value: valueAt(seriesOf(r, d.expr!, env.params), x), at: x };
     }
     case 'deriv': {
@@ -535,11 +552,20 @@ function evaluate(env: Env, d: MeasDirective): { value: number; at?: number } {
 /** Values of the directives that apply to `result` (by its type), in card order. */
 export function measureResult(result: AnalysisResult, directives: readonly MeasDirective[], params: Record<string, number> = {}): MeasurementResult[] {
   const kind = result.type;
-  if (kind !== 'tran' && kind !== 'ac' && kind !== 'dc') return [];
+  if (kind !== 'tran' && kind !== 'ac' && kind !== 'dc' && kind !== 'op' && kind !== 'noise' && kind !== 'tf') return [];
   const own = directives.filter((d) => d.analysis === kind);
   if (!own.length || result.error) return [];
   const scope: Record<string, number> = {};
   for (const [k, v] of Object.entries(params)) if (typeof v === 'number') scope[k.toLowerCase()] = v;
+  // the scalars of a result (gain / rin / rout of a TF, onoise_total of a noise run ...) are names
+  // a PARAM or an expression may use; the circuit's own .param values win
+  if (kind === 'op' || kind === 'tf' || kind === 'noise') {
+    for (const [k, v] of Object.entries(result.scalars ?? {})) if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(k) && Number.isFinite(v)) scope[k.toLowerCase()] ??= v;
+  }
+  // an operating point / transfer function is ONE point: give it a one-sample scale
+  if ((kind === 'op' || kind === 'tf') && !result.scale) {
+    result = { ...result, scale: { name: 'point', unit: '', re: Float64Array.of(0) } };
+  }
   const out: MeasurementResult[] = [];
   for (const d of own) {
     try {

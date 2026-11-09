@@ -334,6 +334,14 @@ export interface ParamSweepAnalysis {
    */
   global?: boolean;
   values: number[];
+  /**
+   * `global` sweeps of a SCHEMATIC: the netlist per value, built by the caller from the design with
+   * the variable set to that value (the schematic netlister writes part values as numbers, so the
+   * parameter cannot stay symbolic inside one netlist). `netlists[k]` belongs to `values[k]`; they
+   * are un-flattened and run through the same path as a `.step param` of a SPICE deck. Never saved
+   * with the design (src/model/steps.ts fills it right before a run).
+   */
+  netlists?: Netlist[];
   base: AnalysisSpec;
 }
 
@@ -410,7 +418,7 @@ export type AnalysisSpec =
 export type AnalysisType = AnalysisSpec['type'];
 
 /** Analysis a `.meas` directive applies to. */
-export type MeasAnalysis = 'tran' | 'ac' | 'dc';
+export type MeasAnalysis = 'tran' | 'ac' | 'dc' | 'op' | 'noise' | 'tf';
 
 /**
  * Kind of a `.meas` directive: FIND (value of expr at a point), DERIV (its derivative), WHEN (x

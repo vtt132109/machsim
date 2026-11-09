@@ -314,6 +314,17 @@ function part(c: Checker, v: unknown, path: string): PartInstance | null {
     });
     if (pins.length) p.ncPins = [...new Set(pins)].sort();
   }
+  if (o.inner !== undefined && o.inner !== null) {
+    const io = c.obj(o.inner, `${path}.inner`);
+    if (io) {
+      const inner: Record<string, Record<string, string>> = {};
+      for (const key of Object.keys(io)) {
+        const rec = c.record(io, key, `${path}.inner`);
+        if (key.trim() && Object.keys(rec).length) inner[key] = rec;
+      }
+      if (Object.keys(inner).length) p.inner = inner;
+    }
+  }
   if (o.fields !== undefined && o.fields !== null) {
     const fo = c.obj(o.fields, `${path}.fields`);
     if (fo) {

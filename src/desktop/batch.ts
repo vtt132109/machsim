@@ -19,6 +19,7 @@ import type { AnalysisSpec, Netlist } from '../sim/netlist';
 import { writeSpice } from '../sim/spice';
 import { parseDesignSafely } from '../model/sanitize';
 import { buildNetlist } from '../model/netlister';
+import { applySteps } from '../model/steps';
 import { ensureDesignParts } from '../model/libraryLoad';
 import { pspiceCompat } from '../model/spiceSchematic';
 import { resolveDeckIncludes } from '../model/spiceIncludes';
@@ -237,7 +238,14 @@ export async function runBatch(o: CliOptions, io: BatchIO): Promise<BatchResult>
       info(ct('log.noAnalysis', { type }));
       spec = defaultSpec(type, specContext(build));
     }
-    netlist = { ...build.netlist, analyses: [withTimes(spec, o)] };
+    // .step cards in the circuit's SPICE text and sweeps of a design variable (src/model/steps.ts)
+    const stepped = applySteps(design, withTimes(spec, o), (n) => ({ ...n, analyses: [] }));
+    for (const m of stepped.notes) info(m.text);
+    if (stepped.errors.length) {
+      for (const m of stepped.errors) fail(m.text);
+      return { code: EXIT.failed, results: [] };
+    }
+    netlist = { ...build.netlist, analyses: [stepped.spec] };
   } else {
     const compat = pspiceCompat(text);
     const resolved = await resolveDeckIncludes(compat.text, io.readInclude, { fileName: o.input });

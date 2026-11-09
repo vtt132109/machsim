@@ -17,6 +17,7 @@
  */
 
 import type { ElementIR, Netlist, SourceSpec, WaveformType } from '../sim/netlist';
+import { flattenNetlist } from '../sim/spice/flatten';
 
 export interface ParamChange {
   element: string;
@@ -69,8 +70,27 @@ function sourceChanges(name: string, a: SourceSpec | undefined, b: SourceSpec | 
   return true;
 }
 
-/** setParam calls that turn `prev` into `next`, or null when a restart is required. */
+/**
+ * setParam calls that turn `prev` into `next`, or null when a restart is required.
+ *
+ * Blocks: when the two netlists differ only inside subcircuits (a switch closed in ONE placed copy
+ * of a block gives that copy its own subcircuit variant, so the X element's model name and the
+ * subcircuit definitions change) the comparison is made again on the FLATTENED netlists, whose
+ * element names ("R.XHB1.S1") do not depend on the variant names. The running engine was built
+ * from the flattened previous netlist, so those names are the ones setParam needs.
+ */
 export function elementValueChanges(prev: Netlist, next: Netlist): ParamChange[] | null {
+  const direct = flatChanges(prev, next);
+  if (direct !== null) return direct;
+  if (!prev.elements.some((e) => e.type === 'X') || !next.elements.some((e) => e.type === 'X')) return null;
+  try {
+    return flatChanges(flattenNetlist(prev), flattenNetlist(next));
+  } catch {
+    return null;
+  }
+}
+
+function flatChanges(prev: Netlist, next: Netlist): ParamChange[] | null {
   if (prev.elements.length !== next.elements.length) return null;
   if (JSON.stringify(prev.models) !== JSON.stringify(next.models) || JSON.stringify(prev.subckts) !== JSON.stringify(next.subckts)) return null;
   if (JSON.stringify(prev.params) !== JSON.stringify(next.params)) return null;
