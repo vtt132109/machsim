@@ -46,8 +46,9 @@ describe('catalogue packs', () => {
     expect(getPart('ttl/74ls00')).toBeUndefined();
     // the generic parts of a lazy group are core parts
     expect(getPart('basic/resistor')).toBeDefined();
-    expect(pendingPartCount('basic')).toBe(682);
-    expect(pendingPartCount('rf')).toBe(25 + 105);
+    // round 4 library breadth adds 1267 (passives-more) + 90 (sensors-more) basic parts and 2 RF transistors
+    expect(pendingPartCount('basic')).toBe(682 + 1267 + 90);
+    expect(pendingPartCount('rf')).toBe(25 + 105 + 2);
     expect(pendingPartCount('sources')).toBe(0);
     expect(groupState('sources')).toBe('ready');
   });
@@ -128,7 +129,7 @@ describe('catalogue packs', () => {
     const ids = listParts().map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
     const real = cataloguePacks().filter((p) => !p.id.startsWith('test-'));
-    expect(real.map((p) => p.id)).toEqual(['basic-series', 'diodes', 'transistors', 'rf', 'connectors', 'logic']);
+    expect(real.map((p) => p.id)).toEqual(['basic-series', 'diodes', 'transistors', 'rf', 'connectors', 'logic', 'logic-more', 'analog-more', 'discretes-more', 'passives-more', 'sensors-more']);
     for (const pack of real) {
       expect(pack.state, pack.id).toBe('ready');
       expect(pack.loads, pack.id).toBe(1);

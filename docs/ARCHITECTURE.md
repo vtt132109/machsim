@@ -1065,6 +1065,48 @@ giáo viên báo đúng chứ không báo "không có gì".
   bằng “hiện vector nội bộ”), đầu vào của bộ tích phân từ thông bị cổng hoá `u(time)+u(hertz)` để điểm làm việc DC không “nạp” lõi. Dòng xoáy = một điện trở.
 - **Đồ thị X–Y**: `vs(y, x)` trong bộ xử lý sau trả `Vector` có `xValues`; `buildPlotData` vẽ theo `PlotTrace.ownX`; nút “Đường B–H” cho mọi lõi có `V(R.b)` và `V(R.h)`.
 
+## Độ rộng thư viện: 5 072 → 11 517 linh kiện (vòng 4 bước 6)
+
+Thư viện tăng thêm **6 445 part** trong năm gói catalogue nạp theo yêu cầu (`src/library/catalog/more/`, mỗi gói
+một chunk nạp động riêng: `logicMore-*.js` 5 kB, `analogMore` 19 kB, `discretesMore` 21 kB, `passivesMore` 3 kB, `sensorsMore` 12 kB, cộng
+`variants` 1 kB; phần lớn mã dùng lại chunk `catalogue-logic` / `-diodes` / `-transistors` / `-series`). Nhóm `catalogue` trong `vite.config.ts` **loại**
+`catalog/more` ra (`(?!more[\/])`): nếu để các gói này khớp nhóm chung hoặc đặt tên nhóm riêng cho chúng, Rolldown gộp cả catalogue nạp lúc khởi động
+vào chunk của gói (580 kB nạp ngay khi mở app). Chunk `catalogue` khởi động chỉ tăng 1,8 kB (458,8 → 460,6 kB: các hàm dựng hàng bảng được xuất ra). Hai nguồn:
+part mới dựng từ bảng thông số datasheet (2 920) và **biến thể** của part sẵn có (3 525: đổi vỏ, đổi mã đặt hàng).
+Mọi part có tên + mô tả tiếng Việt (`textVi`), dấu vết `provenance`, vỏ có trong `footprints.ts`, và đi qua cả hai bộ
+thử toàn danh mục (`catalog-sim.test.ts`: ERC + điểm làm việc DC; `capabilities.test.ts`: OP + quá độ 1 ms với mọi
+chân nối 1 MΩ) — không part nào là "chỉ vẽ".
+
+| Gói (`CATALOGUE_PACKS`) | File | Nhóm | Nội dung |
+|---|---|---|---|
+| `logic-more` | `more/logicMore.ts` | TTL, CMOS | 43 part mới (74x238, 533 / 563 / 564 đảo, 620 / 645, LS290 / 293, CD4724B, thêm họ cho 73 / 20 / 30 / 14 / 109 / 112 / 125 / 164 và HC4022 / 4516 / 4585) + mã đặt hàng của **mọi** IC 74xx / 4000B: `SN74LS00N / D`, `DM74LS00N`, `SN74HC00N / D / PW`, `CD74HC00E`, `CD4017BE / BM / BPW`, `HCF4017BEY`, `HEF4017BP`, `MC14017BCP` … (2 430 part) |
+| `analog-more` | `more/analogMore.ts` | Analog, Power | 137 loại op-amp (chính xác, JFET, CMOS rail-to-rail, audio, băng rộng; loại đôi / tư kèm vỏ cả chip + từng phần: 448 part), 16 comparator, 68 nguồn áp chuẩn, 110 ổn áp (78xx / 79xx mở rộng, LDO, LM1117 / LD1117 / NCP1117, ổn áp xung LM257x HV) và biến thể vỏ / hãng (`TL072CD`, `LM358PW`, `MCP6291-E/SN`, `L7805CV`, `MC7805CD2T`, `KA7805`, `LM1117T-3.3`, `LM317T` …) (1 534 part) |
+| `discretes-more` | `more/discretesMore.ts` | Diodes, Transistors, RF | 401 Zener (E24 2,4 – 75 V: MMSZ52xx, BZT52C, BZV55C, ZMM, TZMC, ZPD, MMBZ52xx; BZX85C 1,3 W; 1N5913B … 1N5956B và 1SMB59xxB 3 W), 102 LED (thêm cỡ 8 mm, 5 × 2, 3528, 5050, 0402, 3 W và LED dòng thấp 2 mA), 159 BJT, 92 MOSFET (kèm mã `…PBF` và `…S` D2PAK của loại TO-220), 36 JFET, 25 IGBT (1 001 part) |
+| `passives-more` | `more/passivesMore.ts` | Basic | điện trở E96 0603 và màng kim loại 1/4 W 1 % (10 Ω – 1 MΩ), 0402 E24, tụ MLCC C0G / X7R 0603 / 0805 / 1206 (1 267 part) |
+| `sensors-more` | `more/sensorsMore.ts` | Basic, Misc, Indicators | 80 NTC (R25 × B × vỏ giọt / 0603), 10 KTY, 10 IC đo nhiệt (TMP35 / 37, LM45 / 50 / 60, MCP9700 / 9701, TC1047A) + LM35 theo cấp / vỏ, 8 cảm biến Hall, 45 opto (4N26 … 4N38, H11A, CNY17, SFH615A, PC817 A – D, EL817, LTV-817, TLP521 / 621 / 281), 48 LED 7 đoạn (0,28 – 1,0 inch × 6 màu × CA / CC) + thanh LED 10 vạch (213 part) |
+
+**Biến thể** (`more/variants.ts`): `repackage(base, spec)` sao chép part gốc với id, tên, `footprint`, `specs.package` và
+(khi vỏ đánh số chân khác, ví dụ op-amp SOT-23-5: OUT 1, V- 2, IN+ 3, IN- 4, V+ 5) số chân mới; **`toSpice`, tham
+số, tên chân và ký hiệu giữ nguyên** — biến thể mô phỏng y hệt part gốc. `LibraryPartDef.variantOf` ghi id part gốc.
+Mã đặt hàng theo quy ước công khai của từng hãng (`codesFor(pn)` trong `analogMore.ts`; `ORDER_CODES` trong
+`logicMore.ts`); chữ cấp (A / B / C) của hãng không tự sinh, nên vài mã là mã "gần đúng" không có chữ cấp.
+
+**Hợp đồng và chỗ cần biết**
+- Gói mới cần: file `more/<tên>.ts` xuất mảng `LibraryPartDef[]`, mục trong `CATALOGUE_PACKS` (`catalog/index.ts`) với
+  `counts` đúng từng nhóm (`lazyPacks.test.ts` kiểm), nhóm chunk trong `vite.config.ts`, và cập nhật hai số đếm trong
+  `tests/review/completeness/capabilities.test.ts`. Mọi gói lọc id đã có (`fresh()`), nên thêm một part trùng id **không báo lỗi
+  mà bị bỏ** — `counts` sẽ lệch và `lazyPacks.test.ts` báo.
+- Hàm dựng hàng bảng được xuất ra để dùng chung: `opampRowParts / opampRowPackages / comparatorRow / shuntRow /
+  seriesRow` (`analogics.ts`), `regulatorFromText / buckFromText` (`power.ts`), `bjtRowFromText / singleBjt /
+  darlingtonPart` (`bjts.ts`), `mosRow / mosPart / jfetFromText / igbtFromText` (`fets.ts`), `resistorPart / filmPart`
+  (`passiveSeries.ts`), `optocoupler` (`parts/misc.ts`), và bảng `V_BZX`, `ZZT_BZX`, `LED_COLORS_EXT`, `diodePart` (`diodes.ts`).
+- Vỏ mới trong `footprints.ts` (khối `SMD_PACKAGES`): TSSOP / SSOP / SOIC rộng, SOT-23-8, SC-70-5, SOT-89, TO-252, TO-263-3,
+  TO-220F, TO-3P, TO-66, TO-46, chip 0402 / 1206 / 1210, tụ tantan A – D, tụ hoá dán, LED 3528 / 5050 / 0402, LED 7 đoạn
+  0,28 – 1,0 inch, SOP-4.
+- Số liệu trong các bảng mới là giá trị điển hình lấy từ datasheet công khai, **làm tròn một – hai chữ số**
+  (`provenance` của từng part nói rõ); các họ 1,3 W / 3 W của Zener có ZZT, IZT ước lượng từ VZ và công suất.
+- Quy mô bộ thử: `catalog-sim.test.ts` chạy ~11 500 part trong ≈ 20 s, `capabilities.test.ts` ≈ 50 s — không cần lấy mẫu.
+
 ## Hợp đồng dùng chung (chỉ thêm, không đổi nghĩa)
 
 - `src/sim/netlist.ts` — Netlist IR, analysis specs, options.

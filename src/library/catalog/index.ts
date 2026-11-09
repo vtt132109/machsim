@@ -89,4 +89,31 @@ export const CATALOGUE_PACKS: CataloguePack[] = [
     counts: { ttl: 484, cmos: 348 },
     load: async () => (await import('./logicCatalog')).LOGIC_CATALOG,
   },
+  // round 4 (library breadth): more device types, order codes and packages. Each pack is its own chunk
+  // (vite.config.ts catalogue-more-*), loaded on the first open of one of its groups like the packs above.
+  {
+    id: 'logic-more',
+    counts: { ttl: 1092, cmos: 1338 },
+    load: async () => (await import('./more/logicMore')).LOGIC_MORE_CATALOG,
+  },
+  {
+    id: 'analog-more',
+    counts: { analog: 1084, power: 450 },
+    load: async () => (await import('./more/analogMore')).ANALOG_MORE_CATALOG,
+  },
+  {
+    id: 'discretes-more',
+    counts: { diodes: 503, transistors: 496, rf: 2 },
+    load: async () => (await import('./more/discretesMore')).DISCRETES_MORE_CATALOG,
+  },
+  {
+    id: 'passives-more',
+    counts: { basic: 1267 },
+    load: async () => (await import('./more/passivesMore')).PASSIVES_MORE_CATALOG,
+  },
+  {
+    id: 'sensors-more',
+    counts: { basic: 90, misc: 70, indicators: 53 },
+    load: async () => (await import('./more/sensorsMore')).SENSORS_MORE_CATALOG,
+  },
 ];

@@ -630,3 +630,6 @@ const pinDiodes: LibraryPartDef[] = PINS.map(([pn, cj, rs, tt, vr, fp]) =>
 );
 
 export const DIODE_CATALOG: LibraryPartDef[] = [...zeners, ...rectifiers, ...schottkys, ...signalDiodes, ...leds, ...tvs, ...bridges, ...varactors, ...pinDiodes];
+
+/** Round 4 (library breadth): the building blocks of the extra diode tables (more/discretesMore.ts). */
+export { diodePart, isFor, V_BZX, ZZT_BZX, V_1N52, ZZT_1N52, IZT_1N52, bzxCode, ZENER_SYMBOL, dsym, LED_COLORS_EXT };

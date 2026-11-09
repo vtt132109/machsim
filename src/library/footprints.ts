@@ -272,7 +272,67 @@ function rotary(ways: number): Footprint {
   return fp(`ROTARY-1P${ways}T`, 'other', ways + 1, [12, 12], `Công tắc xoay 1 tầng ${ways} vị trí`, `Single-pole ${ways}-way rotary switch`, { pitch: 2.54, pad: 1.2 });
 }
 
-const GENERATED: Footprint[] = [...[3, 4, 6, 8, 12].map(rotary)];
+/** Thin / shrink small-outline IC (TSSOP, SSOP, wide SOIC): n pads in two rows. */
+function sop(name: string, pins: number, pitch: number, span: number, vi: string, en: string): Footprint {
+  const rows = pins / 2;
+  return fp(name, 'soic', pins, [span, (rows - 1) * pitch + 1.2], vi, en, { pitch, smd: true, pad: Math.min(0.6, pitch * 0.55) });
+}
+
+/** Round 4 (library breadth): the surface-mount IC, discrete and passive packages of the catalogue variants. */
+const SMD_PACKAGES: Footprint[] = [
+  ...[8, 14, 16, 20, 24, 28].map((n) => sop(`TSSOP-${n}`, n, 0.65, n <= 8 ? 4.9 : 6.4, `Vỏ dán TSSOP ${n} chân, bước 0.65 mm`, `${n}-pin thin shrink small-outline package, 0.65 mm pitch`)),
+  ...[14, 16, 20, 24, 28].map((n) => sop(`SSOP-${n}`, n, 0.65, 7.8, `Vỏ dán SSOP ${n} chân, bước 0.65 mm`, `${n}-pin shrink small-outline package, 0.65 mm pitch`)),
+  ...[20, 24, 28].map((n) => sop(`SOIC-${n}`, n, 1.27, 10.3, `Vỏ dán SOIC ${n} chân (thân rộng 7.5 mm), bước 1.27 mm`, `${n}-pin wide-body small-outline IC (7.5 mm), 1.27 mm pitch`)),
+  sop('MSOP-10', 10, 0.5, 4.9, 'Vỏ dán MSOP-10, bước 0.5 mm', '10-pin MSOP package, 0.5 mm pitch'),
+  sop('SOIC-8-EP', 8, 1.27, 6, 'Vỏ dán SOIC-8 có miếng tản nhiệt', '8-pin SOIC with exposed thermal pad'),
+  pack('SOT-23-8', 'sot', 8, 2.9, 2.8, 0.65, 'Vỏ dán SOT-23-8, 8 chân bước 0.65 mm', 'SOT-23-8 package, eight pads on a 0.65 mm pitch', true),
+  pack('SC-70-5', 'sot', 5, 2, 2.1, 0.65, 'Vỏ dán SC-70-5 (SOT-353), 5 chân bước 0.65 mm', 'SC-70-5 (SOT-353) package, five pads on a 0.65 mm pitch', true),
+  pack('SOT-323', 'sot', 3, 2, 2.1, 0.65, 'Vỏ dán SOT-323 (SC-70), 3 chân', 'SOT-323 (SC-70) package, three pads', true),
+  pack('SOT-89', 'sot', 3, 4.5, 4.1, 1.5, 'Vỏ dán SOT-89, 3 chân bước 1.5 mm', 'SOT-89 package, three pads on a 1.5 mm pitch', true),
+  pack('SOT-363', 'sot', 6, 2, 2.1, 0.65, 'Vỏ dán SOT-363 (SC-70-6), 6 chân', 'SOT-363 (SC-70-6) package, six pads', true),
+  pack('TO-252', 'to', 3, 6.6, 6.1, 2.29, 'Vỏ dán công suất TO-252 / DPAK, 3 chân', 'TO-252 / DPAK power package, three leads', true),
+  pack('TO-263-3', 'to', 3, 10.2, 9.9, 2.54, 'Vỏ dán công suất TO-263 / D2PAK, 3 chân', 'TO-263 / D2PAK power package, three leads', true),
+  pack('TO-39', 'to', 3, 9.4, 9.4, 5.08, 'Vỏ kim loại TO-39, 3 chân', 'TO-39 metal can, three leads'),
+  pack('TO-66', 'to', 3, 20, 20, 12.7, 'Vỏ kim loại TO-66, 2 chân và vỏ', 'TO-66 metal can, two leads plus the case'),
+  pack('TO-46', 'to', 3, 5.8, 5.8, 2.54, 'Vỏ kim loại TO-46, 3 chân', 'TO-46 metal can, three leads'),
+  pack('TO-3P', 'to', 3, 15.6, 20, 5.45, 'Vỏ TO-3P công suất lớn', 'TO-3P high-power package'),
+  pack('TO-220F', 'to', 3, 10.2, 15.5, 2.54, 'Vỏ TO-220 cách điện toàn phần (TO-220F), 3 chân', 'Fully isolated TO-220F package, three leads'),
+  chip('R0402', 1, 0.5, 'Điện trở dán 0402 (1.0 × 0.5 mm)', '0402 chip resistor (1.0 × 0.5 mm)'),
+  chip('R0603', 1.6, 0.8, 'Điện trở dán 0603 (1.6 × 0.8 mm)', '0603 chip resistor (1.6 × 0.8 mm)'),
+  chip('R1210', 3.2, 2.5, 'Điện trở dán 1210 (3.2 × 2.5 mm)', '1210 chip resistor (3.2 × 2.5 mm)'),
+  chip('C0402', 1, 0.5, 'Tụ dán 0402', '0402 chip capacitor'),
+  chip('C1206', 3.2, 1.6, 'Tụ dán 1206', '1206 chip capacitor'),
+  chip('C1210', 3.2, 2.5, 'Tụ dán 1210', '1210 chip capacitor'),
+  chip('IND-0805', 2, 1.25, 'Cuộn cảm dán 0805', '0805 chip inductor'),
+  chip('LED-0402', 1, 0.5, 'LED dán 0402', '0402 chip LED'),
+  chip('LED-PLCC2', 3.5, 2.8, 'LED dán PLCC-2 (3528)', 'PLCC-2 (3528) chip LED'),
+  chip('SOD-523', 1.2, 0.8, 'Điốt dán SOD-523', 'SOD-523 chip diode'),
+  chip('SOD-80', 3.5, 1.5, 'Điốt MiniMELF (SOD-80)', 'MiniMELF (SOD-80) diode'),
+  chip('TANT-A', 3.2, 1.6, 'Tụ tantan dán cỡ A (EIA 3216)', 'Tantalum chip capacitor, case A (EIA 3216)'),
+  chip('TANT-B', 3.5, 2.8, 'Tụ tantan dán cỡ B (EIA 3528)', 'Tantalum chip capacitor, case B (EIA 3528)'),
+  chip('TANT-C', 6, 3.2, 'Tụ tantan dán cỡ C (EIA 6032)', 'Tantalum chip capacitor, case C (EIA 6032)'),
+  chip('TANT-D', 7.3, 4.3, 'Tụ tantan dán cỡ D (EIA 7343)', 'Tantalum chip capacitor, case D (EIA 7343)'),
+  ...[4, 5, 6.3, 8, 10, 13, 16].map((d) => chip(`CAP-SMD-D${d}`, d, d, `Tụ hoá dán đường kính ${d} mm`, `${d} mm surface-mount electrolytic capacitor`)),
+  leads('CAP-RADIAL-150', 'radial', 3.5, 6.3, 'Tụ hoá đứng 6.3 mm, hai chân cách 3.5 mm', '6.3 mm radial electrolytic capacitor, 3.5 mm lead spacing'),
+  leads('CAP-RADIAL-350', 'radial', 7.5, 13, 'Tụ hoá đứng 13 mm, hai chân cách 7.5 mm', '13 mm radial electrolytic capacitor, 7.5 mm lead spacing'),
+  leads('CAP-RADIAL-500', 'radial', 10, 18, 'Tụ hoá đứng 18 mm, hai chân cách 10 mm', '18 mm radial electrolytic capacitor, 10 mm lead spacing'),
+  leads('CAP-DISC-5MM', 'radial', 5, 5, 'Tụ gốm đĩa, hai chân cách 5 mm', 'Ceramic disc capacitor, 5 mm lead spacing'),
+  leads('CAP-FILM-10MM', 'radial', 10, 6, 'Tụ phim, hai chân cách 10 mm', 'Film capacitor, 10 mm lead spacing'),
+  leads('CAP-FILM-15MM', 'radial', 15, 8, 'Tụ phim, hai chân cách 15 mm', 'Film capacitor, 15 mm lead spacing'),
+  leads('RES-AXIAL-250', 'axial', 7.62, 2, 'Điện trở 1/4 W hướng trục, hai lỗ cách 7.62 mm', '1/4 W axial resistor, 7.62 mm lead spacing'),
+  leads('RES-AXIAL-600', 'axial', 15.24, 3.2, 'Điện trở 2 W hướng trục, hai lỗ cách 15.24 mm', '2 W axial resistor, 15.24 mm lead spacing', 1),
+  leads('LED-8MM', 'radial', 2.54, 8, 'LED tròn 8 mm, hai chân cách 2.54 mm', '8 mm round LED, 2.54 mm lead spacing'),
+  leads('LED-RECT-5X2', 'radial', 2.54, 5, 'LED chữ nhật 5 × 2 mm', '5 × 2 mm rectangular LED'),
+  chip('LED-3528', 3.5, 2.8, 'LED dán 3528', '3528 chip LED'),
+  fp('DISPLAY-7SEG-0.28', 'display', 10, [12.7, 10], 'LED 7 đoạn 0.28 inch, 10 chân hai hàng', '0.28 inch single-digit seven-segment display, 10 pins in two rows', { pitch: 2.54, pad: 1.2 }),
+  fp('DISPLAY-7SEG-0.36', 'display', 10, [15.6, 10], 'LED 7 đoạn 0.36 inch, 10 chân hai hàng', '0.36 inch single-digit seven-segment display, 10 pins in two rows', { pitch: 2.54, pad: 1.3 }),
+  fp('DISPLAY-7SEG-0.8', 'display', 10, [27, 20], 'LED 7 đoạn 0.8 inch, 10 chân hai hàng', '0.8 inch single-digit seven-segment display, 10 pins in two rows', { pitch: 2.54, pad: 1.5 }),
+  fp('DISPLAY-7SEG-1.0', 'display', 10, [31, 25], 'LED 7 đoạn 1.0 inch, 10 chân hai hàng', '1.0 inch single-digit seven-segment display, 10 pins in two rows', { pitch: 2.54, pad: 1.5 }),
+  sop('SOP-4', 4, 2.54, 6.8, 'Vỏ dán SOP 4 chân (opto), bước 2.54 mm', '4-pin SOP package (optocouplers), 2.54 mm pitch'),
+  chip('LED-5050', 5, 5, 'LED dán 5050', '5050 chip LED'),
+];
+
+const GENERATED: Footprint[] = [...[3, 4, 6, 8, 12].map(rotary), ...SMD_PACKAGES];
 
 const ALL: Footprint[] = [...CATALOG, ...GENERATED];
 

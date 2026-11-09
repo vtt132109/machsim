@@ -329,7 +329,8 @@ const JFET_TEXT = [
 
 const JFET_SYM = { n: jfetSymbol(false), p: jfetSymbol(true) };
 
-const jfets: LibraryPartDef[] = JFET_TEXT.map((t) => {
+/** One JFET table row ("pn ch IDSS VGS(off) Ciss Crss package"). */
+export function jfetFromText(t: string): LibraryPartDef {
   const [pn, ch, idssS, vpS, cissS, crssS, pkg] = t.split(/\s+/);
   const pch = ch === 'P';
   const idss = num(idssS, pn);
@@ -358,7 +359,9 @@ const jfets: LibraryPartDef[] = JFET_TEXT.map((t) => {
     },
     { vi: `JFET kênh ${pch ? 'P' : 'N'}, ${tail}`, specs: { polarity: `${pch ? 'P' : 'N'}-channel`, idss, vp, ciss, package: pkg }, sortKey: idss, series: 'JFET' },
   );
-});
+}
+
+const jfets: LibraryPartDef[] = JFET_TEXT.map(jfetFromText);
 
 // ---------------------------------------------------------------------------------------------
 // IGBTs: "pn VCES IC VCE(sat) VGE(th) Cies package"
@@ -393,7 +396,8 @@ const IGBT_SYMBOL: SymbolDef = makeSymbol(
   { refPos: { x: 26, y: -6 }, valuePos: { x: 26, y: 8 } },
 );
 
-const igbts: LibraryPartDef[] = IGBT_TEXT.map((t) => {
+/** One IGBT table row ("pn VCES IC VCE(sat) VGE(th) Cies package"). */
+export function igbtFromText(t: string): LibraryPartDef {
   const [pn, vcesS, icS, vsatS, vthS, ciesS, pkg] = t.split(/\s+/);
   const vces = num(vcesS, pn);
   const ic = num(icS, pn);
@@ -435,7 +439,9 @@ const igbts: LibraryPartDef[] = IGBT_TEXT.map((t) => {
     },
     { vi: `IGBT kênh N${copack ? ' có diode song song ngược' : ''}, ${tail}`, specs: { vceo: vces, ic, vth, package: pkg }, sortKey: vces + ic / 1000, series: 'IGBT' },
   );
-});
+}
+
+const igbts: LibraryPartDef[] = IGBT_TEXT.map(igbtFromText);
 
 // ---------------------------------------------------------------------------------------------
 // UJT and PUT
@@ -562,3 +568,6 @@ const mesfets: LibraryPartDef[] = MESFET_TEXT.map((t) => {
 });
 
 export const FET_CATALOG: LibraryPartDef[] = [...MOS_TEXT.map(mosRow).map(mosPart), ...depletion, ...jfets, ...igbts, ...ujts, ...puts, ...mesfets];
+
+/** Round 4 (library breadth): the MOSFET row parser and part builder, for the extra part-number tables. */
+export { mosRow, mosPart };

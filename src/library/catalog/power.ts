@@ -83,13 +83,14 @@ const REG_TEXT = [
   'LM323 pos 5 2 4 12m 0.005 TO-3',
 ];
 
-const num = (s: string, pn: string): number => {
+export const num = (s: string, pn: string): number => {
   const v = Number(s.replace(/u$/, 'e-6').replace(/m$/, 'e-3'));
   if (!Number.isFinite(v)) throw new Error(`bad regulator value '${s}' in ${pn}`);
   return v;
 };
 
-const regulators: LibraryPartDef[] = REG_TEXT.map((t) => {
+/** One linear-regulator table row ("pn kind v vdo ilim iq rout package"; round 4: also used by the library-breadth packs). */
+export function regulatorFromText(t: string): LibraryPartDef {
   const [pn, kind, vS, dS, lS, qS, rS, pkg] = t.split(/\s+/);
   const s: RegSpec = { pn, kind: kind as RegSpec['kind'], v: num(vS, pn), vdo: num(dS, pn), ilim: num(lS, pn), iq: num(qS, pn), rout: num(rS, pn), description: '', footprint: pkg };
   const ldo = s.vdo < 0.9;
@@ -104,7 +105,9 @@ const regulators: LibraryPartDef[] = REG_TEXT.map((t) => {
     : `Ổn áp ${ldo ? 'sụt áp thấp (LDO)' : 'tuyến tính cố định'} ${neg ? '−' : '+'}${s.v} V ${eng(iout, 'A')}, sụt áp tối thiểu ${s.vdo} V, IQ ${eng(s.iq, 'A')}`;
   const base = regulatorPart({ ...s, description: en });
   return withMeta({ ...base, keywords: [...(base.keywords ?? []), ...(ldo ? ['ldo', 'low dropout'] : [])] }, { vi, specs: { vout: adj ? 1.25 : s.v * (neg ? -1 : 1), iout, dropout: s.vdo, iq: s.iq, package: pkg }, sortKey: (neg ? -1 : 1) * s.v + iout / 100, series: ldo ? 'LDO' : 'Linear regulator' });
-});
+}
+
+const regulators: LibraryPartDef[] = REG_TEXT.map(regulatorFromText);
 
 // ---------------------------------------------------------------------------------------------
 // averaged PWM switch and converter modules
@@ -304,7 +307,8 @@ function buckSubckt(name: string, vout: number, vref: number, ilim: number, iq: 
   ]);
 }
 
-const bucks: LibraryPartDef[] = BUCK_TEXT.map((t) => {
+/** One averaged buck-regulator table row ("pn vout(0 = ADJ) vref ilim fsw iq package"). */
+export function buckFromText(t: string): LibraryPartDef {
   const [pn, voS, vrS, ilS, fsS, iqS, pkg] = t.split(/\s+/);
   const vout = Number(voS);
   const vref = Number(vrS);
@@ -335,7 +339,9 @@ const bucks: LibraryPartDef[] = BUCK_TEXT.map((t) => {
       series: 'Buck regulator',
     },
   );
-});
+}
+
+const bucks: LibraryPartDef[] = BUCK_TEXT.map(buckFromText);
 
 // ---------------------------------------------------------------------------------------------
 // PWM generator, PI / PID, phase-angle controller

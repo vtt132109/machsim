@@ -125,7 +125,11 @@ const opampPackages: LibraryPartDef[] = [
       keywords: [o.pn.toLowerCase(), 'op-amp', 'opamp', 'operational amplifier', ...o.keywords],
     }),
   ),
-  ...OPAMP_TEXT.flatMap((t) => {
+  ...OPAMP_TEXT.flatMap(opampRowPackages),
+];
+
+/** The whole chip and the sections of the dual / quad types named in one op-amp table row (round 4: also used by the library-breadth packs). */
+export function opampRowPackages(t: string): LibraryPartDef[] {
     const f = t.split(/\s+/);
     const p: OpampParams = { avol: n(f[1], f[0]), gbw: n(f[2], f[0]), slew: n(f[3], f[0]), rin: n(f[4], f[0]), rout: n(f[5], f[0]), vos: n(f[6], f[0]), iq: n(f[7], f[0]), vsatp: n(f[8], f[0]), vsatn: n(f[9], f[0]), isc: n(f[10], f[0]) };
     return f[0].split('/').flatMap((x) => {
@@ -143,10 +147,12 @@ const opampPackages: LibraryPartDef[] = [
         keywords: [pn.toLowerCase(), 'op-amp', 'opamp', 'operational amplifier', input],
       });
     });
-  }),
-];
+}
 
-const opamps: LibraryPartDef[] = OPAMP_TEXT.flatMap((t) => {
+const opamps: LibraryPartDef[] = OPAMP_TEXT.flatMap(opampRowParts);
+
+/** The parts (one per name, a section of the dual / quad where marked) of one op-amp table row. */
+export function opampRowParts(t: string): LibraryPartDef[] {
   const f = t.split(/\s+/);
   const names = f[0].split('/').map((x) => {
     const [pn, ch] = x.split(':');
@@ -189,7 +195,7 @@ const opamps: LibraryPartDef[] = OPAMP_TEXT.flatMap((t) => {
       },
     );
   });
-});
+}
 
 // ---------------------------------------------------------------------------------------------
 // comparators: "pn tresp iq oc|pp vmax package"
@@ -214,7 +220,8 @@ const COMP_TEXT = [
 ];
 
 const COMP_SYMBOL = comparatorSymbol();
-const comparators: LibraryPartDef[] = COMP_TEXT.map((t) => {
+/** One comparator table row ("pn tresp iq oc|pp vmax package"). */
+export function comparatorRow(t: string): LibraryPartDef {
   const [pn, trS, iqS, out, vmaxS, pkg] = t.split(/\s+/);
   const tresp = n(trS, pn);
   const iq = n(iqS, pn);
@@ -242,7 +249,9 @@ const comparators: LibraryPartDef[] = COMP_TEXT.map((t) => {
       series: 'Comparator',
     },
   );
-});
+}
+
+const comparators: LibraryPartDef[] = COMP_TEXT.map(comparatorRow);
 
 // ---------------------------------------------------------------------------------------------
 // instrumentation amplifiers (three-op-amp topology with external RG)
@@ -355,7 +364,8 @@ const SHUNT_TEXT = [
 
 const SHUNT_SYMBOL = twoPinH(diodeBody('zener'), { names: ['A', 'K'] });
 
-const shuntRefs: LibraryPartDef[] = SHUNT_TEXT.map((t) => {
+/** One shunt-reference table row ("pn vref zzt package"). */
+export function shuntRow(t: string): LibraryPartDef {
   const [pn, vS, zS, pkg] = t.split(/\s+/);
   const vref = n(vS, pn);
   const zzt = n(zS, pn);
@@ -378,7 +388,9 @@ const shuntRefs: LibraryPartDef[] = SHUNT_TEXT.map((t) => {
     },
     { vi: `Nguồn áp chuẩn kiểu song song ${vref} V (dùng với điện trở nối tiếp như diode Zener), trở kháng động ≈ ${zzt} Ω`, specs: { vout: vref, package: pkg }, sortKey: vref, series: 'Shunt reference' },
   );
-});
+}
+
+const shuntRefs: LibraryPartDef[] = SHUNT_TEXT.map(shuntRow);
 
 /** Series: "pn vout dropout iq iout package". */
 const SERIES_TEXT = [
@@ -399,7 +411,8 @@ const SERIES_TEXT = [
 
 const SERIES_SYMBOL: SymbolDef = boxSymbol({ w: 60, h: 40, left: [{ name: 'IN', number: '2', type: 'power' }], right: [{ name: 'OUT', number: '6', type: 'power' }], bottom: [{ name: 'GND', number: '4' }], title: 'REF', titleSize: 9, titlePos: { x: 0, y: -6 } });
 
-const seriesRefs: LibraryPartDef[] = SERIES_TEXT.map((t) => {
+/** One series-reference table row ("pn vout dropout iq iout package"). */
+export function seriesRow(t: string): LibraryPartDef {
   const [pn, vS, dS, iqS, ioS, pkg] = t.split(/\s+/);
   const s: RegSpec = { pn, kind: 'pos', v: n(vS, pn), vdo: n(dS, pn), ilim: n(ioS, pn) * 2, iq: n(iqS, pn), rout: 0.05, description: '', footprint: pkg };
   const sub = posRegulator(modelName(pn), s);
@@ -420,7 +433,9 @@ const seriesRefs: LibraryPartDef[] = SERIES_TEXT.map((t) => {
     },
     { vi: `Nguồn áp chuẩn kiểu nối tiếp ${s.v} V, sụt áp tối thiểu ${s.vdo} V, dòng ra tới ${eng(s.ilim / 2, 'A')}, IQ ${eng(s.iq, 'A')}`, specs: { vout: s.v, dropout: s.vdo, iq: s.iq, package: pkg }, sortKey: s.v, series: 'Series reference' },
   );
-});
+}
+
+const seriesRefs: LibraryPartDef[] = SERIES_TEXT.map(seriesRow);
 
 // ---------------------------------------------------------------------------------------------
 // timers

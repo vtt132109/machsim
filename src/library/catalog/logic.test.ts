@@ -414,7 +414,8 @@ describe('logic catalogue structure', () => {
       if (new Set(names).size !== names.length) bad.push(`${p.id}: duplicate pin names`);
       const nums = p.symbol.pins.map((q) => q.number).filter((n): n is string => !!n);
       if (new Set(nums).size !== nums.length) bad.push(`${p.id}: duplicate pin numbers ${nums.sort().join(',')}`);
-      const pkg = Number((p.footprint ?? '').replace('DIP-', ''));
+      // DIP-14, and the SOIC-14 / TSSOP-14 package variants of round 4 (same pin numbers)
+      const pkg = Number((p.footprint ?? '').replace(/^[A-Z]+-/, ''));
       const m = p.description.match(/Hidden power pins \(\w+ = (\d+), \w+ = (\d+)\)/);
       if (!m) bad.push(`${p.id}: no power pin sentence`);
       else if (nums.includes(m[1]) || nums.includes(m[2])) bad.push(`${p.id}: a signal pin uses power pin ${m[1]} / ${m[2]}`);

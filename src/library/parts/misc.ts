@@ -415,3 +415,6 @@ function header(n: number, kind: 'header' | 'terminal'): LibraryPartDef {
 const connectors = [header(2, 'header'), header(3, 'header'), header(4, 'header'), header(2, 'terminal'), header(3, 'terminal')];
 
 export const MISC_PARTS: LibraryPartDef[] = [...crystals, ...optocouplers, tline, coax, dcMotor, relay(false), relay(true), ...connectors];
+
+/** Round 4 (library breadth): the optocoupler builder, for the extra optocoupler tables (catalog/more/sensorsMore.ts). */
+export { optocoupler };
