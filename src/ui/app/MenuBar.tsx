@@ -12,6 +12,8 @@ import { commandRegistry, hasCommand, isSimulationConnected, runCommand } from '
 import { buildMenus, type MenuContext } from './menus';
 import { beginnerMenus } from './beginner';
 import { clearRecentFiles, openRecentFile, openRecentProject, recentFiles, recentProjectFiles } from './document';
+import { documents } from './documentSet';
+import { displayFileName } from './files';
 import { t } from '../../i18n';
 import { setActiveVariant } from '../../model/variants';
 
@@ -28,6 +30,7 @@ export function MenuBar() {
   useSyncExternalStore(commandRegistry.subscribe, commandRegistry.getState, commandRegistry.getState);
   const recent = useSyncExternalStore(recentFiles.subscribe, recentFiles.getState, recentFiles.getState);
   const recentProjects = useSyncExternalStore(recentProjectFiles.subscribe, recentProjectFiles.getState, recentProjectFiles.getState);
+  const docs = useSyncExternalStore(documents.view.subscribe, documents.view.getState, documents.view.getState);
   const [open, setOpen] = useState<{ index: number; keyboard: boolean } | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -52,6 +55,8 @@ export function MenuBar() {
     setTheme: (mode) => actions.setUi({ theme: mode }),
     setActiveSheet: (id) => actions.setActiveSheet(id),
     simulationConnected: isSimulationConnected(),
+    documents: docs.docs.map((d) => ({ id: d.id, label: displayFileName(d.fileName), dirty: d.dirty, active: d.id === docs.activeId })),
+    switchDocument: (id) => void documents.switchTo(id),
   };
   const menus = beginnerMenus(buildMenus(ctx), state.ui.beginner === true);
 

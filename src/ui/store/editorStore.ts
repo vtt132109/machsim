@@ -28,6 +28,8 @@ import type {
   Point,
   PrintSetup,
   Probe,
+  RefdesRules,
+  SheetLayers,
   ProbeKind,
   Rotation,
   Shape,
@@ -56,6 +58,7 @@ import type {
   Clipboard,
   EditorState,
   HistoryState,
+  DocumentState,
   ItemKind,
   PartLookup,
   RatingState,
@@ -69,6 +72,9 @@ import type {
 import * as ops from './designOps';
 import { levelSheets, validateRefdes } from './refdes';
 import { followNetColors, renameNetAcrossSettings } from './netColors';
+import { setSheetLayers } from '../../model/layers';
+import { annotationRefs, reorderAnnotations, type OrderOp } from '../../model/annotationOrder';
+import { applyRulesToDesign, normalizeRules, type ApplyRulesResult } from '../../model/refdesRules';
 import { centerOn, DEFAULT_VIEW, fitRect, zoomAt } from './viewport';
 import { nextInteractiveValue, type InteractionPhase } from './interactive';
 import { newId } from './ids';
@@ -100,6 +106,11 @@ export interface EditorOptions {
 }
 
 export type InteractiveListener = (refdes: string, param: string, value: string) => void;
+
+/** Outcome of {@link Editor} `pasteSpecial`. */
+export type PasteSpecialResult =
+  | { ok: true; count: number; renamed?: number; childId?: string }
+  | { ok: false; reason: 'noClipboard' | 'restricted' | 'noTarget' | 'nothingMatched' | 'noParts' };
 
 /** A new empty design whose first sheet is named in the UI language ("Trang 1" / "Sheet 1"). */
 /** A new design named and with sheet names in the UI language ("Chưa đặt tên", "Trang 1"). */
@@ -272,6 +283,26 @@ function restrictionMessage(v: 'lockedPart' | 'description'): string {
   return v === 'lockedPart' ? t('learn.restricted.lockedPart') : t('learn.restricted.description');
 }
 
+/** The per-document part of an editor state (see {@link DocumentState}). */
+export function pickDocument(s: EditorState): DocumentState {
+  return {
+    design: s.design,
+    savedDesign: s.savedDesign,
+    fileName: s.fileName,
+    activeSheetId: s.activeSheetId,
+    selection: s.selection,
+    views: s.views,
+    history: s.history,
+    ercMarkers: s.ercMarkers,
+    simMessages: s.simMessages,
+    probeValues: s.probeValues,
+    indicatorLevels: s.indicatorLevels,
+    ladderLive: s.ladderLive,
+    ratingStates: s.ratingStates,
+    sim: s.sim,
+  };
+}
+
 export function createEditor(options: EditorOptions = {}) {
   const baseLookup: PartLookup = options.lookup ?? getPart;
   const now = options.now ?? (() => Date.now());
@@ -405,6 +436,25 @@ export function createEditor(options: EditorOptions = {}) {
     /** File > New: an empty design named in the UI language (file name 'Untitled.msim' until saved). */
     newDocument(title?: string) {
       actions.loadDesign(newLocalizedDesign(title), title ? `${title}.msim` : 'Untitled.msim');
+    },
+    /**
+     * Document tabs (src/ui/app/documents.ts): the part of the state that belongs to the current
+     * document, to be kept while another document is shown. Pure data, no history is changed.
+     */
+    captureDocument(): DocumentState {
+      return pickDocument(getState());
+    },
+    /** Show a captured document again: its undo history, selection, views and simulation state. */
+    restoreDocument(doc: DocumentState) {
+      drag = null;
+      setState((s) => ({ ...s, ...doc, tool: { kind: 'select' } }));
+    },
+    /** A fresh document (state of a newly opened design) that can be restored later; the store is not touched. */
+    makeDocument(design: Design, fileName = 'Untitled.msim', saved = true): DocumentState {
+      const painted = followNetColors(design, lookup);
+      const fresh = initialEditorState(painted, fileName);
+      const doc = pickDocument(fresh);
+      return saved ? doc : { ...doc, savedDesign: newDesign() };
     },
     /** Mark the current document as saved (optionally under a new file name). */
     markSaved(fileName?: string) {
@@ -768,6 +818,93 @@ export function createEditor(options: EditorOptions = {}) {
     },
     getClipboard(): Clipboard | null {
       return clipboard;
+    },
+    /**
+     * Paste special (Edit > Paste special), one undo step. Modes:
+     *  - 'keepNames': the copied parts keep their designators where those are free (a designator
+     *    that is taken gets the next free number); use it to bring a circuit over from another
+     *    document without renaming it;
+     *  - 'values': only the parameter values of the copied parts are written onto the SELECTED
+     *    parts of the same kind (position, wiring and designators stay);
+     *  - 'block': the copied circuit is pasted and at once replaced by a subcircuit / hierarchical
+     *    block named `o.name` (default "Block"), with ports where nets leave the fragment.
+     * Returns what happened so the caller can tell the learner.
+     */
+    pasteSpecial(mode: 'keepNames' | 'values' | 'block', o: { at?: Point; name?: string; kind?: ChildDesign['kind'] } = {}): PasteSpecialResult {
+      if (!clipboard) return { ok: false, reason: 'noClipboard' };
+      const s = getState();
+      if (!pasteAllowed(clipboardHiddenBy, s.design)) {
+        actions.addSimMessage('warning', t('learn.restricted.paste'), 'instructor');
+        return { ok: false, reason: 'restricted' };
+      }
+      if (mode === 'values') {
+        const r = ops.pasteValuesOnly(s.design, s.activeSheetId, clipboard, s.selection, lookup);
+        if (!r.changed) return { ok: false, reason: s.selection.some((x) => x.kind === 'part') ? 'nothingMatched' : 'noTarget' };
+        if (commit(r.design)) reportSanitize(r.notes);
+        return { ok: true, count: r.changed };
+      }
+      let offset: Point;
+      if (o.at) offset = { x: snap(o.at.x) - clipboard.anchor.x, y: snap(o.at.y) - clipboard.anchor.y };
+      else {
+        pasteCount += 1;
+        offset = { x: 20 * pasteCount, y: 20 * pasteCount };
+      }
+      const r = ops.pasteItems(s.design, s.activeSheetId, clipboard, offset, lookup, { keepRefdes: mode === 'keepNames' });
+      if (mode === 'keepNames') {
+        // the pasted parts come back in the order of the copied ones
+        const placed = new Map((ops.getSheet(r.design, s.activeSheetId)?.parts ?? []).map((q) => [q.id, q]));
+        const ids = r.selection.filter((x) => x.kind === 'part').map((x) => x.id);
+        const renamed = clipboard.parts.filter((p, i) => placed.get(ids[i])?.refdes !== p.refdes).length;
+        const kept = ids.length;
+        if (commit(r.design, { selection: r.selection })) reportSanitize(r.notes);
+        return { ok: true, count: kept, renamed };
+      }
+      if (!r.selection.some((x) => x.kind === 'part')) return { ok: false, reason: 'noParts' };
+      const block = hops.replaceWithSubcircuit(r.design, s.activeSheetId, r.selection, { kind: o.kind ?? 'subcircuit', name: o.name?.trim() || 'Block', sheetName: t('sheet.default', { n: 1 }) }, baseLookup);
+      if (!block) return { ok: false, reason: 'noParts' };
+      if (commit(block.design, { selection: [{ kind: 'part', id: block.blockId }] })) reportSanitize(r.notes);
+      return { ok: true, count: 1, childId: block.childId };
+    },
+    /** Edit > Order: move the selected shapes / texts in the drawing order (one undo step). */
+    orderSelection(op: OrderOp): boolean {
+      const s = getState();
+      const refs = annotationRefs(s.selection);
+      if (!refs.length) return false;
+      const sheet = ops.getSheet(s.design, s.activeSheetId);
+      if (!sheet) return false;
+      const next = reorderAnnotations(sheet, refs, op);
+      if (next === sheet) return false;
+      return commit(ops.updateSheet(s.design, s.activeSheetId, () => next));
+    },
+    /**
+     * Edit > Layer settings: show or hide drawing layers on the given sheets (default: the active
+     * sheet), one undo step. Hiding a layer changes the drawing only, never the circuit.
+     */
+    setSheetLayers(layers: SheetLayers, sheetIds?: readonly string[]): boolean {
+      const s = getState();
+      let d = s.design;
+      for (const id of sheetIds ?? [s.activeSheetId]) d = ops.updateSheet(d, id, (sh) => setSheetLayers(sh, layers));
+      return commit(d);
+    },
+    /**
+     * Tools > Reference designator prefixes: store the rules and, when `rename` is set, rename the
+     * parts already placed to follow them (numbers are kept). One undo step; returns the number of
+     * designators renamed and those that could not be (a clash).
+     */
+    setRefdesRules(rules: RefdesRules | undefined, rename = false): ApplyRulesResult {
+      const d = getState().design;
+      if (rename) {
+        const r = applyRulesToDesign(d, rules);
+        commit(r.design);
+        return r;
+      }
+      const normalized = normalizeRules(rules);
+      if (JSON.stringify(normalized ?? null) === JSON.stringify(d.refdesRules ?? null)) return { design: d, changed: 0, skipped: [] };
+      const next: Design = { ...d };
+      if (normalized) next.refdesRules = normalized;
+      else delete next.refdesRules;
+      commit(next);
+      return { design: next, changed: 0, skipped: [] };
     },
     updatePart(partId: string, p: Partial<Omit<PartInstance, 'id'>>, o: CommitOptions = {}) {
       const s = getState();

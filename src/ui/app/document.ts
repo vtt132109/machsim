@@ -1,6 +1,6 @@
 /**
- * Document lifecycle of the shell: new / open / save / save as / recent files / export / print,
- * periodic autosave to the recovery slot with a prompt after an unclean exit (recovery.ts), and the
+ * Document lifecycle of the shell: new / open / save / save as / recent files / export (printing is in
+ * src/ui/print), periodic autosave to the recovery slot with a prompt after an unclean exit (recovery.ts), and the
  * desktop-bridge integration (window title, dirty flag, files opened from the OS).
  *
  * Open: openOpenedFile() hands non-.msim files (MachSim XML, KiCad, EDIF, snippet pictures,
@@ -10,8 +10,15 @@
  * {@link registerSaveTransform} hooks (Grapher pages kept with the design) and, on the desktop,
  * keeps the number of .bak copies chosen in Options > File options.
  *
- * Every function reports problems with a dialog instead of throwing. "Discard changes?" prompts
- * protect unsaved work before the document is replaced.
+ * Every function reports problems with a dialog instead of throwing.
+ *
+ * Several designs can be open at once (documents.ts): opening, importing or generating a design
+ * puts it in a new document tab (an untouched start-up design is replaced instead), so opening
+ * never discards anything. This module keeps what belongs to the *current* document next to the
+ * editor store (where the document was opened from) and registers it as a document extension, so
+ * every tab remembers its own file. Closing documents, Save all and the quit question are in
+ * documentFlows.ts. Autosave writes ONE recovery record holding every document with unsaved
+ * changes.
  */
 import { DesignFormatError, serializeDesign } from '../../model/serialize';
 import { parseDesignSafely } from '../../model/sanitize';
@@ -22,11 +29,10 @@ import { SAVED_BY } from '../../model/appInfo';
 import { browserRecoveryStore, desktopRecoveryStore, HEARTBEAT_MS, recoveryDecision, type PreviousSession, type RecoveryStore } from './recovery';
 import { getDesktopBridge } from '../../desktop/bridge';
 import { actions, getState, isDirty, partLookup, subscribe } from '../store';
+import { newLocalizedDesign } from '../store/editorStore';
+import { documents } from './documentSet';
 import { createStore } from '../store/createStore';
 import { activeSheet } from '../store/editorStore';
-import { getSheet } from '../store/designOps';
-import { instrumentSummary, planPrint } from './printPlan';
-import { paramLabel, partName } from '../../i18n/library';
 import { alertDialog, choiceDialog, promptText } from '../common/dialogs';
 import {
   baseName,
@@ -44,6 +50,8 @@ import {
   saveTextAs,
   writeRecent,
   writeToTarget,
+  recordDocuments,
+  type AutosaveDoc,
   type AutosaveRecord,
   type FileTarget,
   type OpenedFile,
@@ -56,6 +64,29 @@ let target: FileTarget | null = null;
 
 /** Browser files: size and last-modified time of the opened file (File > File information). */
 let openedStat: { size?: number; lastModified?: number } | null = null;
+
+// Document tabs: each document remembers the file it came from. A document that was never saved
+// and holds nothing counts as "just the start-up design" and is replaced by the next one opened.
+documents.registerExtension({
+  id: 'file',
+  capture: () => ({ target, openedStat }),
+  restore: (d) => {
+    const v = d as { target: FileTarget | null; openedStat: { size?: number; lastModified?: number } | null } | undefined;
+    target = v?.target ?? null;
+    openedStat = v?.openedStat ?? null;
+  },
+});
+documents.setReplaceable(() => target === null);
+
+/** Desktop files that are open, by document id: opening the same file again shows its tab instead of opening a copy. */
+const openPaths = new Map<string, string>();
+
+/** The open document that holds this desktop file, if any. */
+function documentOfPath(path: string): string | undefined {
+  const live = new Set(documents.list().map((d) => d.id));
+  for (const [id, p] of openPaths) if (live.has(id) && p.toLowerCase() === path.toLowerCase()) return id;
+  return undefined;
+}
 
 /** Where the current document lives, for File > File information. */
 export function currentFileTarget(): FileTarget | null {
@@ -197,10 +228,6 @@ export function designErrorSummary(issues: readonly string[]): string {
 }
 
 /**
- * When the document has unsaved changes ask whether to save them first.
- * Resolves true when it is safe to replace the document.
- */
-/**
  * Text of the "unsaved changes" prompt. The file name is the one the learner reads in the window
  * title and the status bar ("Chưa đặt tên.msim"), never the internal "Untitled.msim".
  */
@@ -208,44 +235,56 @@ export function unsavedChangesMessage(fileName: string, action: string = t('app.
   return t('app.document.filenameHasUnsavedChangesSave', { fileName: displayFileName(fileName), action });
 }
 
-export async function confirmDiscardChanges(action?: string): Promise<boolean> {
-  if (!isDirty(getState())) return true;
-  const choice = await choiceDialog({
-    title: t('app.document.unsavedChanges'),
-    message: unsavedChangesMessage(getState().fileName, action),
-    choices: [
-      { id: 'cancel', label: t('common.cancel') },
-      { id: 'discard', label: t('app.document.dontSave'), danger: true },
-      { id: 'save', label: t('common.save'), primary: true },
-    ],
-  });
-  if (choice === 'save') return saveDocument();
-  return choice === 'discard';
+/**
+ * Called before a design is opened, imported or generated: resolves true when there is room for it.
+ * With document tabs the new design opens in a tab of its own (or replaces an untouched start-up
+ * design), so unsaved changes of the current document are never at risk and nothing is asked; the
+ * only reason to say no is the limit of open documents, which the learner is told about. The
+ * name and the `action` text are kept so existing callers stay as they are.
+ */
+export async function confirmDiscardChanges(_action?: string): Promise<boolean> {
+  void _action;
+  if (documents.canOpen()) return true;
+  await alertDialog({ title: t('docs.tooMany.title'), message: t('docs.tooMany.message', { n: documents.maxDocuments }) });
+  return false;
 }
 
+/** File > New: an empty design in a new tab. */
 export async function newDocument(): Promise<void> {
-  if (!(await confirmDiscardChanges(t('app.document.startANewDesign')))) return;
+  if (!(await confirmDiscardChanges())) return;
+  const id = await documents.open(newLocalizedDesign(), 'Untitled.msim', { replace: false });
+  if (!id) return;
   target = null;
   openedStat = null;
-  actions.newDocument();
-  void recoveryStore().clearRecord();
 }
 
 /**
- * Open a generated design (circuit wizards) as a new, unsaved document. Asks to save unsaved
- * changes first; resolves false when the user cancels.
+ * Make `design` the current document (a new tab, or the untouched start-up design replaced), then
+ * record where it came from. Resolves false when the limit of open documents is reached.
  */
-export async function openGeneratedDesign(design: Design, name: string, confirm = true): Promise<boolean> {
-  if (confirm && !(await confirmDiscardChanges(t('app.document.startANewDesign')))) return false;
-  // the catalogue packs the design uses load first, so its parts are drawn and netlisted at once
-  const parts = designPartsReady(design);
-  if (parts) await parts;
-  target = null;
+async function presentDesign(design: Design, fileName: string, from: FileTarget | null, saved: boolean): Promise<boolean> {
+  if (!(await confirmDiscardChanges())) return false;
+  const id = await documents.open(design, fileName, { saved });
+  if (!id) return false;
+  if (from?.kind === 'desktop') openPaths.set(id, from.path);
+  else openPaths.delete(id);
+  target = from;
   openedStat = null;
-  actions.loadDesign(design, ensureExtension(name), false);
   actions.fitAll();
   documentLoaded(design);
   return true;
+}
+
+/**
+ * Open a generated design (circuit wizards, lessons, samples) as a new, unsaved document in its
+ * own tab. Resolves false when no more documents can be opened.
+ */
+export async function openGeneratedDesign(design: Design, name: string, confirm = true): Promise<boolean> {
+  void confirm;
+  // the catalogue packs the design uses load first, so its parts are drawn and netlisted at once
+  const parts = designPartsReady(design);
+  if (parts) await parts;
+  return presentDesign(design, ensureExtension(name), null, false);
 }
 
 /** File names treated as SPICE decks rather than designs (File > Open, Explorer, recent files). */
@@ -285,6 +324,10 @@ export async function loadDesignText(text: string, name: string, from: FileTarge
     await spiceFileHandler.current(text, name);
     return true;
   }
+  // the same desktop file is already open: show that tab (a second copy would let two editors
+  // overwrite each other's changes)
+  const already = from?.kind === 'desktop' ? documentOfPath(from.path) : undefined;
+  if (already) return documents.switchTo(already);
   try {
     // the shared integrity layer: a file whose design-scoped references (assembly variants, ERC
     // options, net settings, blocks) do not resolve is repaired and reported, never refused
@@ -292,11 +335,7 @@ export async function loadDesignText(text: string, name: string, from: FileTarge
     const design = await designForOpen(parsed, name);
     const parts = designPartsReady(design);
     if (parts) await parts;
-    target = from;
-    openedStat = null;
-    actions.loadDesign(design, ensureExtension(name), saved);
-    actions.fitAll();
-    documentLoaded(design);
+    if (!(await presentDesign(design, ensureExtension(name), from, saved))) return false;
     remember({ name: ensureExtension(name), openedAt: Date.now(), content: from?.kind === 'desktop' ? undefined : text, ...(from?.kind === 'desktop' ? { path: from.path } : {}) });
     if (notes.length) actions.addSimMessage('warning', sanitizeReport(notes), t('sim.source.integrity'));
     return true;
@@ -334,10 +373,13 @@ export async function openRecentFile(entry: RecentEntry): Promise<void> {
 }
 
 function afterSave(name: string, to: FileTarget | null, text: string, from: Design, written: Design): void {
+  if (to?.kind === 'desktop') openPaths.set(documents.activeId(), to.path);
+  else openPaths.delete(documents.activeId());
   target = to;
   openedStat = null;
   actions.markSavedAs(from, written, ensureExtension(name));
-  void recoveryStore().clearRecord();
+  // the saved document no longer needs its recovery copy; the other open documents keep theirs
+  syncRecovery();
   remember({ name: ensureExtension(name), openedAt: Date.now(), ...(to?.kind === 'desktop' ? { path: to.path } : { content: text }) });
 }
 
@@ -381,7 +423,7 @@ export async function saveDocumentAs(): Promise<boolean> {
 }
 
 // ---------------------------------------------------------------------------
-// export / print
+// export
 // ---------------------------------------------------------------------------
 
 /** The exporter (and react-dom/server) is loaded on first use to keep start-up small. */
@@ -415,86 +457,6 @@ export async function exportSheetPng(): Promise<void> {
   } catch (err) {
     await alertDialog({ title: t('app.document.exportFailed'), message: errorText(err) });
   }
-}
-
-/**
- * Print with the design's print setup (paper, orientation, scale, which sheets, child sheets,
- * instrument page, monochrome; see printPlan.ts): the sheets are rendered into a print-only
- * container (see the @media print rules in app.css) and the browser's print dialog is opened.
- */
-export async function printDesign(): Promise<void> {
-  const { sheetToSvg } = await loadExporter();
-  const s = getState();
-  const plan = planPrint(s.design, s.activeSheetId);
-  document.querySelector('.ms-print-area')?.remove();
-  document.getElementById('ms-print-page-style')?.remove();
-  const style = document.createElement('style');
-  style.id = 'ms-print-page-style';
-  style.textContent = plan.pageCss;
-  document.head.appendChild(style);
-  const area = document.createElement('div');
-  area.className = 'ms-print-area';
-  area.setAttribute('aria-hidden', 'true');
-  // each sheet is an <img> of its exported SVG, so the drawing's embedded stylesheet stays isolated
-  const urls: string[] = [];
-  const images: HTMLImageElement[] = [];
-  for (const pg of plan.pages) {
-    const sheet = getSheet(s.design, pg.sheetId);
-    if (!sheet) continue;
-    const page = document.createElement('div');
-    page.className = 'ms-print-page';
-    const url = URL.createObjectURL(new Blob([sheetToSvg(s.design, sheet.id, partLookup, { probeValues: s.probeValues, monochrome: plan.monochrome }).svg], { type: 'image/svg+xml' }));
-    urls.push(url);
-    const img = document.createElement('img');
-    img.alt = `${s.design.title} — ${sheet.name}`;
-    img.src = url;
-    img.style.width = `${pg.widthMm}mm`;
-    img.style.height = `${pg.heightMm}mm`;
-    img.style.maxWidth = 'none';
-    images.push(img);
-    page.appendChild(img);
-    area.appendChild(page);
-  }
-  if (plan.includeInstruments) {
-    const list = instrumentSummary(s.design, partLookup);
-    const page = document.createElement('div');
-    page.className = 'ms-print-page ms-print-instruments';
-    const h = document.createElement('h2');
-    h.textContent = t('schematic.print.instrumentsTitle', { title: s.design.title });
-    page.appendChild(h);
-    if (!list.length) {
-      const p = document.createElement('p');
-      p.textContent = t('schematic.print.noInstruments');
-      page.appendChild(p);
-    }
-    for (const it of list) {
-      const h3 = document.createElement('h3');
-      h3.textContent = `${it.refdes} — ${partName(it.def)}`;
-      page.appendChild(h3);
-      const table = document.createElement('table');
-      for (const v of it.values) {
-        const tr = document.createElement('tr');
-        const a = document.createElement('td');
-        a.textContent = paramLabel(v.def);
-        const b = document.createElement('td');
-        b.textContent = `${v.value}${v.def.unit ? ` ${v.def.unit}` : ''}`;
-        tr.append(a, b);
-        table.appendChild(tr);
-      }
-      page.appendChild(table);
-    }
-    area.appendChild(page);
-  }
-  document.body.appendChild(area);
-  await Promise.all(images.map((img) => img.decode().catch(() => undefined)));
-  const cleanup = () => {
-    area.remove();
-    style.remove();
-    for (const u of urls) URL.revokeObjectURL(u);
-    window.removeEventListener('afterprint', cleanup);
-  };
-  window.addEventListener('afterprint', cleanup);
-  window.print();
 }
 
 // ---------------------------------------------------------------------------
@@ -532,17 +494,18 @@ export function installAutosave(): () => void {
   let firstChangeAt = 0;
   let lastDesign = getState().design;
   const write = () => {
-    const s = getState();
     pending = false;
-    if (!s.ui.autosave || !isDirty(s)) return;
+    if (!getState().ui.autosave) return;
     lastWriteAt = Date.now();
-    const rec: AutosaveRecord = { fileName: s.fileName, savedAt: lastWriteAt, text: serializeDesign(s.design) };
-    void store.writeRecord(rec);
+    const rec = buildRecoveryRecord(lastWriteAt);
+    if (rec) void store.writeRecord(rec);
   };
   const unsub = subscribe(() => {
     const d = getState().design;
     if (d === lastDesign) return;
     lastDesign = d;
+    // switching between documents swaps the design too, which only matters when something is unsaved
+    if (!isDirty(getState()) && !documents.dirtyDocuments().length) return;
     if (!pending) firstChangeAt = Date.now();
     pending = true;
   });
@@ -571,11 +534,42 @@ export function installAutosave(): () => void {
   };
 }
 
-/** Restore an autosave record as an unsaved document; true when it loaded. */
+/**
+ * The recovery record of the documents open now: every document with unsaved changes (the first
+ * in the record, the others in `others`), or null when nothing is unsaved.
+ */
+export function buildRecoveryRecord(now: number = Date.now()): AutosaveRecord | null {
+  const docs: AutosaveDoc[] = documents.dirtyContents().map((d) => ({ fileName: d.fileName, savedAt: now, text: serializeDesign(d.design) }));
+  if (!docs.length) return null;
+  const [first, ...others] = docs;
+  return { ...first, ...(others.length ? { others } : {}) };
+}
+
+/**
+ * Bring the recovery slot in line with the documents open now: rewritten when some document has
+ * unsaved changes, cleared when none has (after a save, a close).
+ */
+export function syncRecovery(): void {
+  const rec = buildRecoveryRecord();
+  if (rec) void recoveryStore().writeRecord(rec);
+  else void recoveryStore().clearRecord();
+}
+
+/** Restore an autosave record as unsaved documents, one tab each; true when the first loaded. */
 async function restoreRecord(rec: AutosaveRecord): Promise<boolean> {
-  const ok = await loadDesignText(rec.text, rec.fileName, null, false);
-  if (ok) await recoveryStore().clearRecord();
-  return ok;
+  let any = false;
+  for (const doc of recordDocuments(rec)) {
+    if (await loadDesignText(doc.text, doc.fileName, null, false)) any = true;
+  }
+  if (any) await recoveryStore().clearRecord();
+  return any;
+}
+
+/** The recovery question: one document by name, several by number and names. */
+function recoveryMessage(rec: AutosaveRecord, when: string, manual = false): string {
+  const docs = recordDocuments(rec);
+  if (docs.length === 1) return manual ? t('files.recover.found', { fileName: displayFileName(rec.fileName), when }) : t('app.document.machsimFoundUnsavedChangesTo', { fileName: displayFileName(rec.fileName), when });
+  return t('docs.recover.many', { n: docs.length, names: docs.map((d) => displayFileName(d.fileName)).join(', '), when });
 }
 
 /** At start-up: after an unclean exit (crash, killed, power loss) offer the autosaved document. */
@@ -587,7 +581,7 @@ export async function offerRecovery(): Promise<void> {
   const when = new Date(rec.savedAt).toLocaleString(localeTag());
   const choice = await choiceDialog({
     title: t('app.document.recoverUnsavedWork'),
-    message: t('app.document.machsimFoundUnsavedChangesTo', { fileName: displayFileName(rec.fileName), when: when }),
+    message: recoveryMessage(rec, when),
     choices: [
       { id: 'discard', label: t('app.document.discard'), danger: true },
       { id: 'later', label: t('app.document.notNow') },
@@ -608,7 +602,7 @@ export async function recoverAutosaved(): Promise<void> {
   const when = new Date(rec.savedAt).toLocaleString(localeTag());
   const choice = await choiceDialog({
     title: t('files.recover.title'),
-    message: t('files.recover.found', { fileName: displayFileName(rec.fileName), when }),
+    message: recoveryMessage(rec, when, true),
     choices: [
       { id: 'cancel', label: t('common.cancel') },
       { id: 'discard', label: t('app.document.discard'), danger: true },
@@ -616,45 +610,63 @@ export async function recoverAutosaved(): Promise<void> {
     ],
   });
   if (choice === 'discard') await recoveryStore().clearRecord();
-  else if (choice === 'recover' && (await confirmDiscardChanges(t('app.document.openAnotherDesign')))) await restoreRecord(rec);
+  else if (choice === 'recover' && (await confirmDiscardChanges())) await restoreRecord(rec);
 }
 
 // ---------------------------------------------------------------------------
 // desktop integration
 // ---------------------------------------------------------------------------
 
-/** Keep the window title / dirty flag in sync and accept files opened from the OS. */
+/**
+ * Keep the window title / dirty flag in sync and accept files opened from the OS. The title names
+ * the current document; the dirty flag and the list of unsaved documents tell the desktop shell
+ * (and the browser's "leave this page?" question) whether ANY open document has unsaved changes.
+ * A file opened from Explorer, a second instance or "Open with" arrives as a new tab, and the
+ * desktop asks the renderer to run the Close all flow when its window is closed.
+ */
 export function installDocumentChrome(): () => void {
   const bridge = getDesktopBridge();
   let lastTitle = '';
   let lastDirty: boolean | null = null;
+  let lastList = '';
   const sync = () => {
     const s = getState();
-    const dirty = isDirty(s);
-    const title = `${dirty ? '● ' : ''}${displayFileName(s.fileName)} — MachSim`;
+    const here = isDirty(s);
+    const dirtyDocs = documents.dirtyDocuments();
+    const title = `${here ? '● ' : ''}${displayFileName(s.fileName)} — MachSim`;
     if (title !== lastTitle) {
       lastTitle = title;
       document.title = title;
       bridge?.setTitle(title);
     }
-    if (dirty !== lastDirty) {
-      lastDirty = dirty;
-      bridge?.setDirty(dirty);
+    const anyDirty = here || dirtyDocs.length > 0;
+    if (anyDirty !== lastDirty) {
+      lastDirty = anyDirty;
+      bridge?.setDirty(anyDirty);
+    }
+    const names = dirtyDocs.map((d) => displayFileName(d.fileName));
+    const key = JSON.stringify(names);
+    if (key !== lastList) {
+      lastList = key;
+      bridge?.setDirtyDocuments?.(names);
     }
   };
   sync();
   const unsub = subscribe(sync);
+  const unsubDocs = documents.view.subscribe(sync);
   const onBeforeUnload = (e: BeforeUnloadEvent) => {
-    if (!bridge && isDirty(getState())) {
+    if (!bridge && (isDirty(getState()) || documents.dirtyDocuments().length > 0)) {
       e.preventDefault();
       e.returnValue = '';
     }
   };
   window.addEventListener('beforeunload', onBeforeUnload);
   const offOpen = bridge?.onOpenFile((f) => {
-    void (async () => {
-      if (await confirmDiscardChanges(t('app.document.openAnotherDesign'))) await openOpenedFile(openedFromDesktop(f));
-    })();
+    void openOpenedFile(openedFromDesktop(f));
+  });
+  // the window is being closed: one question for all the unsaved documents, then quit
+  const offClose = bridge?.onCloseRequest?.(() => {
+    void import('./documentFlows').then((m) => m.quitFlow());
   });
   refreshRecentProjects();
   if (bridge) {
@@ -668,7 +680,9 @@ export function installDocumentChrome(): () => void {
   }
   return () => {
     unsub();
+    unsubDocs();
     offOpen?.();
+    offClose?.();
     window.removeEventListener('beforeunload', onBeforeUnload);
   };
 }

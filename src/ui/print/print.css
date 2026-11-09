@@ -1,0 +1,44 @@
+/* Print preview and print-only pages (src/ui/print). Pages are sized in millimetres. */
+
+/* a page of the job: a paper-sized box, white, clipped */
+.ms-pp { position: relative; background: #fff; color: #000; overflow: hidden; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+.ms-pp-clip { position: absolute; overflow: hidden; }
+.ms-pp-img { position: absolute; max-width: none; display: block; image-rendering: auto; }
+.ms-pp-footer { position: absolute; display: flex; justify-content: space-between; gap: 6mm; font-size: 2.6mm; line-height: 4mm; color: #333; border-top: 0.2mm solid #888; white-space: nowrap; overflow: hidden; }
+.ms-pp-footer span:first-child { overflow: hidden; text-overflow: ellipsis; }
+.ms-pp-text { font-size: 3.1mm; line-height: 4.6mm; color: #000; }
+.ms-pp-text h1 { font-size: 6mm; margin: 0 0 3mm; line-height: 7mm; }
+.ms-pp-text h2 { font-size: 4.6mm; margin: 0 0 1.5mm; line-height: 6mm; }
+.ms-pp-sub { margin: 0; color: #444; }
+.ms-pp-text table { border-collapse: collapse; }
+.ms-pp-text th, .ms-pp-text td { border: 0.2mm solid #888; padding: 0.7mm 1.2mm; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.ms-pp-text th { background: #e8e8e8; font-weight: 600; }
+.ms-pp-line.is-heading { font-weight: 700; font-size: 4mm; line-height: 7.4mm; }
+.ms-pp-line.is-bullet { padding-left: 2mm; }
+.ms-pp-line.is-blank { min-height: 4.6mm; }
+
+/* the preview dialog */
+.ms-pv { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 12px; height: min(72vh, 760px); min-height: 360px; }
+.ms-pv-options { overflow-y: auto; padding-right: 6px; display: flex; flex-direction: column; gap: 10px; }
+.ms-pv-options fieldset { border: 1px solid var(--border); border-radius: 4px; margin: 0; padding: 6px 8px 8px; display: flex; flex-direction: column; gap: 6px; }
+.ms-pv-options legend { font-size: var(--font-size-small); color: var(--text-dim); padding: 0 4px; }
+.ms-pv-pages { overflow: auto; background: var(--panel-alt, var(--chrome)); border: 1px solid var(--border); border-radius: 4px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.ms-pv-slot { flex: none; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35); background: #fff; position: relative; }
+.ms-pv-slot > .ms-pp { transform-origin: top left; }
+.ms-pv-no { position: absolute; right: 4px; bottom: 2px; font-size: 11px; color: #555; background: rgba(255, 255, 255, 0.85); padding: 0 4px; border-radius: 3px; pointer-events: none; }
+.ms-pv-empty { color: var(--text-dim); text-align: center; margin: auto; max-width: 320px; }
+.ms-pv-summary { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; font-size: var(--font-size-small); color: var(--text-dim); }
+.ms-pv-warn { color: var(--warning-text, #8a5a00); }
+.ms-pv-err { color: var(--danger); }
+.ms-pv-grid { display: inline-grid; gap: 1px; background: #888; border: 1px solid #888; }
+@media (max-width: 900px) { .ms-pv { grid-template-columns: 1fr; height: auto; } .ms-pv-pages { max-height: 50vh; } }
+
+/* the print-only copy of the pages */
+.ms-print-area { display: none; }
+@media print {
+  html, body, #root { height: auto !important; background: #fff !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; }
+  .ms-app, .ms-dialog-layer, .ms-dialog-backdrop, .ms-menu { display: none !important; }
+  .ms-print-area { display: block !important; position: static; }
+  .ms-print-area .ms-pp { page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; margin: 0; box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .ms-print-area .ms-pp:last-child { page-break-after: auto; break-after: auto; }
+}

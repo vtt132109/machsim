@@ -28,6 +28,7 @@ import { instancePins, samePoint, snap } from '../../model/geometry';
 import { packageKey, packageOf } from '../../model/sections';
 import { fragmentNetNames, neededVariables, sanitizeIncoming, type IncomingExtras, type SanitizeNote } from '../../model/sanitize';
 import { netSettings } from '../../model/netSettings';
+import { effectivePrefix } from '../../model/refdesRules';
 import { isCustomPartId } from '../../library/custom/types';
 import type { Clipboard, ItemKind, PartLookup, Rect, SelItem } from './types';
 import { newId } from './ids';
@@ -167,7 +168,7 @@ export function createPartInstance(
   return {
     id: newId('p'),
     partId: part.id,
-    refdes: refdes ?? nextRefdes(part.prefix, used),
+    refdes: refdes ?? nextRefdes(effectivePrefix(part.prefix, design.refdesRules), used),
     x: snap(pos.x),
     y: snap(pos.y),
     rotation,
@@ -716,6 +717,12 @@ export function pasteItems(
   const dy = snap(offset.y);
   const t = (p: Point): Point => ({ x: p.x + dx, y: p.y + dy });
   const used = collectRefdes(design, sheetId);
+  // keepRefdes: every designator that is free here is reserved for the part that brought it BEFORE
+  // any other part looks for a new one, so a taken name cannot push a later part off its own name
+  const keep = new Set<string>();
+  if (opts.keepRefdes) for (const p of clip.parts) if (p.refdes && !used.has(p.refdes.toUpperCase())) keep.add(p.refdes.toUpperCase());
+  for (const k of keep) used.add(k);
+  const kept = new Set<string>();
   // the sections of one package share their designator, so they share the new one too
   const packaged = new Map<string, string>();
   const refdesOf = (p: PartInstance): string => {
@@ -725,10 +732,10 @@ export function pasteItems(
       if (done !== undefined) return done;
     }
     let ref: string;
-    if (opts.keepRefdes && p.refdes && !used.has(p.refdes.toUpperCase())) {
-      used.add(p.refdes.toUpperCase());
+    if (opts.keepRefdes && p.refdes && keep.has(p.refdes.toUpperCase()) && !kept.has(p.refdes.toUpperCase())) {
+      kept.add(p.refdes.toUpperCase());
       ref = p.refdes;
-    } else ref = nextRefdes(lookup(remapPart(p.partId))?.prefix || refdesPrefix(p.refdes) || 'U', used);
+    } else ref = nextRefdes(effectivePrefix(lookup(remapPart(p.partId))?.prefix || refdesPrefix(p.refdes) || 'U', design.refdesRules), used);
     if (pkgKey !== undefined) packaged.set(pkgKey, ref);
     return ref;
   };
@@ -783,6 +790,57 @@ export function pasteItems(
     ...shapes.map((x) => ({ kind: 'shape' as const, id: x.id })),
   ];
   return { design: next, selection, notes: safe.notes };
+}
+
+/**
+ * Paste special > values only: copy the parameter values of the copied parts onto the selected
+ * parts of the same kind, leaving everything else (position, wiring, designator) alone. A copied
+ * part goes to the selected part with the same designator when there is one, otherwise the
+ * selected parts of one kind take the copied parts of that kind in order (one copied resistor
+ * value goes to every selected resistor). Only parameters the target part declares are written;
+ * values that name global parameters are checked by the integrity layer like any paste.
+ */
+export function pasteValuesOnly(design: Design, sheetId: string, clip: Clipboard, selection: readonly SelItem[], lookup: PartLookup): { design: Design; changed: number; notes: SanitizeNote[] } {
+  const sheet = getSheet(design, sheetId);
+  if (!sheet) return { design, changed: 0, notes: [] };
+  const chosen = selIds(selection, 'part');
+  const targets = sheet.parts.filter((p) => chosen.has(p.id));
+  const sources = new Map<string, PartInstance[]>();
+  for (const p of clip.parts) sources.set(p.partId, [...(sources.get(p.partId) ?? []), p]);
+  const used = new Map<string, number>();
+  const pairs: { target: PartInstance; source: PartInstance }[] = [];
+  for (const target of targets) {
+    const pool = sources.get(target.partId);
+    if (!pool?.length) continue;
+    const sameName = pool.find((s) => s.refdes && s.refdes.toUpperCase() === target.refdes.toUpperCase());
+    const n = used.get(target.partId) ?? 0;
+    used.set(target.partId, n + 1);
+    pairs.push({ target, source: sameName ?? pool[Math.min(n, pool.length - 1)] });
+  }
+  if (!pairs.length) return { design, changed: 0, notes: [] };
+  // global parameters / references in the copied values follow the usual integrity rules
+  const safe = sanitizeIncoming(design, { ...clip, parts: pairs.map((p) => p.source), wires: [], labels: [], probes: [], notes: [], shapes: [], children: [] }, clip.extras ?? {});
+  let next = design;
+  if (Object.keys(safe.variables).length) next = { ...next, variables: { ...next.variables, ...safe.variables } };
+  const cleaned = new Map(safe.fragment.parts.map((p) => [p.id, p]));
+  let changed = 0;
+  for (const { target, source } of pairs) {
+    const def = lookup(target.partId);
+    if (!def) continue;
+    const from = cleaned.get(source.id) ?? source;
+    const params = { ...target.params };
+    let touched = false;
+    for (const d of def.params) {
+      const v = from.params[d.key];
+      if (v === undefined || params[d.key] === v) continue;
+      params[d.key] = v;
+      touched = true;
+    }
+    if (!touched) continue;
+    changed += 1;
+    next = updatePart(next, sheetId, target.id, { params });
+  }
+  return { design: changed ? next : design, changed, notes: safe.notes };
 }
 
 const childContent = (c: ChildDesign) => JSON.stringify({ k: c.kind, n: c.name, v: c.variables, s: c.sheets.map((s) => ({ ...s, id: '' })) });
@@ -959,7 +1017,7 @@ export function moveSheet(design: Design, sheetId: string, toIndex: number): Des
 export function renumberParts(design: Design, lookup: PartLookup): Design {
   const all: { sheet: number; inst: PartInstance; prefix: string }[] = [];
   design.sheets.forEach((s, si) => {
-    for (const inst of s.parts) all.push({ sheet: si, inst, prefix: lookup(inst.partId)?.prefix || refdesPrefix(inst.refdes) || 'U' });
+    for (const inst of s.parts) all.push({ sheet: si, inst, prefix: effectivePrefix(lookup(inst.partId)?.prefix || refdesPrefix(inst.refdes) || 'U', design.refdesRules) });
   });
   const row = GRID * 4;
   all.sort((a, b) => a.sheet - b.sheet || Math.floor(a.inst.y / row) - Math.floor(b.inst.y / row) || a.inst.x - b.inst.x);

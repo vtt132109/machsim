@@ -24,6 +24,8 @@ const dialogs = () => import('./schematicDialogs');
 /** ERC options / NC markers / net settings / capture (lazy chunk) */
 const schematicTools = () => import('../schematicTools/flows');
 import { shortcutLabel } from './shortcuts';
+import { documents } from './documentSet';
+import { documentTabAt, dropTargetDocument } from './DocumentTabs';
 import { t, type MessageKey } from '../../i18n';
 import { libText } from '../../i18n/library';
 import { controlKeys } from '../store/interactive';
@@ -82,6 +84,15 @@ export function canvasMenuEntries(hit: HitResult | null): MenuEntry[] {
   if (!hit) {
     return [
       cmd('edit.paste', t('app.canvasHost.pasteHere'), s.clipboardAvailable),
+      {
+        type: 'submenu',
+        label: t('menu.pasteSpecial'),
+        items: [
+          cmd('edit.pasteSpecial.keepNames', t('cmd.edit.pasteSpecial.keepNames'), s.clipboardAvailable),
+          cmd('edit.pasteSpecial.values', t('cmd.edit.pasteSpecial.values'), s.clipboardAvailable && s.selection.some((x) => x.kind === 'part')),
+          cmd('edit.pasteSpecial.block', t('cmd.edit.pasteSpecial.block'), s.clipboardAvailable),
+        ],
+      },
       cmd('edit.selectAll', t('app.canvasHost.selectAll')),
       { type: 'separator' },
       cmd('place.component', t('app.canvasHost.placeComponent')),
@@ -96,6 +107,7 @@ export function canvasMenuEntries(hit: HitResult | null): MenuEntry[] {
       { type: 'separator' },
       cmd('view.fitAll', t('app.canvasHost.fitSheet')),
       { ...cmd('view.grid', t('app.canvasHost.grid')), checked: s.showGrid },
+      cmd('edit.layers', t('cmd.edit.layers')),
       cmd('options.sheetProperties', t('app.canvasHost.sheetProperties')),
     ];
   }
@@ -202,7 +214,19 @@ export function canvasMenuEntries(hit: HitResult | null): MenuEntry[] {
       ...editing,
     ];
   }
-  return [{ label: t('app.canvasHost.properties'), shortcut: 'Alt+Enter', onSelect: () => openPropertiesDialog({ kind: hit.kind, id: hit.id }) }, { type: 'separator' }, ...editing, { type: 'separator' }, ...transform];
+  // graphics and texts can be moved in the drawing order
+  const order: MenuEntry[] =
+    hit.kind === 'shape' || hit.kind === 'note'
+      ? [
+          { type: 'separator' },
+          {
+            type: 'submenu',
+            label: t('menu.order'),
+            items: [cmd('edit.order.front', t('cmd.edit.order.front')), cmd('edit.order.forward', t('cmd.edit.order.forward')), cmd('edit.order.backward', t('cmd.edit.order.backward')), cmd('edit.order.back', t('cmd.edit.order.back'))],
+          },
+        ]
+      : [];
+  return [{ label: t('app.canvasHost.properties'), shortcut: 'Alt+Enter', onSelect: () => openPropertiesDialog({ kind: hit.kind, id: hit.id }) }, { type: 'separator' }, ...editing, { type: 'separator' }, ...transform, ...order];
 }
 
 /** Install the shell host into the canvas interaction controller. */
@@ -225,6 +249,18 @@ export function installCanvasHost(): void {
     captureArea: (rect) => {
       actions.cancelTool();
       void schematicTools().then((m) => m.captureAreaFlow(rect));
+    },
+    // document tabs: a selection dragged onto another design's tab is copied into it
+    dragOverDocument: (x, y) => {
+      const id = documentTabAt(x, y);
+      dropTargetDocument.setState(id && id !== documents.activeId() ? id : null);
+    },
+    dropOnDocument: (x, y) => {
+      dropTargetDocument.setState(null);
+      const id = documentTabAt(x, y);
+      if (!id || id === documents.activeId()) return false;
+      void import('./documentFlows').then((m) => m.copySelectionToDocument(id));
+      return true;
     },
   });
   setPropertiesHost({

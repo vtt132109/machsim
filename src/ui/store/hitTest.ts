@@ -10,7 +10,8 @@ import { pointOnSegment } from '../../model/geometry';
 import type { PartLookup, Rect, SelItem } from './types';
 import { sheetPins, type SheetPin } from './designOps';
 import { nearestOnPolyline } from './routing';
-import type { Shape } from '../../model/types';
+import type { Shape, TextNote } from '../../model/types';
+import { hasDrawingOrder, stackIndex } from '../../model/annotationOrder';
 import {
   netLabelLayout,
   shapeBox,
@@ -44,6 +45,16 @@ export interface HitOptions {
   exclude?: HitResult['kind'][];
 }
 
+/** The notes / shapes of a sheet, top-most first (Edit > Order decides; otherwise the later one is on top). */
+function topFirst(sheet: Sheet, kind: 'note'): TextNote[];
+function topFirst(sheet: Sheet, kind: 'shape'): Shape[];
+function topFirst(sheet: Sheet, kind: 'note' | 'shape'): (TextNote | Shape)[] {
+  const list: (TextNote | Shape)[] = kind === 'note' ? sheet.notes : (sheet.shapes ?? []);
+  if (!hasDrawingOrder(sheet)) return [...list].reverse();
+  const at = stackIndex(sheet);
+  return [...list].sort((a, b) => (at.get(`${kind}:${b.id}`) ?? 0) - (at.get(`${kind}:${a.id}`) ?? 0));
+}
+
 /** Top-most object under `p`, or null. */
 export function hitTest(sheet: Sheet, p: Point, opts: HitOptions): HitResult | null {
   const tol = opts.tolerance ?? 4;
@@ -65,8 +76,7 @@ export function hitTest(sheet: Sheet, p: Point, opts: HitOptions): HitResult | n
     }
   }
   if (!skip.has('note')) {
-    for (let i = sheet.notes.length - 1; i >= 0; i--) {
-      const n = sheet.notes[i];
+    for (const n of topFirst(sheet, 'note')) {
       if (pointInRect(p, noteBox(n), tol / 2)) return { kind: 'note', id: n.id };
     }
   }
@@ -93,7 +103,7 @@ export function hitTest(sheet: Sheet, p: Point, opts: HitOptions): HitResult | n
     }
   }
   if (!skip.has('shape') && sheet.shapes) {
-    for (let i = sheet.shapes.length - 1; i >= 0; i--) if (shapeHit(sheet.shapes[i], p, tol)) return { kind: 'shape', id: sheet.shapes[i].id };
+    for (const x of topFirst(sheet, 'shape')) if (shapeHit(x, p, tol)) return { kind: 'shape', id: x.id };
   }
   return null;
 }

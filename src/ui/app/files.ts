@@ -212,12 +212,42 @@ export function writeRecentProjects(storage: KeyValueStorage | null, list: reado
 // autosave
 // ---------------------------------------------------------------------------
 
-export interface AutosaveRecord {
+/** One autosaved document. */
+export interface AutosaveDoc {
   fileName: string;
   /** ms since epoch */
   savedAt: number;
   /** serialised design */
   text: string;
+}
+
+/**
+ * The crash-recovery record: the first document with unsaved changes in `fileName` / `text`, and
+ * `others` for the remaining unsaved documents when several designs are open (document tabs). A
+ * record written before document tabs existed has no `others` and reads as one document.
+ */
+export interface AutosaveRecord extends AutosaveDoc {
+  others?: AutosaveDoc[];
+}
+
+/** The documents of a record, first one first. */
+export function recordDocuments(rec: AutosaveRecord): AutosaveDoc[] {
+  return [{ fileName: rec.fileName, savedAt: rec.savedAt, text: rec.text }, ...(rec.others ?? [])];
+}
+
+/** Parse the JSON of a recovery record (null for anything that is not one). */
+export function parseAutosave(text: string | null): AutosaveRecord | null {
+  if (!text) return null;
+  try {
+    const raw = JSON.parse(text) as (Partial<AutosaveRecord> & { others?: unknown }) | null;
+    if (!raw || typeof raw.text !== 'string' || typeof raw.fileName !== 'string' || typeof raw.savedAt !== 'number') return null;
+    const others = Array.isArray(raw.others)
+      ? raw.others.filter((o): o is AutosaveDoc => !!o && typeof o.text === 'string' && typeof o.fileName === 'string' && typeof o.savedAt === 'number').map((o) => ({ fileName: o.fileName, savedAt: o.savedAt, text: o.text }))
+      : [];
+    return { fileName: raw.fileName, savedAt: raw.savedAt, text: raw.text, ...(others.length ? { others } : {}) };
+  } catch {
+    return null;
+  }
 }
 
 export function writeAutosave(storage: KeyValueStorage | null, rec: AutosaveRecord): boolean {
@@ -227,9 +257,7 @@ export function writeAutosave(storage: KeyValueStorage | null, rec: AutosaveReco
 export function readAutosave(storage: KeyValueStorage | null): AutosaveRecord | null {
   if (!storage) return null;
   try {
-    const raw = JSON.parse(storage.getItem(AUTOSAVE_KEY) ?? 'null') as Partial<AutosaveRecord> | null;
-    if (!raw || typeof raw.text !== 'string' || typeof raw.fileName !== 'string' || typeof raw.savedAt !== 'number') return null;
-    return { fileName: raw.fileName, savedAt: raw.savedAt, text: raw.text };
+    return parseAutosave(storage.getItem(AUTOSAVE_KEY));
   } catch {
     return null;
   }

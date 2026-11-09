@@ -151,3 +151,38 @@ describe('beginner analyses and toolbar', () => {
     for (const g of TOOLBAR_GROUPS) expect(out[g] === false || out[g] === undefined, g).toBe(true);
   });
 });
+
+describe('several designs, printing and the editing commands in beginner mode', () => {
+  it('the Window menu is hidden, but closing a design and moving between designs stay available', () => {
+    const menus = beginnerMenus(buildMenus(context(state(true))), true);
+    expect(menus.map((m) => m.id)).not.toContain('window');
+    expect(buildMenus(context(state(false))).map((m) => m.id)).toContain('window');
+    for (const id of ['file.close', 'window.next', 'window.previous', 'file.print']) expect(beginnerCommand(id), id).toBe(true);
+    for (const id of ['file.closeAll', 'file.saveAll', 'window.recent']) expect(beginnerCommand(id), id).toBe(false);
+  });
+
+  it('layer settings, drawing order, paste special and name prefixes are professional tools (full mode only)', () => {
+    const ids = [
+      'edit.layers',
+      'edit.order.front',
+      'edit.order.back',
+      'edit.order.forward',
+      'edit.order.backward',
+      'edit.pasteSpecial.keepNames',
+      'edit.pasteSpecial.values',
+      'edit.pasteSpecial.block',
+      'tools.refdesRules',
+    ];
+    for (const id of ids) expect(beginnerCommand(id), id).toBe(false);
+    const beginnerIds = idsOf(beginnerMenus(buildMenus(context(state(true))), true).flatMap((m) => m.items));
+    for (const id of ids) expect(beginnerIds, id).not.toContain(id);
+    const fullIds = idsOf(buildMenus(context(state(false))).flatMap((m) => m.items));
+    for (const id of ids) expect(fullIds, id).toContain(id);
+  });
+
+  it('the Paste special and Order submenus disappear from the beginner Edit menu as a whole', () => {
+    const edit = beginnerMenus(buildMenus(context(state(true))), true).find((m) => m.id === 'edit')!;
+    expect(flat(edit.items).some((e) => e.type === 'submenu' && (e.id === 'menu.pasteSpecial' || e.id === 'menu.order'))).toBe(false);
+  });
+});
+

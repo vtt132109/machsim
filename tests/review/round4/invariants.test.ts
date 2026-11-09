@@ -14,6 +14,8 @@
  *   MachSim XML round trip                           variant change (add / fit / activate)
  *   annotate (missing) / renumber (all)              find & replace on designators and labels
  *   exclude from simulation
+ *   (round 4 step 2) paste keeping names / paste values only / paste as subcircuit, drawing order of
+ *   graphics and text, layer settings, reference designator prefix rules
  *
  * — and after EVERY step check the invariants a saved design must have:
  *
@@ -46,7 +48,11 @@ import { getPart } from '../../../src/library';
 import type { Design, PartInstance, Sheet } from '../../../src/model/types';
 import { EXAMPLES } from '../../../src/ui/integration/exampleDesigns';
 import { LESSONS } from '../../../src/learn/lessons';
-import { copyItems, pasteItems } from '../../../src/ui/store/designOps';
+import { copyItems, pasteItems, pasteValuesOnly } from '../../../src/ui/store/designOps';
+import { replaceWithSubcircuit } from '../../../src/ui/store/hierarchyOps';
+import { reorderAnnotations, annotationStack } from '../../../src/model/annotationOrder';
+import { setSheetLayers } from '../../../src/model/layers';
+import { applyRulesToDesign } from '../../../src/model/refdesRules';
 import { partLookup } from '../../../src/ui/store';
 import type { SelItem } from '../../../src/ui/store/types';
 
@@ -257,6 +263,71 @@ const OPS: Op[] = [
         sheets: d.sheets.map((s) => (s.id === victim.sheet.id ? { ...s, parts: s.parts.map((p) => (p.id === victim.part.id ? { ...p, excludeFromSim: !p.excludeFromSim } : p)) } : s)),
       };
     },
+  },
+  {
+    name: 'paste keeping names',
+    apply: (d, r) => {
+      const sheet = pick(r, d.sheets.filter((s) => s.parts.length > 0));
+      if (!sheet) return d;
+      const sel: SelItem[] = sheet.parts.slice(0, 1 + Math.floor(r() * 3)).map((p) => ({ kind: 'part' as const, id: p.id }));
+      const clip = copyItems(d, sheet.id, sel, partLookup);
+      if (!clip) return d;
+      return pasteItems(d, sheet.id, clip, { x: 240, y: 240 }, partLookup, { keepRefdes: true }).design;
+    },
+  },
+  {
+    name: 'paste values only',
+    apply: (d, r) => {
+      const all = rootParts(d);
+      if (all.length < 2) return d;
+      const src = pick(r, all);
+      const same = all.filter((x) => x.part.partId === src.part.partId && x.part.id !== src.part.id);
+      if (!same.length) return d;
+      const clip = copyItems(d, src.sheet.id, [{ kind: 'part', id: src.part.id }], partLookup);
+      if (!clip) return d;
+      const target = pick(r, same);
+      return pasteValuesOnly(d, target.sheet.id, clip, [{ kind: 'part', id: target.part.id }], partLookup).design;
+    },
+  },
+  {
+    name: 'paste as subcircuit',
+    apply: (d, r) => {
+      const sheet = pick(r, d.sheets.filter((s) => s.parts.length > 0 && s.kind !== 'ladder'));
+      if (!sheet) return d;
+      const sel: SelItem[] = sheet.parts.slice(0, 1 + Math.floor(r() * 2)).map((p) => ({ kind: 'part' as const, id: p.id }));
+      const clip = copyItems(d, sheet.id, sel, partLookup);
+      if (!clip) return d;
+      const pasted = pasteItems(d, sheet.id, clip, { x: 260, y: 260 }, partLookup);
+      return replaceWithSubcircuit(pasted.design, sheet.id, pasted.selection, { kind: 'subcircuit', name: `Khối ${Math.floor(r() * 90) + 10}` }, partLookup)?.design ?? pasted.design;
+    },
+  },
+  {
+    name: 'order graphics and text',
+    apply: (d, r) => {
+      const sheet = d.sheets[0];
+      const tag = Math.floor(r() * 1e9).toString(36);
+      const withItems = {
+        ...sheet,
+        notes: [...sheet.notes, { id: `zn-${tag}`, x: 20, y: 20, text: 'ghi chú' }],
+        shapes: [...(sheet.shapes ?? []), { id: `zs-${tag}`, kind: 'rect' as const, points: [{ x: 10, y: 10 }, { x: 80, y: 60 }] }],
+      };
+      const stack = annotationStack(withItems);
+      const moved = [pick(r, stack)];
+      const ordered = reorderAnnotations(withItems, moved, pick(r, ['front', 'back', 'forward', 'backward'] as const));
+      return { ...d, sheets: d.sheets.map((s, i) => (i === 0 ? ordered : s)) };
+    },
+  },
+  {
+    name: 'layer settings',
+    apply: (d, r) => {
+      const sheet = pick(r, d.sheets);
+      const layer = pick(r, ['grid', 'refdes', 'values', 'labels', 'netNames', 'pinNumbers', 'comments', 'graphics'] as const);
+      return { ...d, sheets: d.sheets.map((s) => (s.id === sheet.id ? setSheetLayers(s, { [layer]: r() < 0.5 }) : s)) };
+    },
+  },
+  {
+    name: 'reference designator prefixes',
+    apply: (d, r) => applyRulesToDesign(d, d.refdesRules ? undefined : r() < 0.5 ? { global: 'A_' } : { map: { R: 'RES_', U: 'U1_' } }).design,
   },
 ];
 

@@ -61,6 +61,11 @@ const BINDINGS: Binding[] = [
   { id: 'file.save', key: 's', ctrl: true, scope: 'any' },
   { id: 'file.saveAs', key: 's', ctrl: true, shift: true, scope: 'any' },
   { id: 'file.print', key: 'p', ctrl: true, scope: 'any' },
+  // several designs open at once (document tabs)
+  { id: 'file.close', key: 'F4', ctrl: true, scope: 'any' },
+  { id: 'file.close', key: 'w', ctrl: true, scope: 'any', alias: true },
+  { id: 'window.next', key: 'Tab', ctrl: true, scope: 'any' },
+  { id: 'window.previous', key: 'Tab', ctrl: true, shift: true, scope: 'any' },
   // edit
   { id: 'edit.undo', key: 'z', ctrl: true, scope: 'app' },
   { id: 'edit.redo', key: 'y', ctrl: true, scope: 'app' },

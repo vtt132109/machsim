@@ -12,6 +12,7 @@ import type { ItemKind, PartLookup, Rect, SelItem } from './types';
 import { getSheet, itemsBounds, moveItems, normalizeSheet, selIds, updateSheet } from './designOps';
 import { newId } from './ids';
 import { collectRefdes, nextRefdes } from './refdes';
+import { effectivePrefix } from '../../model/refdesRules';
 import { rubberBandPoints, simplifyPoints } from './routing';
 import { onWire, pointKey, wireEnds } from './wireOps';
 
@@ -370,7 +371,7 @@ export function replacePart(design: Design, sheetId: string, instId: string, new
   if (!samePrefix) {
     const used = collectRefdes(design, sheetId);
     used.delete(inst.refdes.toUpperCase());
-    refdes = nextRefdes(newDef.prefix, used);
+    refdes = nextRefdes(effectivePrefix(newDef.prefix, design.refdesRules), used);
   }
   const next: PartInstance = { ...inst, partId: newPartId, params, refdes };
   delete next.refOffset;

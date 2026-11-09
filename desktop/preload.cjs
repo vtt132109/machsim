@@ -26,6 +26,26 @@ contextBridge.exposeInMainWorld('machsimDesktop', {
   recentFiles: () => ipcRenderer.invoke('machsim:recent'),
   openRecent: (filePath) => ipcRenderer.invoke('machsim:open-recent', filePath),
   setDirty: (value) => ipcRenderer.send('machsim:set-dirty', Boolean(value)),
+  /** Names of the documents with unsaved changes (document tabs): the shell lists them if it has to ask itself. */
+  setDirtyDocuments: (names) => ipcRenderer.send('machsim:set-dirty-documents', Array.isArray(names) ? names.map(String) : []),
+  /**
+   * The window was asked to close while something is unsaved: the renderer runs its Close all
+   * question and then calls confirmQuit (or does nothing to keep the window open).
+   */
+  onCloseRequest: (callback) => {
+    const listener = () => callback();
+    ipcRenderer.on('machsim:close-request', listener);
+    ipcRenderer.send('machsim:close-handler', true);
+    return () => {
+      ipcRenderer.removeListener('machsim:close-request', listener);
+      ipcRenderer.send('machsim:close-handler', false);
+    };
+  },
+  confirmQuit: () => ipcRenderer.send('machsim:confirm-quit'),
+  /** Print the page (the print preview's print-only container) with the system print dialog. */
+  printPage: (opts) => ipcRenderer.invoke('machsim:print-page', opts || {}),
+  /** Save the page as a PDF file through a save dialog. */
+  printToPdf: (opts) => ipcRenderer.invoke('machsim:print-pdf', opts || {}),
   setTitle: (title) => ipcRenderer.send('machsim:set-title', String(title)),
   info: () => ipcRenderer.invoke('machsim:info'),
   /** Projects (.msimproj): open / save-as dialogs, files by path relative to the project folder. */

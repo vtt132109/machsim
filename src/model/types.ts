@@ -231,6 +231,11 @@ export interface TextNote {
   collapsed?: boolean;
   locked?: boolean;
   group?: string;
+  /**
+   * Drawing order among the annotations of a sheet (Edit > Order): higher is drawn later, so on
+   * top. Absent = the default order (graphics under text, each in list order).
+   */
+  z?: number;
 }
 
 /** v2: kinds of graphic annotation shapes. */
@@ -258,6 +263,8 @@ export interface Shape {
   src?: string;
   locked?: boolean;
   group?: string;
+  /** drawing order among the annotations of a sheet (see TextNote.z) */
+  z?: number;
 }
 
 /** v2: paper sizes for sheets and printing. */
@@ -296,6 +303,27 @@ export interface SheetProps {
  */
 export type SheetKind = 'schematic' | 'ladder';
 
+/**
+ * Layers of a sheet that can be shown or hidden (Edit > Layer settings, src/model/layers.ts). Only
+ * what differs from the default is stored; hiding a layer changes the drawing and the exported
+ * image, never the circuit.
+ */
+export interface SheetLayers {
+  grid?: boolean;
+  refdes?: boolean;
+  values?: boolean;
+  /** net labels and connectors */
+  labels?: boolean;
+  /** the name of every net, drawn along its wires (off by default) */
+  netNames?: boolean;
+  /** physical pin numbers next to the pins (off by default) */
+  pinNumbers?: boolean;
+  /** sticky comments */
+  comments?: boolean;
+  /** graphic annotations (lines, rectangles, pictures ...) */
+  graphics?: boolean;
+}
+
 export interface Sheet {
   id: string;
   name: string;
@@ -312,6 +340,8 @@ export interface Sheet {
   kind?: SheetKind;
   /** ladder sheets: the rungs, top to bottom (src/ladder/types.ts) */
   ladder?: LadderRung[];
+  /** visibility of the drawing layers; absent = the defaults (src/model/layers.ts) */
+  layers?: SheetLayers;
 }
 
 /** v2: title block fields shared by every sheet of a design (empty date = today's date). */
@@ -340,6 +370,16 @@ export interface PrintSetup {
   /** add a page listing every instrument and its settings */
   includeInstruments?: boolean;
   monochrome?: boolean;
+  /** margin on every side in mm (absent = 10) */
+  marginMm?: number;
+  /** a picture larger than the page is spread over several pages (fixed percentage only) */
+  tile?: boolean;
+  /** page footer: design title, sheet name, page n of m */
+  footer?: boolean;
+  /** page numbers to print, e.g. "1-3, 5" (absent = all) */
+  pageRange?: string;
+  /** size of the paper when `paper` is 'Custom', millimetres */
+  customMm?: { w: number; h: number };
 }
 
 /**
@@ -552,6 +592,24 @@ export interface Design {
    * keyed by the net's user-visible name (case-insensitive, see src/model/netSettings.ts).
    */
   nets?: Record<string, NetSettings>;
+  /**
+   * Reference designator prefix rules (Tools > Reference designator prefixes): a design-wide prefix
+   * and per-letter replacements, for example a multi-board design where "U" becomes "U1_" or
+   * "A_U" (src/model/refdesRules.ts). Absent = the library prefixes (R, C, U ...).
+   */
+  refdesRules?: RefdesRules;
+}
+
+/**
+ * Reference designator prefix rules of a design (Design.refdesRules). A part whose library prefix
+ * is "U" is named `<global><map.U ?? 'U'><number>`: with `global: 'A_'` that is "A_U3", with
+ * `map: { U: 'U1_' }` it is "U1_3".
+ */
+export interface RefdesRules {
+  /** text put in front of every designator (a board or module tag such as "A_") */
+  global?: string;
+  /** library prefix (upper-case, "R", "U", "XMM") -> the prefix the design uses instead */
+  map?: Record<string, string>;
 }
 
 /**

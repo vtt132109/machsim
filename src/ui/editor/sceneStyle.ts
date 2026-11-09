@@ -16,6 +16,8 @@ export const SCENE_CSS = `
 .ms-sym-text { fill: currentColor; }
 .ms-part-label { fill: var(--part); font-size: 11px; }
 .ms-part.is-selected .ms-part-label { fill: var(--part-selected); }
+.ms-pin-number { fill: var(--text-dim, #78808a); pointer-events: none; }
+.ms-net-name { fill: var(--label); font-style: italic; opacity: 0.85; pointer-events: none; }
 .ms-part-unknown { fill: none; stroke: var(--erc-error); stroke-dasharray: 4 3; stroke-width: 1.2; }
 .ms-glow { pointer-events: none; }
 .ms-part.is-annotation { color: var(--text-dim, #78808a); }

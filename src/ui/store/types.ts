@@ -176,6 +176,17 @@ export interface EditorState {
   ui: UiState;
 }
 
+/**
+ * Everything of {@link EditorState} that belongs to ONE open document (src/ui/app/documents.ts keeps
+ * one of these per document tab): the design and its saved copy, undo history, selection, the
+ * view of every sheet, the ERC markers and the simulation state it produced. Layout toggles, the
+ * clipboard and the tool are shared by all documents.
+ */
+export type DocumentState = Pick<
+  EditorState,
+  'design' | 'savedDesign' | 'fileName' | 'activeSheetId' | 'selection' | 'views' | 'history' | 'ercMarkers' | 'simMessages' | 'probeValues' | 'indicatorLevels' | 'ladderLive' | 'ratingStates' | 'sim'
+>;
+
 /** Copied schematic fragment (coordinates as on the source sheet). */
 export interface Clipboard {
   parts: PartInstance[];

@@ -14,6 +14,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import type { Design, Sheet } from '../../model/types';
 import type { PartLookup, Rect } from '../store/types';
 import { getSheet, itemsBounds } from '../store/designOps';
+import { sheetWireNets } from '../store/connectivity';
+import { layerVisible } from '../../model/layers';
 import { rectUnion } from '../store/shapes';
 import { SceneDefs, SheetScene } from './scene';
 import { sheetFrame } from '../../model/paper';
@@ -122,6 +124,8 @@ export function sheetToSvg(design: Design, sheetId: string, lookup: PartLookup, 
       showPage: !opts.rect && (opts.area ?? 'page') === 'page',
       probeValues: opts.probeValues,
       indicatorLevels: opts.indicatorLevels,
+      // the "net names" layer (Edit > Layer settings) needs the nets of the sheet
+      wireNets: layerVisible(sheet, 'netNames') ? sheetWireNets(design, sheet.id, lookup) : undefined,
     }),
     ladderGroup(sheet),
   );

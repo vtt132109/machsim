@@ -14,6 +14,7 @@
  *    grapher, postprocessor).
  * Returns an uninstall function (tests, hot reload).
  */
+import { documents } from '../app/documentSet';
 import type { InstrumentKind } from '../../model/types';
 import { emptyNetlist } from '../../sim/netlist';
 import {
@@ -35,7 +36,7 @@ import { SimClient, createLazyInProcessTransport, createWorkerTransport, type Si
 import { BreadboardTab } from './BreadboardTab';
 import { TAB_IDS, registerIntegrationCommands, runSpiceText } from './commands';
 import { installGrapherPersistence } from './grapherPersist';
-import { SimulationIntegration } from './controller';
+import { SimulationIntegration, type DocumentLive } from './controller';
 import { InstrumentWindow } from './InstrumentWindow';
 import { BomTab, ErcTab, GrapherWindow, McuPanel, NetlistTab, SimulationTab } from './panels';
 import { t } from '../../i18n';
@@ -196,6 +197,14 @@ export function installIntegration(): () => void {
     registerBottomTab({ id: TAB_IDS.bom, title: 'BOM', render: () => <BomTab />, order: 40 }),
     registerMainView({ id: 'breadboard', title: t('integration.index.breadboard3d'), render: () => <BreadboardTab ctrl={ctrl} />, order: 10 }),
     registerIntegrationCommands(ctrl),
+    // document tabs: every document keeps its own results and Grapher run history, and a running
+    // simulation is stopped when another document is shown
+    documents.registerExtension({
+      id: 'simulation',
+      capture: () => ctrl.documentState(),
+      restore: (d) => ctrl.restoreDocumentState(d as DocumentLive | undefined),
+      beforeLeave: () => ctrl.stopForDocumentSwitch(),
+    }),
     // Grapher pages kept in a design file come back when it is opened
     installGrapherPersistence(ctrl),
     // a shipped sample opened from a file gets its title and sheet names in the UI language
