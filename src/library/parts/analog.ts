@@ -108,7 +108,7 @@ export function opampNodes(ctx: ToSpiceContext): string[] {
   return [ctx.node('IN+'), ctx.node('IN-'), ctx.node('OUT'), ctx.node('V+'), ctx.node('V-')];
 }
 
-interface RealOpamp {
+export interface RealOpamp {
   pn: string;
   description: string;
   p: OpampParams;
@@ -117,7 +117,7 @@ interface RealOpamp {
   keywords: string[];
 }
 
-const REAL_OPAMPS: RealOpamp[] = [
+export const REAL_OPAMPS: RealOpamp[] = [
   {
     pn: 'LM741',
     description: 'Classic general-purpose bipolar op-amp (±15 V)',

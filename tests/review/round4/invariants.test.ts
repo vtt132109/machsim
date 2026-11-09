@@ -40,7 +40,7 @@ import { designToXml, xmlToDesignSafely } from '../../../src/model/xmlDesign';
 import { buildSnippet, readSnippet, snippetText } from '../../../src/model/snippet';
 import { annotateDesign } from '../../../src/model/annotate';
 import { findInDesign, replaceInDesign } from '../../../src/model/findReplace';
-import { addVariant, setActiveVariant, setFitted } from '../../../src/model/variants';
+import { addVariant, setActiveVariant, setFitted, setVariantParam, setVariantVariable } from '../../../src/model/variants';
 import { packageKey, packageOf } from '../../../src/model/sections';
 import { blockInstances, childIdOfPart, getChild, isBlockPartId, resolveLivePart, withLiveParam } from '../../../src/model/hierarchy';
 import { isCustomPartId } from '../../../src/library/custom/types';
@@ -48,7 +48,7 @@ import { getPart } from '../../../src/library';
 import type { Design, PartInstance, Sheet } from '../../../src/model/types';
 import { EXAMPLES } from '../../../src/ui/integration/exampleDesigns';
 import { LESSONS } from '../../../src/learn/lessons';
-import { copyItems, pasteItems, pasteValuesOnly } from '../../../src/ui/store/designOps';
+import { copyItems, moveToNewPackage, pasteItems, pasteValuesOnly, setSection } from '../../../src/ui/store/designOps';
 import { replaceWithSubcircuit } from '../../../src/ui/store/hierarchyOps';
 import { reorderAnnotations, annotationStack } from '../../../src/model/annotationOrder';
 import { setSheetLayers } from '../../../src/model/layers';
@@ -122,6 +122,7 @@ function dangling(d: Design): string[] {
   for (const s of everySheet(d)) {
     for (const p of s.parts) {
       for (const id of p.notFitted ?? []) if (!variantIds.has(id)) out.push(`${p.refdes}.notFitted=${id}`);
+      for (const id of Object.keys(p.variantValues ?? {})) if (!variantIds.has(id)) out.push(`${p.refdes}.variantValues=${id}`);
       if (isCustomPartId(p.partId) && !customIds.has(p.partId)) out.push(`${p.refdes}: no data for ${p.partId}`);
       if (isBlockPartId(p.partId) && !childIds.has(childIdOfPart(p.partId) ?? '')) out.push(`${p.refdes}: no child for ${p.partId}`);
     }
@@ -240,6 +241,38 @@ const OPS: Op[] = [
         next = setFitted(next, [victim.id], added.id, false);
       }
       return setActiveVariant(next, r() < 0.5 ? added.id : (next.variants?.list[0].id ?? added.id));
+    },
+  },
+  {
+    // round 4 step 4: a section of a multi-section chip moves to another section or to a new chip
+    name: 'section moves',
+    apply: (d, r) => {
+      const sections = rootParts(d).filter((x) => packageOf(lookupOf(d, x.part.partId)) !== undefined);
+      if (!sections.length) return d;
+      const victim = pick(r, sections).part;
+      if (r() < 0.5) return moveToNewPackage(d, victim.id, partLookup);
+      return setSection(d, victim.id, pick(r, packageOf(lookupOf(d, victim.partId))!.sections), partLookup);
+    },
+  },
+  {
+    // round 4 step 4: per-variant values (parts and global parameters) in the active variant
+    name: 'variant values',
+    apply: (d, r) => {
+      let next = d;
+      if (!next.variants?.list.length) next = addVariant(next, 'Đầy đủ').design;
+      const added = addVariant(next, `Giá trị ${Math.floor(r() * 90) + 10}`);
+      next = added.design;
+      // only plain numeric values (a resistance, a voltage): an option list would refuse '4.7k'
+      const numeric = (x: { part: PartInstance }) => Object.values(x.part.params).some((v) => /^\d+(\.\d+)?[a-zA-Zµ]{0,3}$/.test(v));
+      const withParams = rootParts(next).filter(numeric);
+      if (withParams.length) {
+        const victim = pick(r, withParams).part;
+        const key = Object.keys(victim.params).find((k) => /^\d+(\.\d+)?[a-zA-Zµ]{0,3}$/.test(victim.params[k]));
+        if (key) next = setVariantParam(next, victim.id, added.id, key, '4.7k');
+      }
+      const name = Object.keys(next.variables)[0];
+      if (name) next = setVariantVariable(next, added.id, name, '3.3');
+      return setActiveVariant(next, added.id);
     },
   },
   {

@@ -123,6 +123,11 @@ export interface UiState {
    * toolbar groups and analyses hidden. Absent / false = the full interface.
    */
   beginner?: boolean;
+  /**
+   * Placing a section of a multi-section chip (7474A, TL072B …) starts a NEW package instead of
+   * joining one that still has the section free (Place › New package for each section).
+   */
+  newPackage?: boolean;
 }
 
 export interface HistoryState {

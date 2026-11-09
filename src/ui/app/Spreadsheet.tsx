@@ -8,6 +8,7 @@
  * - Simulation: messages posted with actions.addSimMessage (engine, ERC, shell).
  */
 import { valuesHidden } from '../../model/restrictions';
+import { activeVariant, effectiveInstance, isFitted } from '../../model/variants';
 import { useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { actions, partLookup, useEditor } from '../store';
 import { computeConnectivity } from '../store/connectivity';
@@ -54,19 +55,22 @@ function PartsTable() {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'refdes', dir: 1 });
   const rows = useMemo(() => {
     const out: PartRow[] = [];
+    // the active design variant decides the values and whether a part is fitted
+    const variantId = activeVariant(design)?.id;
     design.sheets.forEach((sh, si) => {
       for (const p of sh.parts) {
         const def = partLookup(p.partId);
+        const fitted = isFitted(p, variantId);
         out.push({
           id: p.id,
           refdes: p.refdes,
           part: def ? partName(def) : t('app.spreadsheet.missingPart', { id: p.partId }),
           family: def ? familyName(def.family) : '',
-          value: partValueText(p, def, valuesHidden(design)),
+          value: partValueText(effectiveInstance(p, variantId), def, valuesHidden(design)),
           sheet: sh.name,
           sheetIndex: si,
-          sim: !p.excludeFromSim,
-          bom: !p.excludeFromBom,
+          sim: !p.excludeFromSim && fitted,
+          bom: !p.excludeFromBom && fitted,
         });
       }
     });

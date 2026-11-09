@@ -18,18 +18,30 @@
  * The serial terminal shows the bytes the program transmitted and sends typed characters into the
  * receiver — in live mode through the session parameter `rx` of the core element, in stand-alone
  * mode straight into the panel's core.
+ *
+ * Debugging with the circuit (live mode while a simulation runs or is paused): the buttons drive
+ * the debugger of the co-simulated core (src/mcu/debugger.ts) through run-time parameters of the
+ * core element — breakpoints from the listing, Continue (F5), One instruction (F11), One line =
+ * step over (F10), One machine cycle (Shift+F11), Run to cursor (F4) — and the simulation pauses
+ * itself at exactly the time the core has executed. The Watch tab shows expressions over the
+ * registers, SFRs and memory cells; the cells are given to the core's eight hardware watch slots.
+ * Every number on screen comes from the vectors the core publishes, so the panel stays correct
+ * when the simulation is paused.
  */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { buildProgram, programHex, programOk, type ProgramBuild } from '../../mcu/program';
 import { listingText } from '../../mcu/asm8051';
-import { asmErrorText, hexErrorText, mt } from '../../i18n/mcuText';
+import { asmErrorText, hexErrorText, mt, type McuTextKey } from '../../i18n/mcuText';
 import { t } from '../../i18n';
 import { openHelp } from '../help/open';
 import { actions, getState, subscribe } from '../app/extensions';
 import { partLookup } from '../store';
 import { findPartByRefdes } from '../store/designOps';
-import { parseUserNumber } from '../../util/units';
+import { formatEng, parseUserNumber } from '../../util/units';
 import { downloadText, pickTextFile } from '../app/files';
+import { machineCycleSeconds } from '../../mcu/cpu8051';
+import { encodeWatch } from '../../mcu/debugger';
+import { planWatches, type WatchItem } from '../../mcu/watch';
 import type { SimulationIntegration } from '../integration/controller';
 import type { McuBinding } from '../../model/netlister';
 import {
@@ -37,16 +49,20 @@ import {
   TerminalDecoder,
   appendTerminal,
   breakpointAddresses,
+  cyclesAt,
   emptyView,
+  lineAddresses,
   lineAtPc,
+  mcuTime,
   viewFromSnapshot,
   type McuView,
 } from './mcuModel';
 import { ListingView, PortView, RamView, RegisterView, SfrView, SymbolView, TerminalView } from './McuViews';
+import { WatchView, loadWatchItems, saveWatchItems } from './McuWatch';
 import { lowerValues } from '../integration/live';
 import './mcu.css';
 
-type Tab = 'registers' | 'sfr' | 'ram' | 'ports' | 'terminal' | 'listing' | 'symbols';
+type Tab = 'registers' | 'sfr' | 'ram' | 'ports' | 'watch' | 'terminal' | 'listing' | 'symbols';
 type Mode = 'live' | 'standalone';
 
 const TABS: { id: Tab; label: () => string }[] = [
@@ -54,6 +70,7 @@ const TABS: { id: Tab; label: () => string }[] = [
   { id: 'sfr', label: () => mt('tabSfr') },
   { id: 'ram', label: () => mt('tabRam') },
   { id: 'ports', label: () => mt('tabPorts') },
+  { id: 'watch', label: () => mt('tabWatch') },
   { id: 'terminal', label: () => mt('tabTerminal') },
   { id: 'listing', label: () => mt('tabListing') },
   { id: 'symbols', label: () => mt('tabSymbols') },
@@ -104,6 +121,9 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
   const [standaloneView, setStandaloneView] = useState<McuView>(() => emptyView());
   const [ramBase, setRamBase] = useState(0x30);
   const [note, setNote] = useState('');
+  const [watches, setWatches] = useState<WatchItem[]>(() => loadWatchItems());
+  /** 1-based line the caret is on in the program box (Run to cursor) */
+  const [caretLine, setCaretLine] = useState(1);
   const sourceRef = useRef<HTMLTextAreaElement | null>(null);
   const standalone = useRef<StandaloneRun | null>(null);
   const decoder = useRef(new TerminalDecoder());
@@ -132,6 +152,13 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
   // ---- live view ---------------------------------------------------------------------------
   const liveView = useMemo(() => (current ? viewFromSnapshot(lowerValues(live.latest), current.element) : null), [live.latest, current]);
   const view = mode === 'live' ? liveView : standaloneView;
+  /** the co-simulated core can be driven while a session exists (running or held) */
+  const liveDebug = mode === 'live' && (live.session === 'running' || live.session === 'paused');
+  const watchPlan = useMemo(() => planWatches(watches), [watches]);
+  const changeWatches = useCallback((next: WatchItem[]) => {
+    setWatches(next);
+    saveWatchItems(next);
+  }, []);
 
   // the terminal follows whichever core is being watched
   useEffect(() => {
@@ -145,6 +172,26 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
     if (mode !== 'live' || !current) return;
     ctrl.setElementParam(current.element, 'ramview', ramBase);
   }, [ctrl, current, mode, ramBase]);
+
+  // ---- debugger state of the co-simulated core ---------------------------------------------
+  // breakpoints: the listing's marks become code addresses in the core (re-sent for every new session)
+  const breakKey = asm ? [...breakpointAddresses(asm, breaks)].sort((a, b) => a - b).join(',') : '';
+  useEffect(() => {
+    if (!liveDebug || !current) return;
+    ctrl.setElementParam(current.element, 'bpclear', 1);
+    for (const a of breakKey === '' ? [] : breakKey.split(',')) ctrl.setElementParam(current.element, 'bpadd', Number(a));
+  }, [ctrl, current, liveDebug, breakKey, live.session === 'starting']);
+
+  // watches: the memory cells they read go to the core's hardware slots, and the stop mask with them
+  const slotKey = `${watchPlan.cells.map((c) => encodeWatch(c.space, c.address)).join(',')}|${watchPlan.breakMask}`;
+  useEffect(() => {
+    if (!liveDebug || !current) return;
+    for (let k = 0; k < 8; k++) {
+      const cell = watchPlan.cells[k];
+      ctrl.setElementParam(current.element, `watch${k}`, cell ? encodeWatch(cell.space, cell.address) : -1);
+    }
+    ctrl.setElementParam(current.element, 'wbreak', watchPlan.breakMask);
+  }, [ctrl, current, liveDebug, slotKey, live.session === 'starting']);
 
   const ensureStandalone = useCallback((): StandaloneRun | null => {
     if (!current || !built) return null;
@@ -225,29 +272,85 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
     });
   }, []);
 
+  /** Send a debugger command to the co-simulated core and let a held simulation go on. */
+  const command = useCallback(
+    (key: string, value = 1) => {
+      if (!current) return;
+      ctrl.setElementParam(current.element, key, value);
+      ctrl.resume();
+    },
+    [ctrl, current],
+  );
+
   const stepOnce = useCallback(() => {
+    if (liveDebug) {
+      command('step');
+      return;
+    }
     const run = ensureStandalone();
     if (!run) return;
     setMode('standalone');
     run.step();
     refreshStandalone();
-  }, [ensureStandalone, refreshStandalone]);
+  }, [command, ensureStandalone, liveDebug, refreshStandalone]);
 
   const stepLine = useCallback(() => {
+    if (liveDebug) {
+      command('stepover');
+      return;
+    }
     const run = ensureStandalone();
     if (!run || !asm) return;
     setMode('standalone');
     run.stepLine(asm.addrLine);
     refreshStandalone();
-  }, [asm, ensureStandalone, refreshStandalone]);
+  }, [asm, command, ensureStandalone, liveDebug, refreshStandalone]);
+
+  const stepCycle = useCallback(() => {
+    if (liveDebug) command('stepcycle');
+  }, [command, liveDebug]);
 
   const runToBreak = useCallback(() => {
+    if (liveDebug) {
+      command('resume');
+      return;
+    }
     const run = ensureStandalone();
     if (!run) return;
     setMode('standalone');
     run.run(asm ? breakpointAddresses(asm, breaks) : new Set<number>());
     refreshStandalone();
-  }, [asm, breaks, ensureStandalone, refreshStandalone]);
+  }, [asm, breaks, command, ensureStandalone, liveDebug, refreshStandalone]);
+
+  /** Address of the first instruction at or after the caret line. */
+  const cursorAddress = useCallback((): number | undefined => {
+    if (!asm) return undefined;
+    const byLine = lineAddresses(asm);
+    for (let line = caretLine; line <= asm.lines.length; line++) {
+      const a = byLine.get(line);
+      if (a !== undefined) return a;
+    }
+    return undefined;
+  }, [asm, caretLine]);
+
+  const runCursor = useCallback(() => {
+    const at = cursorAddress();
+    if (at === undefined) return;
+    if (liveDebug) {
+      command('runto', at);
+      return;
+    }
+    const run = ensureStandalone();
+    if (!run) return;
+    setMode('standalone');
+    run.run(new Set([at]));
+    refreshStandalone();
+  }, [command, cursorAddress, ensureStandalone, liveDebug, refreshStandalone]);
+
+  const startDebug = useCallback(() => {
+    setMode('live');
+    void ctrl.startDebugging();
+  }, [ctrl]);
 
   const resetRun = useCallback(() => {
     if (mode === 'live') {
@@ -285,10 +388,17 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
       doBuild();
     } else if (e.key === 'F11') {
       e.preventDefault();
-      stepOnce();
+      if (e.shiftKey) stepCycle();
+      else stepOnce();
     } else if (e.key === 'F10') {
       e.preventDefault();
       stepLine();
+    } else if (e.key === 'F5') {
+      e.preventDefault();
+      runToBreak();
+    } else if (e.key === 'F4') {
+      e.preventDefault();
+      runCursor();
     }
   };
 
@@ -300,6 +410,26 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
   const bytes = built ? Math.max(0, built.end - built.start) : 0;
   const currentLine = asm && view ? lineAtPc(asm, view.pc) : undefined;
   const shown = view ?? emptyView(ramBase);
+  // timing: what the next instruction costs and what the held run has executed
+  const mcs = machineCycleSeconds(current.fosc);
+  const nextCycles = built ? cyclesAt(built.bytes, shown.pc) : 0;
+  // the instruction text without its label and comment
+  const nextText =
+    asm && currentLine !== undefined
+      ? asm.lines
+          .find((l) => l.line === currentLine)
+          ?.text.replace(/;.*$/, '')
+          .replace(/^\s*[A-Za-z_?][A-Za-z0-9_?]*:\s*/, '')
+          .trim()
+      : undefined;
+  const held = liveDebug && live.session === 'paused' && shown.dbg.reason > 0 ? shown.dbg : null;
+  const reasonText = held
+    ? held.reason === 3
+      ? held.mid > 0
+        ? mt('dbgReason3', { k: held.mid, n: held.insn || nextCycles })
+        : mt('dbgReason3end')
+      : mt(`dbgReason${held.reason}` as McuTextKey)
+    : '';
 
   return (
     <div className="ms-mcu" onKeyDown={onKeyDown}>
@@ -355,7 +485,9 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
             onChange={(e) => {
               setSource(e.target.value);
               setDirty(true);
+              setCaretLine(e.target.value.slice(0, e.target.selectionStart).split('\n').length);
             }}
+            onSelect={(e) => setCaretLine(e.currentTarget.value.slice(0, e.currentTarget.selectionStart).split('\n').length)}
           />
           <div className="ms-mcu-output" aria-live="polite">
             <span className="ms-mcu-cell-label">{mt('output')}</span>
@@ -413,15 +545,31 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
             </button>
           </div>
           <div className="ms-mcu-row">
-            <button type="button" className="ms-btn ms-btn-small" title={mt('tipStep')} onClick={stepOnce}>
+            {mode === 'live' && !liveDebug ? (
+              <button type="button" className="ms-btn ms-btn-small ms-btn-primary" title={mt('tipDbgStart')} disabled={!programOk(built ?? buildProgram(''))} onClick={startDebug}>
+                {mt('dbgStart')}
+              </button>
+            ) : null}
+            <button type="button" className="ms-btn ms-btn-small" title={liveDebug ? mt('tipDbgStepLive') : mt('tipStep')} onClick={stepOnce}>
               {mt('step')}
             </button>
-            <button type="button" className="ms-btn ms-btn-small" title={mt('tipStepLine')} disabled={!asm} onClick={stepLine}>
+            <button type="button" className="ms-btn ms-btn-small" title={liveDebug ? mt('tipDbgStepOverLive') : mt('tipStepLine')} disabled={!asm} onClick={stepLine}>
               {mt('stepLine')}
             </button>
-            <button type="button" className="ms-btn ms-btn-small" title={mt('tipRunTo')} onClick={runToBreak}>
-              {mt('runTo')}
+            <button type="button" className="ms-btn ms-btn-small" title={mt('tipStepCycle')} disabled={!liveDebug} onClick={stepCycle}>
+              {mt('stepCycle')}
             </button>
+            <button type="button" className="ms-btn ms-btn-small" title={mt('tipRunCursor')} disabled={!asm} onClick={runCursor}>
+              {mt('runCursor')}
+            </button>
+            <button type="button" className="ms-btn ms-btn-small" title={liveDebug ? mt('tipDbgContinue') : mt('tipRunTo')} onClick={runToBreak}>
+              {liveDebug ? mt('dbgContinue') : mt('runTo')}
+            </button>
+            {liveDebug && live.session === 'running' ? (
+              <button type="button" className="ms-btn ms-btn-small" title={mt('tipDbgBreakNow')} onClick={() => command('break')}>
+                {mt('dbgBreakNow')}
+              </button>
+            ) : null}
             <button type="button" className="ms-btn ms-btn-small" title={mt('tipResetRun')} onClick={resetRun}>
               {mt('resetRun')}
             </button>
@@ -432,6 +580,27 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
               </button>
             ) : null}
           </div>
+          {mode === 'live' && !liveDebug ? <p className="ms-hint">{mt('dbgNeedSim')}</p> : null}
+          {held ? (
+            <p className="ms-mcu-status" role="status">
+              {mt('dbgStatus', {
+                reason: reasonText,
+                pc: `${shown.pc.toString(16).toUpperCase().padStart(4, '0')}h`,
+                line: currentLine !== undefined ? mt('dbgStatusLine', { line: currentLine }) : '',
+                cycles: Math.round(shown.cycles),
+                time: formatEng(mcuTime(shown.cycles, current.fosc), 's'),
+                sim: formatEng(live.simTime, 's'),
+              })}
+            </p>
+          ) : null}
+          {view && shown.halted === 0 ? (
+            <p className="ms-mcu-timing">
+              {nextText
+                ? mt('dbgNext', { text: nextText, n: nextCycles, time: formatEng(nextCycles * mcs, 's') })
+                : mt('dbgNextNoText', { pc: `${shown.pc.toString(16).toUpperCase().padStart(4, '0')}h`, n: nextCycles, time: formatEng(nextCycles * mcs, 's') })}{' '}
+              <span title={mt('dbgCycleTime', { time: formatEng(mcs, 's'), fosc: formatEng(current.fosc, 'Hz') })}>· {mt('dbgCycleTime', { time: formatEng(mcs, 's'), fosc: formatEng(current.fosc, 'Hz') })}</span>
+            </p>
+          ) : null}
           {shown.halted === 1 ? <p className="ms-mcu-error">{mt('halted', { pc: `${shown.pc.toString(16).toUpperCase()}h` })}</p> : null}
           {shown.halted === 2 ? <p className="ms-mcu-error">{mt('haltedStack')}</p> : null}
           {mode === 'live' && !liveView ? <p className="ms-hint">{mt('liveWaiting')}</p> : null}
@@ -454,10 +623,11 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
             {tab === 'sfr' ? <SfrView view={shown} /> : null}
             {tab === 'ram' ? <RamView view={{ ...shown, ramBase: mode === 'live' ? shown.ramBase : ramBase }} onBase={setRamBase} /> : null}
             {tab === 'ports' ? <PortView view={shown} /> : null}
+            {tab === 'watch' ? <WatchView items={watches} plan={watchPlan} view={shown} cpu={mode === 'standalone' ? (standalone.current?.cpu ?? undefined) : undefined} live={liveDebug} onChange={changeWatches} /> : null}
             {tab === 'terminal' ? (
               <TerminalView text={terminal} view={shown} canSend={mode === 'standalone' || ctrl.active} onSend={sendText} onClear={() => setTerminal('')} />
             ) : null}
-            {tab === 'listing' ? <ListingView asm={asm} breaks={breaks} currentLine={currentLine} onToggle={toggleBreak} /> : null}
+            {tab === 'listing' ? <ListingView asm={asm} breaks={breaks} currentLine={currentLine} onToggle={toggleBreak} fosc={current.fosc} /> : null}
             {tab === 'symbols' ? <SymbolView asm={asm} /> : null}
           </div>
         </div>

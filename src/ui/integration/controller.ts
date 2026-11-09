@@ -237,7 +237,7 @@ export class SimulationIntegration {
   /** Start (or resume) the active analysis / interactive simulation. */
   async run(): Promise<void> {
     if (this.session) {
-      if (this.live.getState().session === 'paused') this.session.resume();
+      if (this.live.getState().session === 'paused') this.resumeSession();
       return;
     }
     if (this.batch) return;
@@ -378,6 +378,46 @@ export class SimulationIntegration {
 
   pause(): void {
     if (this.session && this.live.getState().session === 'running') this.session.pause();
+  }
+
+  /** Set by {@link startDebugging} for the next interactive session only. */
+  private debugStart = false;
+
+  /**
+   * Start the simulation with every microcontroller held before its first instruction, so the
+   * program can be single-stepped from the very beginning (MCU code editor "Start debugging").
+   * A session that is already running is left alone.
+   */
+  async startDebugging(): Promise<void> {
+    if (this.session) {
+      if (this.live.getState().session === 'paused') this.resumeSession();
+      return;
+    }
+    this.debugStart = true;
+    await this.run();
+    this.debugStart = false;
+  }
+
+  /** Resume a session that paused (a debugger stop or the Pause button). */
+  resume(): void {
+    if (this.session && this.live.getState().session === 'paused') this.session.resume();
+  }
+
+  /** True while the session is paused because a microcontroller debugger stop holds it. */
+  private debugHeld = false;
+
+  /**
+   * Resume after a pause. A hold by the microcontroller debugger is released first (the program
+   * continues to its next breakpoint), so the toolbar Run button always means "go on".
+   */
+  private resumeSession(): void {
+    if (!this.session) return;
+    if (this.debugHeld) {
+      const edits = (this.sessionBuild?.mcus ?? []).map((m) => ({ element: m.element, param: 'resume', value: 1 }));
+      if (edits.length) this.session.setParams(edits);
+      this.debugHeld = false;
+    }
+    this.session.resume();
   }
 
   async stop(): Promise<void> {
@@ -772,7 +812,13 @@ export class SimulationIntegration {
     this.sessionGeneration = this.generation;
     // instrument analyses are queued first: the worker answers them before streaming starts
     this.runNeeds(build, false);
-    const base: Netlist = { ...build.netlist, analyses: [] };
+    let base: Netlist = { ...build.netlist, analyses: [] };
+    if (this.debugStart && (build.mcus?.length ?? 0) > 0) {
+      // "Start debugging" (MCU code editor): the microcontrollers hold the run before their first instruction
+      const cores = new Set(build.mcus!.map((m) => m.element));
+      base = { ...base, elements: base.elements.map((el) => (cores.has(el.name) ? { ...el, params: { ...el.params, dbgstart: 1 } } : el)) };
+    }
+    this.debugStart = false;
     const netlist = settings.initial === 'zero' ? zeroInitialState(base) : base;
     const session = this.client.startInteractive(
       netlist,
@@ -782,12 +828,13 @@ export class SimulationIntegration {
           for (const w of info.warnings) this.msg('warning', w, 'engine');
         },
         onChunk: (chunk, info) => this.onChunk(session, chunk, info),
-        onState: (state, simTime) => {
+        onState: (state, simTime, held) => {
           if (this.session !== session) return;
+          this.debugHeld = state === 'paused' && held === true;
           if (state === 'running' || state === 'paused') {
             this.live.setState((s) => ({ ...s, session: state }));
             this.audio?.setPaused(state === 'paused');
-            this.status({ state, message: state === 'paused' ? t('integration.controller.paused') : rateText(this.live.getState().rate, this.live.getState().speed), simTime });
+            this.status({ state, message: state === 'paused' ? t(held ? 'integration.controller.debugHold' : 'integration.controller.paused') : rateText(this.live.getState().rate, this.live.getState().speed), simTime });
           }
         },
         onError: (message, fatal) => {

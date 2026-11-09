@@ -25,7 +25,8 @@ import type {
 import { GRID, newSheet } from '../../model/types';
 import { BLOCK_PREFIX, findSheet, updateChild } from '../../model/hierarchy';
 import { instancePins, samePoint, snap } from '../../model/geometry';
-import { packageKey, packageOf } from '../../model/sections';
+import { packageKey, packageOf, sectionPartId } from '../../model/sections';
+import { joinableRefdes, joinTargets, packageUses, type JoinOptions } from '../../model/sectionPlan';
 import { fragmentNetNames, neededVariables, sanitizeIncoming, type IncomingExtras, type SanitizeNote } from '../../model/sanitize';
 import { relinkPastedContacts } from '../../model/relink';
 import { netSettings } from '../../model/netSettings';
@@ -185,25 +186,14 @@ export function createPartInstance(
  * and what the learner had to type by hand before. Returns undefined for an ordinary part, or when
  * every placed package already uses that section (then the next free designator starts a new chip).
  */
-function joinPackage(design: Design, sheetId: string, part: PartDef, lookup: PartLookup): string | undefined {
-  const pkg = packageOf(part);
-  if (!pkg) return undefined;
-  const taken = new Map<string, Set<string>>();
-  const order: string[] = [];
-  for (const sheet of levelSheets(design, sheetId)) {
-    for (const p of sheet.parts) {
-      const other = packageOf(lookup(p.partId));
-      if (!other || other.id !== pkg.id) continue;
-      const key = p.refdes.trim().toUpperCase();
-      if (!taken.has(key)) {
-        taken.set(key, new Set());
-        order.push(p.refdes);
-      }
-      taken.get(key)!.add(other.section.toUpperCase());
-    }
-  }
-  const byNumber = [...order].sort((a, b) => (Number(/\d+$/.exec(a)?.[0] ?? 0) || 0) - (Number(/\d+$/.exec(b)?.[0] ?? 0) || 0));
-  return byNumber.find((ref) => !taken.get(ref.trim().toUpperCase())!.has(pkg.section.toUpperCase()));
+function joinPackage(design: Design, sheetId: string, part: PartDef, lookup: PartLookup, opts: JoinOptions = {}): string | undefined {
+  return joinableRefdes(levelSheets(design, sheetId), part, lookup, opts);
+}
+
+/** Options of {@link placePart}. */
+export interface PlaceOptions {
+  /** a section starts a new package (a new designator) even when an existing package has its section free */
+  newPackage?: boolean;
 }
 
 export function placePart(
@@ -214,12 +204,66 @@ export function placePart(
   rotation: Rotation,
   mirror: boolean,
   lookup: PartLookup,
+  opts: PlaceOptions = {},
 ): { design: Design; id: string | null } {
   const part = lookup(partId);
   if (!part || !getSheet(design, sheetId)) return { design, id: null };
-  const inst = createPartInstance(design, part, pos, rotation, mirror, collectRefdes(design, sheetId), joinPackage(design, sheetId, part, lookup));
+  const inst = createPartInstance(design, part, pos, rotation, mirror, collectRefdes(design, sheetId), joinPackage(design, sheetId, part, lookup, opts));
   const next = updateSheet(design, sheetId, (s) => normalizeSheet({ ...s, parts: [...s.parts, inst] }, lookup));
   return { design: next, id: inst.id };
+}
+
+// ---------------------------------------------------------------------------
+// sections of multi-section packages (Properties panel "Package")
+
+/** The sheet a part instance sits on (root or child design). */
+function sheetOfPart(design: Design, instId: string): { sheetId: string; inst: PartInstance } | undefined {
+  const all: Sheet[] = [...design.sheets, ...(design.children ?? []).flatMap((c) => c.sheets)];
+  for (const s of all) {
+    const inst = s.parts.find((p) => p.id === instId);
+    if (inst) return { sheetId: s.id, inst };
+  }
+  return undefined;
+}
+
+function mapPart(design: Design, sheetId: string, instId: string, fn: (p: PartInstance) => PartInstance): Design {
+  return updateSheet(design, sheetId, (s) => ({ ...s, parts: s.parts.map((p) => (p.id === instId ? fn(p) : p)) }));
+}
+
+/**
+ * Change a placed section to another section of the same chip (7474A -> 7474B): the part id changes,
+ * the designator, position and wires stay. Refused (same design) when the letter is unknown or the
+ * package already has that section placed.
+ */
+export function setSection(design: Design, instId: string, letter: string, lookup: PartLookup): Design {
+  const at = sheetOfPart(design, instId);
+  if (!at) return design;
+  const pkg = packageOf(lookup(at.inst.partId));
+  if (!pkg || pkg.section.toUpperCase() === letter.toUpperCase()) return design;
+  const partId = sectionPartId(pkg.id, letter);
+  if (!lookup(partId)) return design;
+  const use = packageUses(levelSheets(design, at.sheetId), lookup).find((u) => u.packageId === pkg.id && u.refdes.trim().toUpperCase() === at.inst.refdes.trim().toUpperCase());
+  if (use?.placed.some((p) => p.letter === letter.toUpperCase() && p.instId !== instId)) return design;
+  return mapPart(design, at.sheetId, instId, (p) => ({ ...p, partId }));
+}
+
+/** Give a placed section a new designator, so it becomes a section of a new chip. */
+export function moveToNewPackage(design: Design, instId: string, lookup: PartLookup): Design {
+  const at = sheetOfPart(design, instId);
+  const def = at ? lookup(at.inst.partId) : undefined;
+  if (!at || !def || !packageOf(def)) return design;
+  const refdes = nextRefdes(effectivePrefix(def.prefix, design.refdesRules), collectRefdes(design, at.sheetId));
+  return mapPart(design, at.sheetId, instId, (p) => ({ ...p, refdes }));
+}
+
+/** Move a placed section into the package with designator `refdes` (it must have that section free). */
+export function moveToPackage(design: Design, instId: string, refdes: string, lookup: PartLookup): Design {
+  const at = sheetOfPart(design, instId);
+  if (!at) return design;
+  const uses = packageUses(levelSheets(design, at.sheetId), lookup);
+  const target = joinTargets(uses, at.inst, lookup, at.inst.partId).find((u) => u.refdes.trim().toUpperCase() === refdes.trim().toUpperCase());
+  if (!target) return design;
+  return mapPart(design, at.sheetId, instId, (p) => ({ ...p, refdes: target.refdes }));
 }
 
 export function addWire(
@@ -658,7 +702,7 @@ export function clipboardExtras(design: Design, clip: Clipboard): IncomingExtras
   const names = neededVariables(all, design.variables);
   if (names.length) out.variables = Object.fromEntries(names.map((n) => [n, design.variables[n]]));
   const notFitted = new Set<string>();
-  for (const p of all) for (const id of p.notFitted ?? []) notFitted.add(id);
+  for (const p of all) for (const id of [...(p.notFitted ?? []), ...Object.keys(p.variantValues ?? {})]) notFitted.add(id);
   const list = (design.variants?.list ?? []).filter((v) => notFitted.has(v.id));
   if (list.length) out.variants = { list: list.map((v) => ({ ...v })), ...(design.variants?.active !== undefined ? { active: design.variants.active } : {}) };
   if (design.customSpice?.trim() && all.some((p) => p.modelOverride)) out.customSpice = design.customSpice;
@@ -880,6 +924,11 @@ export function mergeChildren(design: Design, incoming: ChildDesign[]): { design
     const keep = (p.notFitted ?? []).filter((id) => variantIds.has(id));
     if (keep.length) q.notFitted = keep;
     else delete q.notFitted;
+    if (p.variantValues) {
+      const values = Object.fromEntries(Object.entries(p.variantValues).filter(([id]) => variantIds.has(id)));
+      if (Object.keys(values).length) q.variantValues = values;
+      else delete q.variantValues;
+    }
     return q;
   };
   const fresh = added.map((c) => ({

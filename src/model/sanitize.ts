@@ -58,7 +58,7 @@ import { isCustomPartId } from '../library/custom/types';
 import { ERC_PIN_TYPES, pinPairKey, type ErcLevel } from './ercMatrix';
 import { BLOCK_PREFIX, childIdOfPart, isBlockPartId } from './hierarchy';
 import { CURRENT_DESIGN_VERSION, DesignFormatError, parseDesign, validateDesign } from './serialize';
-import type { ChildDesign, Design, DesignVariants, NetLabel, NetSettings, PartInstance, Point, Probe, Shape, Sheet, TextNote, Wire } from './types';
+import type { ChildDesign, Design, DesignVariants, VariantValues, NetLabel, NetSettings, PartInstance, Point, Probe, Shape, Sheet, TextNote, Wire } from './types';
 import { isPlainNumber } from './variables';
 import { LADDER_LIMITS, type LadderNode, type LadderRung } from '../ladder/types';
 
@@ -300,8 +300,11 @@ export function sanitizeIncoming(
   const knownIds = new Set(targetVariants.map((v) => v.id));
   const sourceName = new Map((extras.variants?.list ?? []).map((v) => [v.id, v.name]));
   const mapVariant = (id: string, refdes: string): string | null => {
-    if (knownIds.has(id)) return id;
     const name = sourceName.get(id);
+    // the source declared this id with a name: the name decides (the same id can mean another build
+    // in another design: "v2" is "Without display" here and "Lab" there); a source that declared
+    // nothing is the same design, where the id itself is the answer
+    if (knownIds.has(id) && (name === undefined || lower(targetVariants.find((v) => v.id === id)?.name ?? '') === lower(name))) return id;
     const hit = name !== undefined ? byName.get(lower(name)) : undefined;
     if (hit !== undefined) {
       log.add('variantRemapped', `${refdes}: ${name}`);
@@ -311,14 +314,31 @@ export function sanitizeIncoming(
     return null;
   };
   const fixVariants = (p: PartInstance) => {
-    if (!p.notFitted?.length) return;
-    const keep: string[] = [];
-    for (const id of p.notFitted) {
-      const to = mapVariant(id, p.refdes || p.partId);
-      if (to !== null && !keep.includes(to)) keep.push(to);
+    if (!p.notFitted?.length && !p.variantValues) return;
+    // each variant id of the part is mapped once (notFitted and variantValues may name the same one)
+    const mapped = new Map<string, string | null>();
+    const to = (id: string): string | null => {
+      if (!mapped.has(id)) mapped.set(id, mapVariant(id, p.refdes || p.partId));
+      return mapped.get(id) ?? null;
+    };
+    if (p.notFitted?.length) {
+      const keep: string[] = [];
+      for (const id of p.notFitted) {
+        const t = to(id);
+        if (t !== null && !keep.includes(t)) keep.push(t);
+      }
+      if (keep.length) p.notFitted = keep;
+      else delete p.notFitted;
     }
-    if (keep.length) p.notFitted = keep;
-    else delete p.notFitted;
+    if (p.variantValues) {
+      const values: Record<string, VariantValues> = {};
+      for (const [id, vv] of Object.entries(p.variantValues)) {
+        const t = to(id);
+        if (t !== null && !(t in values)) values[t] = vv;
+      }
+      if (Object.keys(values).length) p.variantValues = values;
+      else delete p.variantValues;
+    }
   };
   for (const p of fragmentParts(frag)) fixVariants(p);
 
@@ -519,12 +539,24 @@ export function sanitizeDesign(design: Design): { design: Design; notes: Sanitiz
   const ids = new Set((d.variants?.list ?? []).map((v) => v.id));
   for (const s of everySheet(d)) {
     for (const p of s.parts) {
-      if (!p.notFitted?.length) continue;
-      const keep = p.notFitted.filter((id) => ids.has(id));
-      if (keep.length === p.notFitted.length) continue;
-      for (const id of p.notFitted) if (!ids.has(id)) log.add('variantDropped', `${p.refdes || p.partId}: ${id}`);
-      if (keep.length) p.notFitted = keep;
-      else delete p.notFitted;
+      if (p.notFitted?.length) {
+        const keep = p.notFitted.filter((id) => ids.has(id));
+        if (keep.length !== p.notFitted.length) {
+          for (const id of p.notFitted) if (!ids.has(id)) log.add('variantDropped', `${p.refdes || p.partId}: ${id}`);
+          if (keep.length) p.notFitted = keep;
+          else delete p.notFitted;
+        }
+      }
+      if (p.variantValues) {
+        const gone = Object.keys(p.variantValues).filter((id) => !ids.has(id));
+        if (gone.length) {
+          for (const id of gone) {
+            log.add('variantDropped', `${p.refdes || p.partId}: ${id}`);
+            delete p.variantValues[id];
+          }
+          if (!Object.keys(p.variantValues).length) delete p.variantValues;
+        }
+      }
     }
   }
   if (d.variants && d.variants.active !== undefined && !ids.has(d.variants.active)) {
@@ -683,7 +715,17 @@ export function repairRawDesign(input: unknown): { raw: unknown; notes: Sanitize
   }
   for (const sheet of rawSheets(raw)) {
     for (const p of rawArray(sheet.parts)) {
-      if (!isObj(p) || !Array.isArray(p.notFitted)) continue;
+      if (!isObj(p)) continue;
+      if (isObj(p.variantValues)) {
+        const values = p.variantValues as Record<string, unknown>;
+        for (const id of Object.keys(values)) {
+          if (ids.has(id)) continue;
+          log.add('variantDropped', `${typeof p.refdes === 'string' ? p.refdes : '?'}: ${id}`);
+          delete values[id];
+        }
+        if (!Object.keys(values).length) delete p.variantValues;
+      }
+      if (!Array.isArray(p.notFitted)) continue;
       const keep = p.notFitted.filter((x) => typeof x === 'string' && ids.has(x));
       if (keep.length === p.notFitted.length) continue;
       for (const x of p.notFitted) if (typeof x !== 'string' || !ids.has(x)) log.add('variantDropped', `${typeof p.refdes === 'string' ? p.refdes : '?'}: ${String(x)}`);

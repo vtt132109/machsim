@@ -41,6 +41,7 @@ import { CURRENT_DESIGN_VERSION, DesignFormatError, validateDesign } from './ser
 import type { ChildDesign, Design, DesignVariants, NetLabel, NetSettings, PartInstance, Point, Probe, Shape, TextNote, Wire } from './types';
 import { newDesign } from './types';
 import { fragmentNetNames, neededVariables } from './sanitize';
+import { activeVariant, bakeVariant, effectiveVariables } from './variants';
 import { netSettings } from './netSettings';
 
 export const SNIPPET_KEYWORD = 'MachSim-snippet';
@@ -57,6 +58,12 @@ export interface SnippetFragment {
   shapes?: Shape[];
   children?: ChildDesign[];
   anchor: Point;
+}
+
+/** Options of {@link buildSnippet}. */
+export interface SnippetOptions {
+  /** write the active variant's values as the saved ones and drop all variant marks */
+  bakeVariant?: boolean;
 }
 
 export interface SnippetData {
@@ -96,8 +103,16 @@ const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
  * the design's custom SPICE text. Hidden practice faults are left out (they would give the
  * answer away).
  */
-export function buildSnippet(design: Design, fragment: SnippetFragment, now: Date = new Date()): SnippetData {
+export function buildSnippet(design: Design, fragment: SnippetFragment, now: Date = new Date(), options: SnippetOptions = {}): SnippetData {
   const frag = clone(fragment);
+  // "as the active variant builds it": its values are written as the saved ones and no variant
+  // information is kept (the snippet then places the same circuit in any design)
+  const baked = options.bakeVariant ? activeVariant(design)?.id : undefined;
+  if (baked !== undefined) {
+    frag.parts = frag.parts.map((p) => bakeVariant(p, baked));
+    if (frag.children) frag.children = frag.children.map((c) => ({ ...c, sheets: c.sheets.map((s) => ({ ...s, parts: s.parts.map((p) => bakeVariant(p, baked)) })) }));
+  }
+  const globals = baked !== undefined ? effectiveVariables(design, baked) : design.variables;
   // the editor clipboard carries the source design's references with it (Clipboard.extras); the
   // snippet writes them as its own top-level fields instead, so the chunk holds them only once
   delete (frag as { extras?: unknown }).extras;
@@ -113,7 +128,7 @@ export function buildSnippet(design: Design, fragment: SnippetFragment, now: Dat
   const customParts = (design.customParts ?? []).filter((c) => customIds.has(c.id)).map(clone);
   // the global parameters the copied values need, closed over the definitions they use
   // (src/model/sanitize.ts owns that rule, so paste and snippets answer the same)
-  const used = neededVariables(all, design.variables);
+  const used = neededVariables(all, globals);
   const data: SnippetData = {
     format: SNIPPET_FORMAT,
     version: SNIPPET_VERSION,
@@ -123,19 +138,21 @@ export function buildSnippet(design: Design, fragment: SnippetFragment, now: Dat
     fragment: frag,
   };
   if (customParts.length) data.customParts = customParts;
-  if (used.length) data.variables = Object.fromEntries(used.map((n) => [n, design.variables[n]]));
+  if (used.length) data.variables = Object.fromEntries(used.map((n) => [n, globals[n]]));
   // assembly variants: a copied part that is "not fitted" names variant ids, so the snippet has to
   // declare them (a part may only name variants its design has — src/model/serialize.ts)
   const notFitted = new Set<string>();
-  for (const p of all) for (const id of p.notFitted ?? []) notFitted.add(id);
+  for (const p of all) for (const id of [...(p.notFitted ?? []), ...Object.keys(p.variantValues ?? {})]) notFitted.add(id);
   const list = (design.variants?.list ?? []).filter((v) => notFitted.has(v.id)).map(clone);
   if (list.length) {
     const active = design.variants?.active;
     data.variants = { list, ...(active !== undefined && list.some((v) => v.id === active) ? { active } : {}) };
   } else if (notFitted.size) {
     // ids nobody declares (a design edited by hand): drop them instead of writing a broken snippet
-    for (const p of frag.parts) delete p.notFitted;
-    for (const c of frag.children ?? []) for (const s of c.sheets) for (const p of s.parts) delete p.notFitted;
+    for (const p of all) {
+      delete p.notFitted;
+      delete p.variantValues;
+    }
   }
   if (design.customSpice?.trim() && all.some((p) => p.modelOverride)) data.customSpice = design.customSpice;
   // per-net settings: a copied net keeps its colour and PCB properties where it is placed again

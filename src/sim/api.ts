@@ -48,6 +48,12 @@ export interface TransientStepper {
   readonly time: number;
   /** Simulate until tUntil (or until maxWallMs elapsed) and return new samples since the last call. */
   advance(tUntil: number, maxWallMs?: number): TransientChunk;
+  /**
+   * True when the last advance() stopped early because a device asked for the simulation to be held
+   * (a microcontroller reached a breakpoint or finished a debugger step). The caller pauses; the
+   * next advance() continues once the device has been told to go on (setParam).
+   */
+  readonly held?: boolean;
   /** Change an element parameter ("value" = primary value; or e.g. "dc", "acmag", "freq", "ampl"). */
   setParam(element: string, param: string, value: number): void;
   vectorNames(): string[];

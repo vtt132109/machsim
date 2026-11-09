@@ -75,6 +75,14 @@ export interface PartInstance {
    */
   notFitted?: string[];
   /**
+   * Values this part has in a design variant other than its saved ones (Tools > Variant manager):
+   * keyed by variant id, each entry holds parameter values (as typed, like `params`) and BOM / PCB
+   * fields that REPLACE the saved ones while that variant is active (src/model/variants.ts
+   * variantView). A parameter or field that is not named keeps the saved value. Absent = the part
+   * has the same values in every variant.
+   */
+  variantValues?: Record<string, VariantValues>;
+  /**
    * Pins the learner marked "not connected" (Edit › NC marker). Such a pin is drawn with a small
    * cross, raises no floating-pin ERC warning, and raises `ncPinConnected` when it is wired after
    * all (src/model/ercMatrix.ts). Absent = no markers.
@@ -89,6 +97,14 @@ export interface PartInstance {
    * parameters (src/model/hierarchy.ts `innerParams`). Absent = every part keeps the saved values.
    */
   inner?: Record<string, Record<string, string>>;
+}
+
+/** Values of one part in one design variant (PartInstance.variantValues). */
+export interface VariantValues {
+  /** parameter key -> value text, replacing PartInstance.params for this variant */
+  params?: Record<string, string>;
+  /** BOM / PCB fields replacing PartInstance.fields for this variant (manufacturer, part number ...) */
+  fields?: PartFields;
 }
 
 /** BOM / PCB fields of a placed part (PartInstance.fields); every field is optional. */
@@ -652,6 +668,12 @@ export interface DesignVariant {
   id: string;
   name: string;
   description?: string;
+  /**
+   * Global parameters (Design.variables) that have another expression in this variant, for example
+   * { RF: "47k" } for a "high gain" build. While the variant is active they replace the saved
+   * expressions of the same names (src/model/variants.ts variantView).
+   */
+  variables?: Record<string, string>;
 }
 
 /** The variants of a design and the active one (simulation, BOM and reports follow it). */

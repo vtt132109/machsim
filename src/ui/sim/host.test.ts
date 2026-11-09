@@ -176,3 +176,43 @@ describe('SimHost interactive sessions', () => {
     expect(host.sessionCount).toBe(0);
   });
 });
+
+describe('SimHost with the microcontroller debugger', () => {
+  /** MOV A,#1 / MOV A,#2 / MOV A,#3 / SJMP $ at 12 MHz: breakpoint on the third instruction (address 4). */
+  function mcuNetlist() {
+    const nodes: string[] = [];
+    for (let k = 0; k < 32; k++) nodes.push('null');
+    nodes.push('null', 'null', '0');
+    return netlist(
+      [{ type: 'A', name: 'A1', nodes, model: 'MCU', params: { pwr: 1, fosc: 12e6 } }, res('R1', 'x', '0', 1e3)],
+      [],
+      { models: [{ name: 'MCU', type: 'D_MCU8051', params: { vol: 0, voh: 5, vnom: 5, rlow: 100, rhigh: 100, vth: 2.5 }, stringParams: { code: '0:740174027403 80FE'.replace(' ', '') } }], saves: ['all'] },
+    );
+  }
+
+  it('pauses itself at the breakpoint, exactly at the executed cycles, and a step resumes it', () => {
+    const { clock, msgs, host } = setup();
+    host.handle({ type: 'interactive', id: 1, netlist: mcuNetlist(), options: { tstep: 5e-6, speed: 1 } });
+    host.handle({ type: 'params', id: 1, edits: [{ element: 'A1', param: 'bpadd', value: 4 }] });
+    clock.advance(100);
+    const states = msgs.filter((m): m is Extract<FromWorker, { type: 'state' }> => m.type === 'state');
+    const held = states.filter((s) => s.held);
+    expect(held).toHaveLength(1);
+    expect(held[0].state).toBe('paused');
+    // two 1-cycle instructions have run: the circuit clock reads 2 µs
+    expect(held[0].simTime).toBeCloseTo(2e-6, 12);
+    // nothing runs while paused, however long the wall clock goes on
+    const count = chunks(msgs).length;
+    clock.advance(500);
+    expect(chunks(msgs).length).toBe(count);
+    expect(lastTime(msgs)).toBeCloseTo(2e-6, 12);
+    // single step: one more cycle, held again at 3 µs
+    host.handle({ type: 'params', id: 1, edits: [{ element: 'A1', param: 'step', value: 1 }] });
+    host.handle({ type: 'control', id: 1, action: 'resume' });
+    clock.advance(100);
+    const again = msgs.filter((m): m is Extract<FromWorker, { type: 'state' }> => m.type === 'state' && !!m.held);
+    expect(again).toHaveLength(2);
+    expect(again[1].simTime).toBeCloseTo(3e-6, 12);
+    host.dispose();
+  });
+});

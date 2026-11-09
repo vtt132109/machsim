@@ -84,7 +84,7 @@ export const CATALOGUE_PACKS: CataloguePack[] = [
   },
   {
     id: 'logic',
-    counts: { ttl: 436, cmos: 316 },
+    counts: { ttl: 484, cmos: 348 },
     load: async () => (await import('./logicCatalog')).LOGIC_CATALOG,
   },
 ];

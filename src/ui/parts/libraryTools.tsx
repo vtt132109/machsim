@@ -16,9 +16,11 @@ import type { MergePolicy } from '../../library/custom/database';
 import { buildProfile, mergeProfile, parseProfile, serializeProfile, PROFILE_EXTENSION, type LibraryProfile } from '../../library/custom/profile';
 import { partValue } from '../../model/bom';
 import { SAVED_BY } from '../../model/appInfo';
-import { activeVariant, addVariant, isFitted, notFittedCount, removeVariant, renameVariant, setActiveVariant, setFitted, setVariantDescription } from '../../model/variants';
-import type { Design, PartInstance } from '../../model/types';
+import { activeVariant, addVariant, clearVariantValues, isFitted, notFittedCount, removeVariant, renameVariant, setActiveVariant, setFitted, setVariantDescription, setVariantField, setVariantParam, setVariantVariable, variantChanges } from '../../model/variants';
+import type { Design, PartFields, PartInstance } from '../../model/types';
+import type { ParamDef, PartDef } from '../../library/types';
 import { defaultParams } from '../../library';
+import { optionLabel, paramLabel } from '../../i18n/library';
 import { valuesHidden, HIDDEN_VALUE } from '../../model/restrictions';
 import { Dialog } from '../common/Dialog';
 import { alertDialog, confirmDialog, openCustomDialog } from '../common/dialogs';
@@ -165,6 +167,34 @@ interface PartRow {
   path: string;
   name: string;
   value: string;
+  def: PartDef | undefined;
+}
+
+/** The parameter the grid edits directly: the one the symbol shows as the part's value. */
+function primaryParam(def: PartDef | undefined): ParamDef | undefined {
+  // an instrument has no value to vary (its "value" is a measuring mode)
+  if (def?.instrument) return undefined;
+  return def?.params.find((p) => p.showOnSchematic && p.kind !== 'bool');
+}
+
+const FIELD_KEYS: (keyof PartFields)[] = ['manufacturer', 'partNumber', 'supplier', 'footprint'];
+
+/** One value box: empty = the part keeps its saved value in this variant (the saved value is the hint). */
+function VariantValueInput({ def, saved, own, label, onChange }: { def?: ParamDef; saved: string; own: string | undefined; label: string; onChange: (value: string | undefined) => void }) {
+  if (def?.kind === 'select' || def?.kind === 'bool') {
+    const options = def.kind === 'bool' ? [{ value: 'true', label: t('common.yes') }, { value: 'false', label: t('common.no') }] : (def.options ?? []).map((o) => ({ value: o.value, label: optionLabel(o.label) }));
+    return (
+      <select className="ms-input" value={own ?? ''} aria-label={label} onChange={(e) => onChange(e.target.value || undefined)}>
+        <option value="">{pt('varSameAsSaved')}</option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    );
+  }
+  return <input key={own ?? ''} className={`ms-input${own !== undefined ? ' ms-variant-own' : ''}`} defaultValue={own ?? ''} placeholder={saved} aria-label={label} onBlur={(e) => (e.target.value.trim() === (own ?? '') ? undefined : onChange(e.target.value))} onKeyDown={(e) => (e.key === 'Enter' ? e.currentTarget.blur() : undefined)} />;
 }
 
 function variantRows(design: Design): PartRow[] {
@@ -176,7 +206,7 @@ function variantRows(design: Design): PartRow[] {
         const def = partLookup(inst.partId);
         if (def?.globalNet !== undefined) continue;
         const value = def ? partValue(def, { ...defaultParams(def), ...inst.params }) : '';
-        rows.push({ inst, path: `${prefix}${inst.refdes}`, name: def ? partName(def) : inst.partId, value: hidden && value ? HIDDEN_VALUE : value });
+        rows.push({ inst, path: `${prefix}${inst.refdes}`, name: def ? partName(def) : inst.partId, value: hidden && value ? HIDDEN_VALUE : value, def });
       }
     }
   };
@@ -192,6 +222,7 @@ export function openVariantManager(): void {
 function VariantDialog({ close }: { close: () => void }) {
   const design = useEditor((s) => s.design);
   const [filter, setFilter] = useState('');
+  const [detailId, setDetailId] = useState<string | null>(null);
   const variants = design.variants?.list ?? [];
   const active = activeVariant(design);
   const rows = useMemo(() => variantRows(design), [design]);
@@ -238,6 +269,7 @@ function VariantDialog({ close }: { close: () => void }) {
                 <th>{pt('varDescription')}</th>
                 <th />
                 <th />
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -253,6 +285,7 @@ function VariantDialog({ close }: { close: () => void }) {
                     <input className="ms-input" defaultValue={v.description ?? ''} aria-label={pt('varDescription')} onBlur={(e) => apply((d) => ((d.variants?.list.find((x) => x.id === v.id)?.description ?? '') === e.target.value.trim() ? d : setVariantDescription(d, v.id, e.target.value)))} />
                   </td>
                   <td className="ms-hint">{pt('varCount', { n: notFittedCount(design, v.id) })}</td>
+                  <td className="ms-hint">{pt('varValueCount', { n: variantChanges(design, v.id).filter((c) => c.kind !== 'notFitted').length })}</td>
                   <td>
                     <button type="button" className="ms-btn ms-btn-small" onClick={() => apply((d) => setFitted(d, rows.map((r) => r.inst.id), v.id, true))}>
                       {pt('varAllFitted')}
@@ -289,25 +322,136 @@ function VariantDialog({ close }: { close: () => void }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {shown.map((r) => (
-                    <tr key={r.inst.id}>
-                      <td>{r.path}</td>
-                      <td>{r.name}</td>
-                      <td>{r.value}</td>
-                      {variants.map((v) => (
-                        <td key={v.id} className="ms-variant-cell">
-                          <input type="checkbox" checked={isFitted(r.inst, v.id)} title={pt('tipVarFitted', { name: v.name })} aria-label={`${r.path}: ${pt('tipVarFitted', { name: v.name })}`} onChange={(e) => apply((d) => setFitted(d, [r.inst.id], v.id, e.target.checked))} />
+                  {shown.map((r) => {
+                    const main = primaryParam(r.def);
+                    return (
+                      <tr key={r.inst.id} className={detailId === r.inst.id ? 'is-selected' : undefined}>
+                        <td>
+                          <button type="button" className="ms-link-button" title={pt('tipVarDetail')} aria-expanded={detailId === r.inst.id} onClick={() => setDetailId(detailId === r.inst.id ? null : r.inst.id)}>
+                            {r.path}
+                          </button>
                         </td>
-                      ))}
-                    </tr>
-                  ))}
+                        <td>{r.name}</td>
+                        <td>{r.value}</td>
+                        {variants.map((v) => (
+                          <td key={v.id} className="ms-variant-cell">
+                            <input type="checkbox" checked={isFitted(r.inst, v.id)} title={pt('tipVarFitted', { name: v.name })} aria-label={`${r.path}: ${pt('tipVarFitted', { name: v.name })}`} onChange={(e) => apply((d) => setFitted(d, [r.inst.id], v.id, e.target.checked))} />
+                            {main ? (
+                              <VariantValueInput
+                                def={main}
+                                saved={r.inst.params[main.key] ?? main.default}
+                                own={r.inst.variantValues?.[v.id]?.params?.[main.key]}
+                                label={`${r.path}: ${pt('tipVarValue', { name: v.name })}`}
+                                onChange={(val) => apply((d) => setVariantParam(d, r.inst.id, v.id, main.key, val))}
+                              />
+                            ) : null}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           )}
+          {(() => {
+            const row = rows.find((r) => r.inst.id === detailId);
+            return row ? <VariantPartDetail row={row} variants={variants} apply={apply} /> : null;
+          })()}
+          <VariantVariables design={design} apply={apply} />
         </>
       )}
     </Dialog>
+  );
+}
+
+/** Every parameter and BOM field of one part, one box per variant (opened from the reference in the grid). */
+function VariantPartDetail({ row, variants, apply }: { row: PartRow; variants: { id: string; name: string }[]; apply: (fn: (d: Design) => Design) => void }) {
+  const { inst, def } = row;
+  return (
+    <section className="ms-variant-detail" aria-label={pt('varDetailTitle', { ref: row.path })}>
+      <h4>{pt('varDetailTitle', { ref: row.path })}</h4>
+      <p className="ms-hint">{pt('varDetailHint')}</p>
+      <table className="ms-table">
+        <thead>
+          <tr>
+            <th>{pt('varDetailParam')}</th>
+            <th>{pt('varDetailSaved')}</th>
+            {variants.map((v) => (
+              <th key={v.id}>{v.name}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {(def?.params ?? []).map((p) => (
+            <tr key={p.key}>
+              <td title={p.key}>{paramLabel(p)}</td>
+              <td>{inst.params[p.key] ?? p.default}</td>
+              {variants.map((v) => (
+                <td key={v.id}>
+                  <VariantValueInput def={p} saved={inst.params[p.key] ?? p.default} own={inst.variantValues?.[v.id]?.params?.[p.key]} label={`${paramLabel(p)} — ${v.name}`} onChange={(val) => apply((d) => setVariantParam(d, inst.id, v.id, p.key, val))} />
+                </td>
+              ))}
+            </tr>
+          ))}
+          {FIELD_KEYS.map((k) => (
+            <tr key={k}>
+              <td>{pt(`varField_${k}`)}</td>
+              <td>{inst.fields?.[k] ?? ''}</td>
+              {variants.map((v) => (
+                <td key={v.id}>
+                  <VariantValueInput saved={inst.fields?.[k] ?? ''} own={inst.variantValues?.[v.id]?.fields?.[k]} label={`${pt(`varField_${k}`)} — ${v.name}`} onChange={(val) => apply((d) => setVariantField(d, inst.id, v.id, k, val))} />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="ms-variant-top">
+        {variants.map((v) => (
+          <button key={v.id} type="button" className="ms-btn ms-btn-small" disabled={!inst.variantValues?.[v.id]} onClick={() => apply((d) => clearVariantValues(d, [inst.id], v.id))}>
+            {pt('varClearValues', { name: v.name })}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** Global parameters (Design.variables) with another expression per variant. */
+function VariantVariables({ design, apply }: { design: Design; apply: (fn: (d: Design) => Design) => void }) {
+  const names = Object.keys(design.variables);
+  const variants = design.variants?.list ?? [];
+  if (!names.length) return null;
+  return (
+    <section className="ms-variant-detail" aria-label={pt('varGlobals')}>
+      <h4>{pt('varGlobals')}</h4>
+      <p className="ms-hint">{pt('varGlobalsHint')}</p>
+      <table className="ms-table">
+        <thead>
+          <tr>
+            <th>{pt('varDetailParam')}</th>
+            <th>{pt('varDetailSaved')}</th>
+            {variants.map((v) => (
+              <th key={v.id}>{v.name}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {names.map((n) => (
+            <tr key={n}>
+              <td>{n}</td>
+              <td>{design.variables[n]}</td>
+              {variants.map((v) => (
+                <td key={v.id}>
+                  <VariantValueInput saved={design.variables[n]} own={v.variables?.[n]} label={`${n} — ${v.name}`} onChange={(val) => apply((d) => setVariantVariable(d, v.id, n, val))} />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
   );
 }
 

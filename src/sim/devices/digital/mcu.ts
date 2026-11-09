@@ -45,8 +45,20 @@
  *   vector snapshot. The
  *   run-time parameters `rx` (inject a byte into the serial receiver), `ramview` (base of the RAM
  *   window) and `reset` are settable while an interactive simulation runs.
+ *
+ * Debugging while the circuit runs (src/mcu/debugger.ts)
+ *   More run-time parameters drive a debugger: `bpadd` / `bpdel` (code address), `bpclear`,
+ *   `resume`, `step`, `stepcycle`, `stepover`, `runto` (address), `watch0` … `watch7` (see
+ *   `encodeWatch`) and `wbreak` (bit mask of watch slots that stop the run when they change). When
+ *   the program reaches a breakpoint or a step command completes, the device asks the stepper to
+ *   hold the simulation (`holdRequested`) and the session pauses at EXACTLY the time the core has
+ *   executed — cycles × the machine-cycle period — because the look-ahead (below) and the step
+ *   goal both place a timepoint there. The read-outs `Mdbg` (why it stopped), `Mmid` (cycles into
+ *   the instruction in progress), `Minsn` (cycles of the next instruction) and `Mw0` … `Mw7` (the
+ *   watched values) are published next to the registers.
  */
 import { Cpu8051, SFR, machineCycleSeconds, type CpuState } from '../../../mcu/cpu8051';
+import { CoreDebugger, WATCH_SLOTS } from '../../../mcu/debugger';
 import { decodeImage } from '../../../mcu/program';
 import { MCU_PROBE_KEYS, RAM_WINDOW } from '../../../mcu/probes';
 import { netlistError, range, type BehaviourFactory, type EvalIO } from './behaviour';
@@ -74,16 +86,32 @@ const mcu8051: BehaviourFactory = (ctx) => {
   const pullup = p.positive('pullup', 50e3);
   const ahead = Math.max(1, p.int('ahead', 20000));
   const debug = p.flag('debug', true);
+  /** "Start debugging": the run is held before the first instruction (set by the code editor, never saved) */
+  const dbgStart = p.flag('dbgstart', false);
   const image = decodeImage(p.text('code') ?? '');
 
   const cpu = new Cpu8051({ xramSize });
   cpu.loadCode(image.bytes, image.at);
+  const dbg = new CoreDebugger(cpu, mcs);
   /** pin drive word of the last committed state (four bytes packed high port first) */
   let lastWord = -1;
   /** time of the newest pin change the core made */
   let lastChange = 0;
   /** time the look-ahead asked to be woken at (-1 = none) */
   let wakeAt = -1;
+  /**
+   * Circuit time at which the core's cycle counter was zero. 0 for a normal run; a program restart
+   * in the middle of a run (the `reset` parameter) moves it to the restart time, so the cycle
+   * counter and the circuit clock keep agreeing: time = timeBase + cycles × machine-cycle period.
+   */
+  let timeBase = 0;
+  /** time of the newest evaluation (where a parameter change finds the circuit) */
+  let lastNow = 0;
+  /** the engine must place a timepoint at this time (a debugger event the look-ahead predicted after a command); -1 = none */
+  let predicted = -1;
+  /** a manual break was requested: hold at the next timepoint */
+  let breakPending = false;
+  const timeOf = (cycles: number): number => timeBase + cycles * mcs;
   /** base address of the RAM window the panel shows */
   let ramBase = 0x30;
   /** the four newest transmitted bytes, newest first */
@@ -105,21 +133,34 @@ const mcu8051: BehaviourFactory = (ctx) => {
     }
   };
 
+  const applyPending = (): void => {
+    const t = timeOf(cpu.cycles);
+    while (pending.length > 0 && pending[0].time <= t) {
+      const c = pending.shift()!;
+      cpu.pinIn[c.pin] = c.value;
+    }
+  };
+  const trackPins = (): void => {
+    const w = portWord();
+    if (w !== lastWord) {
+      lastWord = w;
+      lastChange = timeOf(cpu.cycles);
+    }
+  };
+  const hooks = { before: applyPending, after: trackPins };
+
   /** Run the core to `target` machine cycles, applying the pending input changes on the way. */
   const runTo = (target: number): void => {
+    if (dbg.active) {
+      dbg.advance(target, hooks);
+      for (const c of pending.splice(0)) cpu.pinIn[c.pin] = c.value;
+      return;
+    }
     let guard = 0;
     while (cpu.cycles < target && cpu.halted === 'none') {
-      const t = cpu.cycles * mcs;
-      while (pending.length > 0 && pending[0].time <= t) {
-        const c = pending.shift()!;
-        cpu.pinIn[c.pin] = c.value;
-      }
+      applyPending();
       cpu.step();
-      const w = portWord();
-      if (w !== lastWord) {
-        lastWord = w;
-        lastChange = cpu.cycles * mcs;
-      }
+      trackPins();
       if (++guard > 4_000_000) break; // never spend more than this in one step
     }
     for (const c of pending.splice(0)) cpu.pinIn[c.pin] = c.value;
@@ -134,14 +175,21 @@ const mcu8051: BehaviourFactory = (ctx) => {
     const limit = cpu.cycles + ahead;
     const word = lastWord;
     let found = -1;
+    let first = true;
     while (cpu.cycles < limit && cpu.halted === 'none') {
+      // the debugger stops the program BEFORE a breakpoint: that is also an event the engine needs a timepoint for
+      if (dbg.active && dbg.stopsAt(cpu.pc, cpu.sp, first)) {
+        found = timeOf(cpu.cycles);
+        break;
+      }
+      first = false;
       cpu.step();
-      if (portWord() !== word) {
-        found = cpu.cycles * mcs;
+      if (portWord() !== word || dbg.watchChangeAhead()) {
+        found = timeOf(cpu.cycles);
         break;
       }
     }
-    const reached = cpu.cycles * mcs;
+    const reached = timeOf(cpu.cycles);
     cpu.restoreState(snap);
     return found >= 0 ? found : reached;
   };
@@ -174,6 +222,27 @@ const mcu8051: BehaviourFactory = (ctx) => {
     probe.Mhalt = cpu.halted === 'none' ? 0 : cpu.halted === 'opcode' ? 1 : 2;
     probe.Mbase = ramBase;
     for (let k = 0; k < RAM_WINDOW; k++) probe[`Mm${k}`] = cpu.iram[(ramBase + k) & 0xff];
+    probe.Mdbg = dbg.held ? dbg.reason : 0;
+    probe.Mmid = dbg.cyclesIntoInstruction;
+    probe.Minsn = dbg.held && cpu.halted === 'none' ? dbg.instructionCycles : 0;
+    probe.Mbpn = dbg.breakpoints.size;
+    for (let k = 0; k < WATCH_SLOTS; k++) probe[`Mw${k}`] = dbg.readWatch(k);
+  };
+
+  /**
+   * After a debugger command: predict again (on a snapshot) where the program next changes a pin,
+   * reaches a breakpoint or changes a watched value, and have the engine place a timepoint there.
+   * The next evaluation would be too late, because the step after the command is already planned.
+   */
+  const repredict = (): void => {
+    predicted = -1;
+    wakeAt = -1;
+    if (!dbg.active || dbg.held || dbg.goalTime() !== undefined || cpu.halted !== 'none') return;
+    const t = lookAhead();
+    if (t > lastNow) {
+      predicted = t;
+      wakeAt = t;
+    }
   };
 
   return {
@@ -188,14 +257,35 @@ const mcu8051: BehaviourFactory = (ctx) => {
     init() {
       cpu.reset();
       cpu.loadCode(image.bytes, image.at);
+      dbg.reset();
+      if (dbgStart) dbg.breakNow();
       lastWord = portWord();
       lastChange = 0;
       wakeAt = -1;
+      predicted = -1;
+      timeBase = 0;
+      dbg.timeBase = 0;
       txRing.fill(0);
       pending.length = 0;
     },
 
+    holdRequested: () => dbg.held,
+
+    wakeTimes() {
+      const out: number[] = [];
+      const g = dbg.goalTime();
+      if (g !== undefined) out.push(g);
+      if (predicted > 0) out.push(predicted);
+      return out;
+    },
+
     eval(io) {
+      lastNow = io.now;
+      if (predicted > 0 && io.now >= predicted - 1e-15) predicted = -1;
+      if (breakPending && !io.dc) {
+        breakPending = false;
+        dbg.breakNow();
+      }
       // RST is active high; EA low means "fetch from external memory", which does not exist here
       const held = io.present[RST] === 1 && io.in[RST] === 1;
       const ea = io.present[EA] === 1 ? io.in[EA] : 1;
@@ -218,9 +308,10 @@ const mcu8051: BehaviourFactory = (ctx) => {
       }
       pending.sort((a, b) => a.time - b.time);
       const inputsChanged = pending.length > 0;
-      const target = Math.floor(io.now / mcs + 1e-6);
+      const target = Math.floor((io.now - timeBase) / mcs + 1e-6);
       if (ea === 1 && !held) runTo(target);
       else {
+        if (held) dbg.reset();
         for (const c of pending.splice(0)) cpu.pinIn[c.pin] = c.value;
         if (held) {
           cpu.reset();
@@ -231,8 +322,11 @@ const mcu8051: BehaviourFactory = (ctx) => {
       drainTx();
       if (lastChange > io.prevTime && lastChange <= io.now) io.setTime(lastChange);
       writeOutputs(io);
-      // ask to be woken when the program next changes a pin
-      if (ea === 1 && !held && cpu.halted === 'none' && (inputsChanged || wakeAt < 0 || io.now >= wakeAt)) {
+      // a debugger step in progress completes at an exact time: the engine needs a timepoint there
+      const goal = dbg.goalTime();
+      if (goal !== undefined && goal > io.now) io.wake(goal);
+      // ask to be woken when the program next changes a pin (or reaches a breakpoint)
+      if (ea === 1 && !held && !dbg.held && goal === undefined && cpu.halted === 'none' && (inputsChanged || wakeAt < 0 || io.now >= wakeAt)) {
         const t = lookAhead();
         if (t > io.now) {
           wakeAt = t;
@@ -262,17 +356,64 @@ const mcu8051: BehaviourFactory = (ctx) => {
         if (value !== 0) {
           cpu.reset();
           cpu.loadCode(image.bytes, image.at);
+          dbg.reset();
           lastWord = portWord();
+          timeBase = lastNow;
+          dbg.timeBase = timeBase;
+          repredict();
         }
         return true;
       }
-      return false;
+      // ---- debugger commands (src/mcu/debugger.ts)
+      const rounded = Math.round(value);
+      switch (key) {
+        case 'bpadd':
+          dbg.addBreakpoint(rounded);
+          break;
+        case 'bpdel':
+          dbg.removeBreakpoint(rounded);
+          break;
+        case 'bpclear':
+          dbg.clearBreakpoints();
+          break;
+        case 'resume':
+          dbg.resume();
+          break;
+        case 'break':
+          // taken at the next timepoint, so the hold and its reason are recorded with a sample
+          breakPending = true;
+          return true;
+        case 'step':
+          dbg.stepInstruction();
+          break;
+        case 'stepcycle':
+          dbg.stepCycle();
+          break;
+        case 'stepover':
+          dbg.stepOver();
+          break;
+        case 'runto':
+          dbg.runTo(rounded);
+          break;
+        case 'wbreak':
+          dbg.watchBreak = rounded & 0xff;
+          break;
+        default: {
+          const slot = /^watch([0-7])$/.exec(key);
+          if (!slot) return false;
+          dbg.setWatch(Number(slot[1]), value);
+        }
+      }
+      repredict();
+      return true;
     },
 
     getParam(key) {
       if (key === 'ramview') return ramBase;
       if (key === 'pc') return cpu.pc;
       if (key === 'cycles') return cpu.cycles;
+      if (key === 'held') return dbg.held ? 1 : 0;
+      if (key === 'reason') return dbg.held ? dbg.reason : 0;
       return undefined;
     },
   };

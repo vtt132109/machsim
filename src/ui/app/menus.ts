@@ -255,6 +255,7 @@ export function buildMenus(ctx: MenuContext): TopMenu[] {
   const shapeKinds: ShapeKind[] = ['line', 'polyline', 'rect', 'ellipse', 'arc', 'polygon', 'picture'];
   const place: MenuEntry[] = [
     item('place.component'),
+    item('place.newPackage', { checked: !!s.ui.newPackage }),
     item('place.wire', { checked: s.tool.kind === 'wire' }),
     item('place.bus', { checked: s.tool.kind === 'bus' }),
     item('place.label', { checked: labelTool('label') }),

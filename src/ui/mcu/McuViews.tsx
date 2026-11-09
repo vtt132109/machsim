@@ -7,7 +7,7 @@ import { useState, type ReactNode } from 'react';
 import { mt } from '../../i18n/mcuText';
 import { formatEng } from '../../util/units';
 import type { AsmResult } from '../../mcu/asm8051';
-import { bits, hex, mcuTime, pswFlags, type McuView } from './mcuModel';
+import { bits, cyclesAt, hex, mcuTime, pswFlags, type McuView } from './mcuModel';
 
 const SFR_ORDER: readonly string[] = ['TMOD', 'TCON', 'TL0', 'TH0', 'TL1', 'TH1', 'IE', 'IP', 'SCON', 'SBUF', 'PCON'];
 
@@ -208,11 +208,14 @@ export function ListingView({
   breaks,
   currentLine,
   onToggle,
+  fosc = 12e6,
 }: {
   asm: AsmResult | null;
   breaks: ReadonlySet<number>;
   currentLine: number | undefined;
   onToggle: (line: number) => void;
+  /** crystal frequency, for the time of each instruction */
+  fosc?: number;
 }): ReactNode {
   if (!asm) return <p className="ms-empty">{mt('noListing')}</p>;
   return (
@@ -220,6 +223,8 @@ export function ListingView({
       <ol className="ms-mcu-listing">
         {asm.lines.map((l) => {
           const hasCode = l.bytes.length > 0;
+          /** an instruction line (a DB / DW line has bytes but no cycles) */
+          const isInsn = hasCode && l.addr !== undefined && asm.addrLine.get(l.addr) === l.line;
           const isBreak = breaks.has(l.line);
           const isCurrent = currentLine === l.line;
           return (
@@ -237,6 +242,9 @@ export function ListingView({
               </button>
               <span className="ms-mcu-addr">{hasCode && l.addr !== undefined ? hex(l.addr, 4) : ''}</span>
               <span className="ms-mcu-bytes">{l.bytes.map((b) => hex(b)).join(' ')}</span>
+              <span className="ms-mcu-cyc" title={isInsn ? mt('tipListCyclesTime', { n: cyclesAt(l.bytes, 0), time: formatEng(mcuTime(cyclesAt(l.bytes, 0), fosc), 's') }) : undefined}>
+                {isInsn ? cyclesAt(l.bytes, 0) : ''}
+              </span>
               <span className="ms-mcu-src">{l.text}</span>
             </li>
           );

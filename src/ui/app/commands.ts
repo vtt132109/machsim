@@ -150,6 +150,7 @@ export const BUILTIN_COMMANDS = [
   'view.openBlock',
   'view.parentSheet',
   'place.component',
+  'place.newPackage',
   'place.wire',
   'place.label',
   'place.text',
@@ -392,6 +393,7 @@ export function installBuiltinCommands(): void {
 
   // place
   def('place.component', async () => (await placeUi()).openPlaceComponentDialog());
+  def('place.newPackage', () => actions.setUi({ newPackage: !getState().ui.newPackage }));
   def('place.wire', tool(() => actions.setTool({ kind: 'wire' })));
   def('place.label', tool(() => actions.setTool({ kind: 'label' })));
   def('place.text', tool(() => actions.setTool({ kind: 'text' })));

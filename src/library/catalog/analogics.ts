@@ -18,7 +18,9 @@
  */
 import type { ElementIR, SubcktDef } from '../../sim/netlist';
 import { parseUserNumber } from '../../util/units';
-import { comparatorSubckt, comparatorSymbol, opampNodes, opampSubckt, type OpampParams } from '../parts/analog';
+import { comparatorSubckt, comparatorSymbol, opampNodes, opampSubckt, REAL_OPAMPS, type OpampParams } from '../parts/analog';
+import { makeSectionParts } from '../sectionKit';
+import { opampPackageParts } from './opampSections';
 import { posRegulator, type RegSpec } from '../parts/power';
 import { zenerFragment } from '../parts/diodes';
 import { elB, elC, elR, elX, subckt, type LibraryPartDef } from '../partkit';
@@ -105,6 +107,44 @@ const OPAMP_TEXT = [
 
 const OPAMP_SYMBOL = ampSymbol({ supplies: true });
 const INPUT_VI: Record<string, string> = { bipolar: 'lưỡng cực', jfet: 'JFET', cmos: 'CMOS' };
+
+/** Dual / quad types of the hand-written op-amps (parts/analog.ts) that also exist as packages with sections. */
+const HAND_WRITTEN_PACKAGES: Record<string, 2 | 4> = { LM358: 2, LM324: 4, NE5532: 2 };
+
+/** The whole chip and the sections of every dual / quad op-amp type (round 4 step 4). */
+const opampPackages: LibraryPartDef[] = [
+  ...REAL_OPAMPS.filter((o) => HAND_WRITTEN_PACKAGES[o.pn] !== undefined).flatMap((o) =>
+    opampPackageParts({
+      pn: o.pn,
+      channels: HAND_WRITTEN_PACKAGES[o.pn],
+      sub: opampSubckt(`MS_${o.pn}`, o.p),
+      footprint: o.footprint,
+      en: o.description.replace(/ \(one section[^)]*\)/, ''),
+      vi: `Khuếch đại thuật toán ${o.pn}`,
+      provenance: `MachSim op-amp macromodel parameterised from ${o.pn} datasheet typical values: ${o.source}`,
+      keywords: [o.pn.toLowerCase(), 'op-amp', 'opamp', 'operational amplifier', ...o.keywords],
+    }),
+  ),
+  ...OPAMP_TEXT.flatMap((t) => {
+    const f = t.split(/\s+/);
+    const p: OpampParams = { avol: n(f[1], f[0]), gbw: n(f[2], f[0]), slew: n(f[3], f[0]), rin: n(f[4], f[0]), rout: n(f[5], f[0]), vos: n(f[6], f[0]), iq: n(f[7], f[0]), vsatp: n(f[8], f[0]), vsatn: n(f[9], f[0]), isc: n(f[10], f[0]) };
+    return f[0].split('/').flatMap((x) => {
+      const [pn, ch] = x.split(':');
+      if (ch !== '2' && ch !== '4') return [];
+      const input = f[12];
+      return opampPackageParts({
+        pn,
+        channels: ch === '4' ? 4 : 2,
+        sub: opampSubckt(modelName(pn), p),
+        footprint: ch === '4' ? (f[14].startsWith('DIP') ? 'DIP-14' : 'SO-14') : f[14] === 'SOT-23-5' ? 'SO-8' : f[14],
+        en: `${input === 'jfet' ? 'JFET-input' : input === 'cmos' ? 'CMOS' : 'Bipolar'} op-amp ${pn}: GBW ${eng(p.gbw, 'Hz')}, SR ${eng(p.slew / 1e6, 'V/µs')}, VOS ${eng(p.vos, 'V')}`,
+        vi: `Khuếch đại thuật toán ${input === 'jfet' ? 'đầu vào JFET' : input === 'cmos' ? 'CMOS' : INPUT_VI.bipolar} ${pn}: GBW ${eng(p.gbw, 'Hz')}, tốc độ quét ${eng(p.slew / 1e6, 'V/µs')}, VOS ${eng(p.vos, 'V')}`,
+        provenance: `MachSim op-amp macromodel parameterised from ${pn} datasheet typical values: AVOL ${eng(p.avol, 'V/V')}, GBW ${eng(p.gbw, 'Hz')}, SR ${eng(p.slew / 1e6, 'V/µs')}, RIN ${eng(p.rin, 'Ω')}, VOS ${eng(p.vos, 'V')}, IQ ${eng(p.iq, 'A')}, ISC ${eng(p.isc, 'A')}`,
+        keywords: [pn.toLowerCase(), 'op-amp', 'opamp', 'operational amplifier', input],
+      });
+    });
+  }),
+];
 
 const opamps: LibraryPartDef[] = OPAMP_TEXT.flatMap((t) => {
   const f = t.split(/\s+/);
@@ -517,4 +557,16 @@ const dualTimers: LibraryPartDef[] = DUAL_TIMERS.map((v) => {
   );
 });
 
-export const ANALOG_CATALOG: LibraryPartDef[] = [...opamps, ...comparators, ...inamps, ...shuntRefs, ...seriesRefs, ...timers, ...dualTimers];
+/** NE556 / TLC556 section by section: each timer with its own pins and the shared VCC / GND. */
+const dualTimerSections: LibraryPartDef[] = dualTimers.flatMap((pkg) => {
+  const numbers = new Map(pkg.symbol.pins.map((p) => [p.name, p.number]));
+  const drafts = ([1, 2] as const).map((k) => {
+    const base = TIMER_SYMBOL('555');
+    const rename = (name: string): string => (name === 'VCC' || name === 'GND' ? name : `${name}${k}`);
+    const pins = base.pins.map((p) => ({ ...p, name: rename(p.name), number: numbers.get(rename(p.name)) }));
+    return { letter: String.fromCharCode(64 + k), symbol: { ...base, pins }, own: pins.map((p) => p.name), optionalPins: [`CTRL${k}`, `RST${k}`] };
+  });
+  return makeSectionParts(pkg, drafts, { en: '555 timer', vi: 'bộ định thời 555' });
+});
+
+export const ANALOG_CATALOG: LibraryPartDef[] = [...opamps, ...opampPackages, ...comparators, ...inamps, ...shuntRefs, ...seriesRefs, ...timers, ...dualTimers, ...dualTimerSections];

@@ -45,7 +45,7 @@ import { LcdScreen, LitBars, LitSegments, MatrixDots, ProbeLight, displayCells }
 import { MechaGlyph } from './mechaGlyphs';
 import { explainErc } from '../../i18n/erc';
 import { partDescription, partName } from '../../i18n/library';
-import { activeVariant, isFitted } from '../../model/variants';
+import { activeVariant, effectiveInstance, isFitted } from '../../model/variants';
 import { layerVisible } from '../../model/layers';
 import { annotationStack, hasDrawingOrder } from '../../model/annotationOrder';
 
@@ -828,7 +828,7 @@ export function SheetScene({ design, sheet, lookup, selected = EMPTY_SET, indica
       )}
       <g className="ms-layer-parts">
         {sheet.parts.map((p) => (
-          <PartGlyph key={p.id} inst={p} def={lookup(p.partId)} selected={selected.has(selKey('part', p.id))} level={indicatorLevels?.[p.refdes]} rating={ratingStates?.[p.refdes]} faults={faultSummary(p, design)} cells={displayCells(lookup(p.partId), p.refdes, indicatorLevels)} hideValue={hideValues} showRef={showRef} showValue={showValue} pinNumbers={showPinNumbers} className={variantId && !isFitted(p, variantId) ? 'is-not-fitted' : undefined} />
+          <PartGlyph key={p.id} inst={variantId ? effectiveInstance(p, variantId) : p} def={lookup(p.partId)} selected={selected.has(selKey('part', p.id))} level={indicatorLevels?.[p.refdes]} rating={ratingStates?.[p.refdes]} faults={faultSummary(p, design)} cells={displayCells(lookup(p.partId), p.refdes, indicatorLevels)} hideValue={hideValues} showRef={showRef} showValue={showValue} pinNumbers={showPinNumbers} className={variantId && !isFitted(p, variantId) ? 'is-not-fitted' : undefined} />
         ))}
       </g>
       <g className="ms-layer-wires">

@@ -24,6 +24,9 @@ export const FILES_TEXT = {
   snippetNoCanvas: L('Không vẽ được ảnh xem trước nên snippet dùng một ảnh trắng; mạch vẫn được lưu đầy đủ.', 'The preview picture could not be drawn, so the snippet uses a blank picture; the circuit itself is saved in full.'),
   snippetFilter: L('Snippet mạch (PNG)', 'Circuit snippet (PNG)'),
   snippetSheet: L('Trang 1', 'Sheet 1'),
+  snippetVariantQuestion: L('Thiết kế có nhiều phương án lắp ráp và phương án đang dùng là “{name}”. Giá trị linh kiện của các phương án có thể khác nhau. Lưu snippet theo cách nào?', 'The design has assembly variants and the active one is “{name}”. Part values can differ between variants. How should the snippet be saved?'),
+  snippetVariantBake: L('Lưu đúng giá trị của “{name}”', 'Save the values of “{name}”'),
+  snippetVariantKeep: L('Giữ mọi phương án', 'Keep every variant'),
   pasteNothing: L('Bộ nhớ tạm không có mạch để dán. Sao chép linh kiện (Ctrl+C) hoặc sao chép một tệp snippet PNG trong trình quản lý tệp rồi dán.', 'The clipboard holds no circuit. Copy parts (Ctrl+C), or copy a snippet PNG file in the file manager, then paste.'),
 
   // ---- file information

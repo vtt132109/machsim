@@ -767,6 +767,7 @@ function emitLevel(a: LevelAnalysis, scope: VariableScope, shared: Shared, set: 
   const push = (m: ErcMessage) => pushErc(shared, m, once);
   const partParams = (def: PartDef, inst: PartInstance) => substituteVariables(def, { ...defaultParams(def), ...inst.params, ...(overrides?.[inst.refdes] ?? {}) }, scope);
   const netIdOf = (part: PlacedPartInfo, pin: string): number | undefined => a.conn.pinNet.get(pinKey(part.index, pin));
+  const refdesOfSection = (part: PlacedPartInfo): string => sectionLabel(part.inst.refdes, packageOf(part.def)?.section);
   const nodeOf = (part: PlacedPartInfo, pin: string): string | undefined => {
     const id = netIdOf(part, pin);
     return id === undefined ? undefined : a.netName[id];
@@ -785,13 +786,39 @@ function emitLevel(a: LevelAnalysis, scope: VariableScope, shared: Shared, set: 
   const packageNodes = new Map<PackageGroup<PartInstance>, Map<string, string>>();
   for (const g of sectionsOf) {
     const m = new Map<string, string>();
+    /** pins that two sections both carry (the supply pins of a dual op-amp): which section gave the node */
+    const owner = new Map<string, PlacedPartInfo>();
+    const open = new Set<string>();
     for (const s of g.placed) {
       if (g.active && s.inst.excludeFromSim) continue;
       const part = a.placed[s.index];
       for (const pin of part.pins) {
-        if (m.has(pin.name)) continue;
         const n = nodeOf(part, pin.name);
-        if (n !== undefined) m.set(pin.name, n);
+        if (n === undefined) continue;
+        const id = netIdOf(part, pin.name);
+        const isOpen = id === undefined || a.floating.has(id);
+        const have = m.get(pin.name);
+        // a shared pin takes the first node that is actually connected: wiring the supply on one
+        // section is enough, whichever section was placed first
+        if (have === undefined || (open.has(pin.name) && !isOpen)) {
+          m.set(pin.name, n);
+          owner.set(pin.name, part);
+          if (isOpen) open.add(pin.name);
+          else open.delete(pin.name);
+        } else if (!isOpen && !open.has(pin.name) && have !== n) {
+          const first = owner.get(pin.name)!;
+          push({
+            severity: 'error',
+            code: 'other',
+            message: `${prefix}${refdesOfSection(first)} and ${refdesOfSection(part)} connect their shared pin ${pin.name} to different nets`,
+            detail: { id: 'sectionPinConflict', params: { refdes: first.inst.refdes, pin: pin.name, a: refdesOfSection(first), b: refdesOfSection(part) } },
+            sheetId: part.sheetId,
+            refdes: part.inst.refdes,
+            pin: pin.name,
+            x: part.inst.x,
+            y: part.inst.y,
+          });
+        }
       }
     }
     packageNodes.set(g, m);
@@ -1138,6 +1165,18 @@ function connectivityErc(a: LevelAnalysis, shared: Shared, once: boolean): void 
   const prefix = a.child ? `${a.child.name}: ` : '';
   const push = (m: ErcMessage) => pushErc(shared, m, once);
   const isPortNet = (net: ConnNet) => a.child !== undefined && net.ports.length > 0;
+  // a pin that two sections of one package share (V+ of a dual op-amp) is connected as soon as one
+  // of the sections wires it: the others raise no floating-pin warning for it
+  const sharedConnected = new Set<string>();
+  for (const g of packageGroups(a.placed.map((p) => ({ inst: p.inst, def: p.def, index: p.index })))) {
+    if (g.placed.length < 2) continue;
+    const wired = new Set<string>();
+    for (const s of g.placed) for (const pin of a.placed[s.index].pins) {
+      const id = a.conn.pinNet.get(pinKey(s.index, pin.name));
+      if (id !== undefined && !a.floating.has(id)) wired.add(pin.name);
+    }
+    for (const s of g.placed) for (const pin of a.placed[s.index].pins) if (wired.has(pin.name)) sharedConnected.add(pinKey(s.index, pin.name));
+  }
   for (const part of a.placed) {
     const def = part.def;
     if (!def || def.globalNet !== undefined || part.inst.excludeFromSim) continue;
@@ -1145,6 +1184,7 @@ function connectivityErc(a: LevelAnalysis, shared: Shared, once: boolean): void 
     for (const pin of part.pins) {
       const id = a.conn.pinNet.get(pinKey(part.index, pin.name));
       if (id === undefined || !a.floating.has(id)) continue;
+      if (sharedConnected.has(pinKey(part.index, pin.name))) continue;
       if (lib.optionalPins?.includes(pin.name) || lib.groundWhenOpen?.includes(pin.name)) continue;
       // intentionally open pins: an NC marker (Edit › NC marker) or a pin of type 'nc'
       if (isNcPin(part.inst, pin.name) || normalizePinType(pin.pin.type) === 'nc') continue;

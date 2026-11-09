@@ -797,7 +797,13 @@ export class CodeModelDevice implements Device, EngineDeviceExtensions {
     }
     for (const a of this.aouts) a.value.times().forEach(take);
     this.wakes.forEach(take);
+    this.beh?.wakeTimes?.().forEach(take);
     return out.sort((a, b) => a - b);
+  }
+
+  /** The behaviour asks for the interactive simulation to be held (microcontroller debugger). */
+  holdRequested(): boolean {
+    return this.beh?.holdRequested?.() === true;
   }
 
   private addWake(ctx: AcceptContext, t: number): void {

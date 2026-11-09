@@ -6,9 +6,11 @@
  * Keeping this pure means the register views, the RAM window, the line ↔ address mapping and the
  * terminal are covered by ordinary tests (mcuModel.test.ts) instead of only by clicking.
  */
-import { Cpu8051, SFR, machineCycleSeconds } from '../../mcu/cpu8051';
+import { CYCLES, Cpu8051, SFR, machineCycleSeconds } from '../../mcu/cpu8051';
 import { MCU_PROBE_KEYS, RAM_WINDOW, mcuProbeValue } from '../../mcu/probes';
 import type { AsmResult } from '../../mcu/asm8051';
+import { WATCH_SLOTS, WATCH_SPACE, type WatchSpace } from '../../mcu/debugger';
+import type { WatchContext } from '../../mcu/watch';
 
 /** Everything the panel shows about one microcontroller. */
 export interface McuView {
@@ -37,6 +39,27 @@ export interface McuView {
   txRing: number[];
   rxCount: number;
   rxPending: number;
+  /** debugger read-outs of the core (all quiet for the stand-alone run) */
+  dbg: DebugView;
+}
+
+/** What the debugger of the co-simulated core reports. */
+export interface DebugView {
+  /** why the run is held: 0 not held, 1 breakpoint, 2 step, 3 cycle step, 4 run to cursor, 5 watch (src/mcu/debugger.ts DEBUG_REASON) */
+  reason: number;
+  /** machine cycles of the instruction in progress that the circuit has already run (0 at a boundary) */
+  mid: number;
+  /** machine cycles of the instruction about to run (only published while held) */
+  insn: number;
+  /** breakpoints set in the core */
+  breakpoints: number;
+  /** values of the eight watch slots, -1 = slot off */
+  watch: number[];
+}
+
+/** A quiet debugger read-out. */
+export function emptyDebug(): DebugView {
+  return { reason: 0, mid: 0, insn: 0, breakpoints: 0, watch: new Array<number>(WATCH_SLOTS).fill(-1) };
 }
 
 /** SFR names the panel lists, in display order. */
@@ -76,6 +99,7 @@ export function emptyView(ramBase = 0x30): McuView {
     txRing: [0, 0, 0, 0],
     rxCount: 0,
     rxPending: 0,
+    dbg: emptyDebug(),
   };
 }
 
@@ -107,6 +131,13 @@ export function viewFromSnapshot(values: Map<string, number>, element: string): 
     txRing: Array.from({ length: 4 }, (_, k) => n(`Mtx${k}`)),
     rxCount: n('Mrxn'),
     rxPending: n('Mrxq'),
+    dbg: {
+      reason: n('Mdbg'),
+      mid: n('Mmid'),
+      insn: n('Minsn'),
+      breakpoints: n('Mbpn'),
+      watch: Array.from({ length: WATCH_SLOTS }, (_, k) => (get(`Mw${k}`) === undefined ? -1 : Math.round(get(`Mw${k}`) ?? -1))),
+    },
   };
 }
 
@@ -132,7 +163,79 @@ export function viewFromCpu(cpu: Cpu8051, ramBase: number, txRing: readonly numb
     txRing: [txRing[0] ?? 0, txRing[1] ?? 0, txRing[2] ?? 0, txRing[3] ?? 0],
     rxCount: cpu.rxCount,
     rxPending: cpu.rxPending,
+    dbg: emptyDebug(),
   };
+}
+
+/** Machine cycles of the instruction at `pc` in a program image (0 when the address is outside it). */
+export function cyclesAt(bytes: ArrayLike<number>, pc: number): number {
+  const op = bytes[pc & 0xffff];
+  return op === undefined ? 0 : CYCLES[op];
+}
+
+/**
+ * Where the Watch tab finds values (src/mcu/watch.ts): registers and SFR read-outs from the view,
+ * memory cells from the hardware watch slots (live) or straight from the stand-alone core, and
+ * the 16-byte RAM window as a fall-back for computed addresses.
+ */
+export function watchContext(view: McuView, cells: { space: WatchSpace; address: number }[], cpu?: Cpu8051): WatchContext {
+  const reg = (name: string): number | undefined => {
+    switch (name) {
+      case 'A':
+      case 'ACC':
+        return view.a;
+      case 'B':
+        return view.b;
+      case 'SP':
+        return view.sp;
+      case 'PC':
+        return view.pc;
+      case 'DPTR':
+        return view.dptr;
+      case 'DPH':
+        return (view.dptr >> 8) & 0xff;
+      case 'DPL':
+        return view.dptr & 0xff;
+      case 'PSW':
+        return view.psw;
+      default:
+    }
+    const r = /^R([0-7])$/.exec(name);
+    if (r) return view.regs[Number(r[1])];
+    const p = /^P([0-3])$/.exec(name);
+    if (p) return view.ports[Number(p[1])];
+    return view.sfr[name];
+  };
+  const mem = (space: WatchSpace, address: number): number | undefined => {
+    if (cpu) {
+      // the stand-alone core can answer any address
+      switch (space) {
+        case WATCH_SPACE.direct:
+          return cpu.readDirect(address & 0xff);
+        case WATCH_SPACE.indirect:
+          return cpu.iram[address & 0xff];
+        case WATCH_SPACE.xram:
+          return address < cpu.xram.length ? cpu.xram[address] : 0;
+        case WATCH_SPACE.code:
+          return cpu.code[address & 0xffff];
+        case WATCH_SPACE.bit:
+          return cpu.readBit(address & 0xff);
+        default:
+          return cpu.pinIn[address & 31] & 1;
+      }
+    }
+    const slot = cells.findIndex((c) => c.space === space && c.address === address);
+    if (slot >= 0) {
+      const v = view.dbg.watch[slot];
+      return v < 0 ? undefined : v;
+    }
+    // a computed address inside the RAM window
+    if ((space === WATCH_SPACE.direct || space === WATCH_SPACE.indirect) && address >= view.ramBase && address < view.ramBase + view.ram.length && (space === WATCH_SPACE.indirect || address < 0x80)) {
+      return view.ram[address - view.ramBase];
+    }
+    return undefined;
+  };
+  return { reg, mem };
 }
 
 /** The PSW flags of a view. */

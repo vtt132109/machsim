@@ -684,7 +684,7 @@ export function createEditor(options: EditorOptions = {}) {
         commit(b.design, { selection: [{ kind: 'part', id: b.id }] });
         return b.id;
       }
-      const r = ops.placePart(getState().design, sheetId(), partId, pos, rotation, mirror, lookup);
+      const r = ops.placePart(getState().design, sheetId(), partId, pos, rotation, mirror, lookup, { newPackage: !!getState().ui.newPackage });
       if (!r.id) return null;
       commit(r.design, { selection: [{ kind: 'part', id: r.id }] });
       const tool = getState().tool;
