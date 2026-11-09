@@ -60,6 +60,43 @@ export function libText(english: string): string {
   return LIB_TEXT_VI[english] ?? english;
 }
 
+/** English for the Vietnamese words some part faces and pin labels are drawn with. */
+const FACE_TEXT_EN: Record<string, string> = {
+  'BĂNG TẢI': 'CONVEYOR',
+  'NÚT GIAO': 'JUNCTION',
+  'B–N': 'N–S',
+  'Đ–T': 'E–W',
+  'B–N đỏ': 'N–S red',
+  'B–N vàng': 'N–S amber',
+  'B–N xanh': 'N–S green',
+  'Đ–T đỏ': 'E–W red',
+  'Đ–T vàng': 'E–W amber',
+  'Đ–T xanh': 'E–W green',
+  'BỒN NƯỚC': 'TANK',
+  'BƠM': 'PUMP',
+  'VAN XẢ': 'DRAIN',
+  'CỬA CUỐN': 'GARAGE DOOR',
+  'MỞ ▲': 'UP ▲',
+  'ĐÓNG ▼': 'DOWN ▼',
+  'THANG MÁY': 'LIFT',
+  'LÊN ▲': 'UP ▲',
+  'XUỐNG ▼': 'DOWN ▼',
+  'MỞ CỬA': 'DOOR',
+};
+
+/**
+ * Text drawn on a part face (a symbol text or a pin label) in the current language. The
+ * definitions draw a few faces in Vietnamese ("BỒN NƯỚC", "VÀO 8", "RA 8"); the English UI shows the
+ * English words instead. Any other text is returned unchanged.
+ */
+export function faceText(text: string): string {
+  if (isVi()) return text;
+  const known = FACE_TEXT_EN[text];
+  if (known !== undefined) return known;
+  const io = /^(VÀO|RA) (\d+)$/.exec(text);
+  return io ? `${io[1] === 'RA' ? 'OUT' : 'IN'} ${io[2]}` : text;
+}
+
 export function groupName(group: PartGroup): string {
   return t(`group.${group}`);
 }

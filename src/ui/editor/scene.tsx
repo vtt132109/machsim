@@ -44,7 +44,7 @@ import { localeTag, t } from '../../i18n';
 import { LcdScreen, LitBars, LitSegments, MatrixDots, ProbeLight, displayCells } from './displayGlyphs';
 import { MechaGlyph } from './mechaGlyphs';
 import { explainErc } from '../../i18n/erc';
-import { partDescription, partName } from '../../i18n/library';
+import { faceText, partDescription, partName } from '../../i18n/library';
 import { activeVariant, effectiveInstance, isFitted } from '../../model/variants';
 import { layerVisible } from '../../model/layers';
 import { annotationStack, hasDrawingOrder } from '../../model/annotationOrder';
@@ -97,7 +97,7 @@ function primElement(p: SymbolPrim, key: number, mirror: boolean): ReactNode {
           fontSize={p.size ?? 10}
           fontWeight={p.bold ? 700 : undefined}
         >
-          {p.text}
+          {faceText(p.text)}
         </text>
       );
     }
@@ -112,7 +112,7 @@ function uprightTexts(def: PartDef, o: Orientation): ReactNode[] {
     const t = uprightTextPlacement(p, o);
     out.push(
       <text key={`t${i}`} className="ms-sym-text" x={t.x} y={t.y} textAnchor={t.anchor} fontSize={p.size ?? 10} fontWeight={p.bold ? 700 : undefined}>
-        {p.text}
+        {faceText(p.text)}
       </text>,
     );
   });
@@ -142,7 +142,7 @@ function uprightTexts(def: PartDef, o: Orientation): ReactNode[] {
     const t = uprightTextPlacement({ x: lx, y: ly, anchor }, o);
     out.push(
       <text key={`p${i}`} className="ms-sym-text" x={t.x} y={t.y} textAnchor={t.anchor} fontSize={PIN_LABEL_SIZE}>
-        {pin.label}
+        {faceText(pin.label)}
       </text>,
     );
   });

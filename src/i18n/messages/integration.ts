@@ -46,6 +46,7 @@ export default {
   'integration.panels.noErcResultsRunThe': ['Chưa có kết quả ERC — chạy kiểm tra để liệt kê vấn đề ở đây.', 'No ERC results — run the check to list problems here.'],
   'integration.panels.noInstrumentsInTheDesign': ['Thiết kế chưa có thiết bị đo. Hãy đặt một thiết bị từ nhóm Thiết bị đo.', 'No instruments in the design. Place one from the Instruments group.'],
   'integration.panels.noPhysicalPartsInThe': ['Thiết kế chưa có linh kiện vật lý{value}.', 'No physical parts in the design{value}.'],
+  'integration.panels.virtualPartsHidden': [' (linh kiện ảo đang bị ẩn)', ' (virtual parts are hidden)'],
   'integration.panels.oneShotAnalysesDcAc': ['Các phép phân tích một lần (DC, AC, quá độ không có thiết bị đo …) hiện ở đây và trong Grapher.', 'One-shot analyses (DC, AC, transient without instruments …) show up here and in the Grapher.'],
   'integration.panels.open': ['Mở', 'Open'],
   'integration.panels.openGrapher': ['Mở Grapher', 'Open Grapher'],

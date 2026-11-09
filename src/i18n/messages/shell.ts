@@ -142,6 +142,7 @@ export default {
   'status.kind.label': ['{n} nhãn', '{n} {n|label|labels}'],
   'status.kind.probe': ['{n} đầu đo', '{n} {n|probe|probes}'],
   'status.kind.note': ['{n} ghi chú', '{n} {n|note|notes}'],
+  'status.kind.shape': ['{n} hình vẽ', '{n} {n|shape|shapes}'],
   'status.cursorNone': ['X —  Y —', 'X —  Y —'],
   'annotate.done': ['Đã đặt ký hiệu cho {n} linh kiện.', 'Annotated {n} {n|part|parts}.'],
   'annotate.none': ['Mọi linh kiện đã có ký hiệu riêng.', 'All parts already have unique designators.'],

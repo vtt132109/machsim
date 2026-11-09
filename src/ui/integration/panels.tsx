@@ -381,7 +381,7 @@ export function BomTab() {
                 <td>{r.item}</td>
                 <td>{r.quantity}</td>
                 <td className="ms-wrap">{r.refdes.join(', ')}</td>
-                <td>{maskValue(design, r.value)}</td>
+                <td>{maskValue(design, r.value === r.name ? partName(partLookup(r.partId) ?? { id: r.partId, name: r.name }) : r.value)}</td>
                 <td>{r.tolerance}</td>
                 <td>{partName(partLookup(r.partId) ?? { id: r.partId, name: r.name })}</td>
                 <td>{r.footprint}</td>
@@ -391,7 +391,7 @@ export function BomTab() {
           </tbody>
         </table>
       ) : (
-        <p className="ms-empty">{t('integration.panels.noPhysicalPartsInThe', { value: virtual ? '' : ' (virtual parts are hidden)' })}</p>
+        <p className="ms-empty">{t('integration.panels.noPhysicalPartsInThe', { value: virtual ? '' : t('integration.panels.virtualPartsHidden') })}</p>
       )}
     </div>
   );
