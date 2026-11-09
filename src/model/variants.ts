@@ -27,6 +27,8 @@
  * version 2. A file written before them has neither, loads unchanged and means "same values in
  * every variant", which is exactly what it always did (no version bump needed; see serialize.ts).
  */
+import type { PartDef } from '../library/types';
+import { packageKey } from './sections';
 import type { ChildDesign, Design, DesignVariant, DesignVariants, PartFields, PartInstance, Sheet, VariantValues } from './types';
 
 /** The active variant, or undefined for a design without variants. */
@@ -259,10 +261,37 @@ export function setActiveVariant(design: Design, id: string): Design {
   return withVariants(design, { ...v, active: id });
 }
 
-/** Fit (or leave out) the parts `instIds` (any sheet, any level) in variant `variantId`. */
-export function setFitted(design: Design, instIds: Iterable<string>, variantId: string, fitted: boolean): Design {
+/**
+ * `ids` plus every other section of the chips they belong to (same designator on the same design
+ * level): the sections of one chip cannot be left off a board one by one.
+ */
+function withSectionSiblings(design: Design, ids: ReadonlySet<string>, lookup: (partId: string) => PartDef | undefined): Set<string> {
+  const out = new Set(ids);
+  const visit = (sheets: readonly Sheet[]) => {
+    const keys = new Set<string>();
+    for (const s of sheets) for (const p of s.parts) if (ids.has(p.id)) {
+      const k = packageKey(p, lookup(p.partId));
+      if (k !== undefined) keys.add(k);
+    }
+    if (!keys.size) return;
+    for (const s of sheets) for (const p of s.parts) {
+      const k = packageKey(p, lookup(p.partId));
+      if (k !== undefined && keys.has(k)) out.add(p.id);
+    }
+  };
+  visit(design.sheets);
+  for (const c of design.children ?? []) visit(c.sheets);
+  return out;
+}
+
+/**
+ * Fit (or leave out) the parts `instIds` (any sheet, any level) in variant `variantId`. With a
+ * `lookup`, a section of a multi-section chip takes the other sections of its chip along.
+ */
+export function setFitted(design: Design, instIds: Iterable<string>, variantId: string, fitted: boolean, lookup?: (partId: string) => PartDef | undefined): Design {
   if (!design.variants?.list.some((x) => x.id === variantId)) return design;
-  const ids = new Set(instIds);
+  let ids = new Set(instIds);
+  if (lookup) ids = withSectionSiblings(design, ids, lookup);
   return mapParts(design, (p) => {
     if (!ids.has(p.id)) return p;
     const has = !!p.notFitted?.includes(variantId);

@@ -249,10 +249,10 @@ const CATALOG: Footprint[] = [
   fp('RJ45', 'connector', 8, [15.4, 13.5], 'Ổ mạng RJ45 8 chân', '8-pin RJ45 socket', { pitch: 1.02, pad: 0.9 }),
   fp('RJ11', 'connector', 4, [12, 13.5], 'Ổ điện thoại RJ11 4 chân', '4-pin RJ11 socket', { pitch: 1.02, pad: 0.9 }),
   fp('RJ12', 'connector', 6, [12, 13.5], 'Ổ RJ12 6 chân', '6-pin RJ12 socket', { pitch: 1.02, pad: 0.9 }),
-  fp('USB-A', 'connector', 4, [13, 14], 'Ổ USB loại A', 'USB type-A socket', { pitch: 2, pad: 1 }),
-  fp('USB-B', 'connector', 4, [12, 16], 'Ổ USB loại B', 'USB type-B socket', { pitch: 2, pad: 1 }),
-  fp('USB-MINI-B', 'connector', 5, [7.7, 9], 'Ổ USB mini-B', 'USB mini-B socket', { pitch: 0.8, pad: 0.5, smd: true }),
-  fp('USB-MICRO-B', 'connector', 5, [7.5, 5.5], 'Ổ USB micro-B', 'USB micro-B socket', { pitch: 0.65, pad: 0.4, smd: true }),
+  fp('USB-A', 'connector', 5, [13, 14], 'Ổ USB loại A (4 chân tín hiệu và chân vỏ)', 'USB type-A socket (four signal pins and the shell)', { pitch: 2, pad: 1 }),
+  fp('USB-B', 'connector', 5, [12, 16], 'Ổ USB loại B (4 chân tín hiệu và chân vỏ)', 'USB type-B socket (four signal pins and the shell)', { pitch: 2, pad: 1 }),
+  fp('USB-MINI-B', 'connector', 6, [7.7, 9], 'Ổ USB mini-B (5 chân tín hiệu và chân vỏ)', 'USB mini-B socket (five signal pins and the shell)', { pitch: 0.8, pad: 0.5, smd: true }),
+  fp('USB-MICRO-B', 'connector', 6, [7.5, 5.5], 'Ổ USB micro-B (5 chân tín hiệu và chân vỏ)', 'USB micro-B socket (five signal pins and the shell)', { pitch: 0.65, pad: 0.4, smd: true }),
   fp('USB-C-16P', 'connector', 16, [9, 7.5], 'Ổ USB-C 16 chân', '16-pin USB-C socket', { pitch: 0.5, pad: 0.3, smd: true }),
   fp('JACK-3.5-TRS', 'connector', 3, [12, 6.5], 'Giắc 3.5 mm 3 tiếp điểm', '3.5 mm TRS jack', { pitch: 2.5, pad: 1 }),
   fp('JACK-3.5-TRRS', 'connector', 4, [12, 6.5], 'Giắc 3.5 mm 4 tiếp điểm', '3.5 mm TRRS jack', { pitch: 2.5, pad: 1 }),
@@ -261,10 +261,10 @@ const CATALOG: Footprint[] = [
   fp('DC-JACK-2.1', 'connector', 3, [14, 11], 'Giắc nguồn DC 2.1 mm', '2.1 mm DC power jack', { pitch: 4.7, pad: 1.5 }),
   fp('BLOCK', 'other', 0, [20, 12], 'Khối cơ khí (không có chân hàn)', 'Mechanical block (no pads)'),
   fp('DIN-RAIL', 'other', 0, [45, 25], 'Thiết bị gắn thanh DIN', 'DIN-rail mounted device'),
-  fp('PCB-TRACE', 'other', 2, [20, 1], 'Đường mạch in (không phải linh kiện)', 'Printed trace (not a component)', { pitch: 20, pad: 0.6 }),
+  fp('PCB-TRACE', 'other', 4, [20, 1], 'Đường mạch in (không phải linh kiện): hai cổng, mỗi cổng hai đầu', 'Printed trace (not a component): two ports of two terminals each', { pitch: 6, pad: 0.6 }),
   fp('PCB-SPIRAL', 'other', 2, [12, 12], 'Cuộn cảm in xoắn trên mạch', 'Printed spiral inductor', { pitch: 10, pad: 0.6 }),
   fp('COAX', 'other', 4, [30, 6], 'Cáp đồng trục: lõi và vỏ ở hai đầu', 'Coaxial cable: core and shield at both ends', { pitch: 9, pad: 1 }),
-  fp('WAVEGUIDE', 'other', 2, [40, 20], 'Ống dẫn sóng', 'Waveguide', { pitch: 38, pad: 1 }),
+  fp('WAVEGUIDE', 'other', 4, [40, 20], 'Ống dẫn sóng: hai cổng, mỗi cổng hai đầu', 'Waveguide: two ports of two terminals each', { pitch: 12, pad: 1 }),
 ];
 
 /** Rotary switch footprints: one common pad plus n contact pads on a 10 mm circle. */

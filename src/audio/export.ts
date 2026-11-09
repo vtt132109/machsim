@@ -35,8 +35,14 @@ export interface WavExport {
   bits: number;
 }
 
+/** Longest sound written (seconds at any rate): about 10 minutes, 115 MB of float samples at 48 kHz. */
+export const WAV_EXPORT_MAX_SECONDS = 600;
+
+/** Most samples one export may hold (a WAV data chunk is also limited to 4 GiB by its 32-bit size). */
+export const WAV_EXPORT_MAX_SAMPLES = 48000 * WAV_EXPORT_MAX_SECONDS;
+
 export class WavExportError extends Error {
-  constructor(readonly code: 'empty' | 'short' | 'rate') {
+  constructor(readonly code: 'empty' | 'short' | 'rate' | 'long') {
     super(code);
     this.name = 'WavExportError';
   }
@@ -62,6 +68,8 @@ export function traceToWav(time: ArrayLike<number>, values: ArrayLike<number>, o
     k++;
   }
   if (k < 2) throw new WavExportError('empty');
+  // refuse before allocating: stretch 1000 on a 10 s trace would ask for hundreds of millions of samples
+  if ((t[k - 1] - t[0]) * rate > WAV_EXPORT_MAX_SAMPLES) throw new WavExportError('long');
   let samples = resampleUniform(t.subarray(0, k), v.subarray(0, k), rate);
   if (samples.length < 2) throw new WavExportError('short');
   if (options.removeDc) samples = dcRemove(samples);

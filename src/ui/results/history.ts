@@ -40,6 +40,8 @@ export interface PageProps {
   x?: AxisProps;
   /** first analog pane's y axis */
   y?: AxisProps;
+  /** postprocessor expressions added to the page (`vs(V(L1.b), V(L1.h))`, `V(out)*2` …): saved with the page and evaluated again on opening */
+  exprs?: string[];
 }
 
 export interface TraceStyle {

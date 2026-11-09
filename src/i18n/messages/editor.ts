@@ -16,6 +16,8 @@ export default {
   'editor.interaction.placeNetLabel': ['Đặt nhãn net', 'Place net label'],
   'editor.interaction.placeText': ['Đặt chữ', 'Place text'],
   'editor.interaction.textCtrlEnterToAccept': ['Nội dung (Ctrl+Enter để nhận)', 'Text (Ctrl+Enter to accept)'],
+  'editor.properties.pickCoil': ['Chọn cuộn…', 'Pick a coil…'],
+  'editor.properties.pickCoilTip': ['Chọn một cuộn hút hoặc rơ-le nhiệt đang có trong mạch để tiếp điểm này đi theo', 'Pick a coil or overload relay of this circuit for the contact to follow'],
   'editor.properties.connections': ['Kết nối', 'Connections'],
   'editor.properties.ctrlEnterApplies': ['Ctrl+Enter để áp dụng', 'Ctrl+Enter applies'],
   'editor.properties.design': ['Thiết kế', 'Design'],

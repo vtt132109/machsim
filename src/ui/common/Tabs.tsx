@@ -68,7 +68,7 @@ export function Tabs({ items, active, onSelect, onClose, onDoubleClick, onContex
             aria-selected={t.id === active}
             aria-controls={`${idPrefix}-panel-${t.id}`}
             aria-disabled={t.disabled || undefined}
-            aria-label={t.ariaLabel}
+            aria-label={t.ariaLabel ?? (typeof t.title === 'string' ? t.title : undefined)}
             tabIndex={t.id === active ? 0 : -1}
             className={`ms-tab ${t.id === active ? 'is-active' : ''} ${t.disabled ? 'is-disabled' : ''}`}
             onClick={() => !t.disabled && onSelect(t.id)}

@@ -54,6 +54,11 @@ function vectorToSaved(v: Vector, keep: number[] | null): SavedVector {
   const out: SavedVector = { name: v.name, unit: v.unit, re: toNums(v.re, keep) };
   if (v.im) out.im = toNums(v.im, keep);
   if (v.digital) out.digital = true;
+  if (v.xValues && v.xValues.length === v.re.length) {
+    out.xValues = toNums(v.xValues, keep);
+    if (v.xName !== undefined) out.xName = v.xName;
+    if (v.xUnit !== undefined) out.xUnit = v.xUnit;
+  }
   return out;
 }
 
@@ -72,6 +77,11 @@ function vectorFromSaved(v: SavedVector): Vector {
   const out: Vector = { name: v.name, unit: v.unit as VectorUnit, re: fromNums(v.re) };
   if (v.im) out.im = fromNums(v.im);
   if (v.digital) out.digital = true;
+  if (v.xValues) {
+    out.xValues = fromNums(v.xValues);
+    if (v.xName !== undefined) out.xName = v.xName;
+    if (v.xUnit !== undefined) out.xUnit = v.xUnit as VectorUnit;
+  }
   return out;
 }
 

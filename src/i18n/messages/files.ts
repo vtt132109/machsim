@@ -61,6 +61,18 @@ export default {
   'sanitize.activeVariantReset': ['Phương án đang hoạt động không tồn tại ({names}) nên MachSim chọn phương án đầu tiên.', 'The active variant did not exist ({names}), so MachSim selected the first one.'],
   'sanitize.variableAdded': ['Đã thêm {n} tham số toàn cục mà giá trị linh kiện cần ({names}).', 'Added {n} global parameters the part values need ({names}).'],
   'sanitize.variableKept': ['Thiết kế này đã có tham số toàn cục {names} với giá trị khác: giữ giá trị của thiết kế này.', 'This design already defines the global parameters {names} with other values: its own values are kept.'],
+  'sanitize.variantVariableDropped': [
+    'Phương án lắp ráp của nguồn đặt giá trị riêng cho tham số toàn cục, nhưng thiết kế này không có phương án cùng tên nên giá trị riêng bị bỏ ({names}).',
+    'A variant of the source gave a global parameter its own value, but this design has no variant of that name, so that value was left behind ({names}).',
+  ],
+  'sanitize.ladderBlockRenamed': [
+    'Thiết kế này đã có khối hàm thang với cùng tên nhưng chương trình khác nên khối mang vào được đổi tên: {names}. Các lời gọi của sơ đồ thang vừa nhập đã đi theo tên mới.',
+    'This design already has a ladder function block with the same name but another program, so the incoming block was renamed: {names}. The calls of the imported ladder sheets follow the new name.',
+  ],
+  'sanitize.refdesRuleDropped': [
+    'Đã bỏ {n} quy tắc tiền tố ký hiệu không dùng được ({names}): tiền tố chỉ gồm chữ, số, "_" và không kết thúc bằng chữ số.',
+    'Dropped {n} designator-prefix rules that cannot be used ({names}): a prefix has letters, digits and "_" only and must not end in a digit.',
+  ],
   'sanitize.customPartAdded': ['Đã nhúng {n} linh kiện người dùng vào thiết kế ({names}).', 'Embedded {n} user components in the design ({names}).'],
   'sanitize.customPartKept': ['Thiết kế này đã có linh kiện người dùng {names}: giữ bản của thiết kế này.', 'This design already embeds the user components {names}: its own copies are kept.'],
   'sanitize.customPartMissing': ['Đã bỏ {n} linh kiện vì không có dữ liệu linh kiện người dùng kèm theo ({names}).', 'Removed {n} parts because the user-component data was not included ({names}).'],

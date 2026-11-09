@@ -178,6 +178,8 @@ export default {
   'grapher.history': ['Trang', 'Page'],
   'tip.grapher.history': ['Mọi trang của các lần chạy trong phiên, lần mới nhất ở trên', 'Every page of this session’s runs, newest run first'],
   'grapher.pages': ['Trang của lần chạy này', 'Pages of this run'],
+  'grapher.pageRef': ['mã {key}', 'ref {key}'],
+  'tip.grapher.pageRef': ['Mã dùng để gọi trang này trong biểu thức của bộ hậu xử lý, ví dụ {key}.V(out)', 'The name that refers to this page in postprocessor expressions, for example {key}.V(out)'],
   'tip.grapher.pageKey': ['Dùng tên {key} để lấy đường cong của trang này trong biểu thức, ví dụ {key}.V(out)', 'Use the name {key} to read this page in expressions, e.g. {key}.V(out)'],
   'grapher.keyHint': ['(tên trong biểu thức: {key})', '(name in expressions: {key})'],
   'grapher.capture': ['Chụp phiên tương tác', 'Capture interactive run'],

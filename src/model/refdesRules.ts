@@ -21,7 +21,8 @@
  *   validateRules(rules, ['R', 'U'])             [] or the problems (readable codes)
  *   applyRulesToDesign(design, rules)            renamed parts, number of changes, collisions
  */
-import type { Design, PartInstance, RefdesRules, Sheet } from './types';
+import { childIdOfPart, INNER_SEP } from './hierarchy';
+import type { ChildDesign, Design, PartInstance, RefdesRules, Sheet } from './types';
 
 /** Longest text allowed for a rule (a designator has to stay readable on a symbol). */
 export const MAX_RULE_TEXT = 12;
@@ -146,6 +147,35 @@ export interface ApplyRulesResult {
 }
 
 /**
+ * `block` with the keys of its `inner` state renamed: a key is a path of designators through the
+ * child designs ("R1", or "X2/S1" for a block inside the block), each looked up in its own child.
+ */
+function renameInnerKeys(block: PartInstance, oldChildren: readonly ChildDesign[], renamed: ReadonlyMap<string, ReadonlyMap<string, string>>): PartInstance {
+  const root = childIdOfPart(block.partId);
+  if (root === undefined || !block.inner) return block;
+  const inner: Record<string, Record<string, string>> = {};
+  let changed = false;
+  for (const [key, values] of Object.entries(block.inner)) {
+    const segments = key.split(INNER_SEP);
+    const out: string[] = [];
+    let cur: string | undefined = root;
+    segments.forEach((seg, i) => {
+      const map = cur === undefined ? undefined : renamed.get(cur);
+      out.push(map?.get(seg.trim().toUpperCase()) ?? seg);
+      if (i === segments.length - 1 || cur === undefined) return;
+      // the next level is the child design of the block part this segment names
+      const child = oldChildren.find((c) => c.id === cur);
+      const nested = child?.sheets.flatMap((s) => s.parts).find((p) => p.refdes.trim().toUpperCase() === seg.trim().toUpperCase());
+      cur = nested ? childIdOfPart(nested.partId) : undefined;
+    });
+    const renamedKey = out.join(INNER_SEP);
+    if (renamedKey !== key) changed = true;
+    inner[renamedKey] = values;
+  }
+  return changed ? { ...block, inner } : block;
+}
+
+/**
  * Give the design new rules and rename every placed part to follow them, keeping each number
  * ("R3" -> "A_R3", and back again when the rules are removed). Sections of one multi-section
  * package keep sharing one designator. A name that would collide with another part's keeps its
@@ -156,7 +186,9 @@ export function applyRulesToDesign(design: Design, nextRules: RefdesRules | unde
   const rules = normalizeRules(nextRules);
   let changed = 0;
   const skipped: string[] = [];
-  const renameLevel = (sheets: Sheet[]): Sheet[] => {
+  /** child design id -> (old designator, upper case) -> new designator, for the per-copy state below */
+  const renamedIn = new Map<string, Map<string, string>>();
+  const renameLevel = (sheets: Sheet[], childId?: string): Sheet[] => {
     const parts = sheets.flatMap((s) => s.parts);
     const fresh = new Map<string, string>();
     const taken = new Set(parts.map((p) => p.refdes.trim().toUpperCase()));
@@ -190,6 +222,7 @@ export function applyRulesToDesign(design: Design, nextRules: RefdesRules | unde
       claimed.set(w, old);
       fresh.set(old, want);
     }
+    if (childId !== undefined) renamedIn.set(childId, fresh);
     return sheets.map((s) => {
       let touched = false;
       const next = s.parts.map((p) => {
@@ -206,15 +239,24 @@ export function applyRulesToDesign(design: Design, nextRules: RefdesRules | unde
   let children = design.children;
   if (children?.length) {
     const mapped = children.map((c) => {
-      const cs = renameLevel(c.sheets);
+      const cs = renameLevel(c.sheets, c.id);
       return cs.every((s, i) => s === c.sheets[i]) ? c : { ...c, sheets: cs };
     });
     if (mapped.some((c, i) => c !== children![i])) children = mapped;
   }
-  const same = sheets.every((s, i) => s === design.sheets[i]) && children === design.children;
+  // the state of each placed copy of a block is keyed by the designators INSIDE the child design
+  // (PartInstance.inner): they follow the rename, or every copy would silently fall back to the
+  // block's shared values
+  const followInner = (list: Sheet[]): Sheet[] =>
+    list.map((s) => {
+      if (!s.parts.some((p) => p.inner)) return s;
+      return { ...s, parts: s.parts.map((p) => (p.inner ? renameInnerKeys(p, design.children ?? [], renamedIn) : p)) };
+    });
+  const sheetsKept = children !== design.children ? followInner(sheets) : sheets;
+  const same = sheetsKept.every((s, i) => s === design.sheets[i]) && children === design.children;
   const stored = JSON.stringify(rules ?? null) === JSON.stringify(oldRules ?? null);
   if (same && stored) return { design, changed: 0, skipped };
-  const next: Design = { ...design, sheets, ...(children ? { children } : {}) };
+  const next: Design = { ...design, sheets: sheetsKept, ...(children ? { children } : {}) };
   if (rules) next.refdesRules = rules;
   else delete next.refdesRules;
   return { design: next, changed, skipped };

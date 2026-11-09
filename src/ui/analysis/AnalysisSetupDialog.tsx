@@ -361,7 +361,7 @@ export function AnalysisSetupDialog(props: AnalysisSetupDialogProps) {
             <h3>{info.title}</h3>
             <p>{info.description}</p>
           </header>
-          <div className="msa-tabs" role="tablist">
+          <div className="msa-tabs" role="tablist" aria-label={info.title}>
             {tabs.map(([t, label]) => (
               <button key={t} type="button" role="tab" aria-selected={tab === t} className={`msa-tab${tab === t ? ' msa-tab-active' : ''}${t === 'options' && optionErrors ? ' msa-tab-bad' : ''}`} onClick={() => setTab(t)}>
                 {label}

@@ -15,7 +15,7 @@ import { checkLesson, simulatingSteps, structuralSteps } from '../../learn/runne
 import type { RunFn } from '../../learn/circuit';
 import type { CheckResult, Feedback, LessonDef } from '../../learn/types';
 import { PROGRESS_KEY, answerQuiz, lessonStatus, markPassed, parseProgress, resetLesson, serializeProgress, setCurrent, type LessonProgress } from '../../learn/progress';
-import { LEVELS, NOUNS, feedbackText, type LessonText } from '../../i18n/lessons';
+import { LEVELS, NOUNS, feedbackText, readingNameText, readingReasonText, type LessonText } from '../../i18n/lessons';
 import { lt } from '../../i18n/learnUi';
 import { explainErc, explainSimError } from '../../i18n/erc';
 import { getLang, interpolate, tr, type Lang } from '../../i18n';
@@ -70,6 +70,10 @@ export function feedbackLine(note: Feedback, lang: Lang): string {
     } catch {
       params.message = String(note.params?.erc ?? '');
     }
+  }
+  if (note.id === 'note:fileReading') {
+    params.reading = tr(readingNameText(String(note.params?.reading ?? '')), lang);
+    params.message = tr(readingReasonText(String(note.params?.message ?? '')), lang);
   }
   if (note.id === 'simFailed') params.message = explainSimError(String(note.params?.message ?? '')).title;
   return interpolate(tr(text, lang), params);

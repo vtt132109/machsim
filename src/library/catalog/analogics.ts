@@ -20,7 +20,8 @@ import type { ElementIR, SubcktDef } from '../../sim/netlist';
 import { parseUserNumber } from '../../util/units';
 import { comparatorSubckt, comparatorSymbol, opampNodes, opampSubckt, REAL_OPAMPS, type OpampParams } from '../parts/analog';
 import { makeSectionParts } from '../sectionKit';
-import { opampPackageParts } from './opampSections';
+import { COMPARATOR_QUAD_PINS, opampPackageParts } from './opampSections';
+import { fitPackage, fitReference } from './packagePins';
 import { posRegulator, type RegSpec } from '../parts/power';
 import { zenerFragment } from '../parts/diodes';
 import { elB, elC, elR, elX, subckt, type LibraryPartDef } from '../partkit';
@@ -149,7 +150,7 @@ export function opampRowPackages(t: string): LibraryPartDef[] {
     });
 }
 
-const opamps: LibraryPartDef[] = OPAMP_TEXT.flatMap(opampRowParts);
+const opamps: LibraryPartDef[] = OPAMP_TEXT.flatMap(opampRowParts).map(fitPackage);
 
 /** The parts (one per name, a section of the dual / quad where marked) of one op-amp table row. */
 export function opampRowParts(t: string): LibraryPartDef[] {
@@ -220,6 +221,49 @@ const COMP_TEXT = [
 ];
 
 const COMP_SYMBOL = comparatorSymbol();
+
+/**
+ * Dual and quad comparators as chips with sections (LM393 / LM339 are the ones learners meet):
+ * "pn channels tresp iq oc|pp package". The single-comparator parts above keep working; these add
+ * the whole chip and one part per comparator (U1A, U1B …) with the shared supply pins.
+ */
+const COMP_PACKAGE_TEXT = [
+  'LM393 2 300n 0.2m oc DIP-8',
+  'LM2903 2 300n 0.4m oc DIP-8',
+  'LM193 2 300n 0.4m oc DIP-8',
+  'LMV393 2 200n 40u oc SO-8',
+  'TLC3702 2 1.1u 20u pp DIP-8',
+  'TLC372 2 200n 150u oc DIP-8',
+  'LM339 4 300n 0.2m oc DIP-14',
+  'LM2901 4 300n 0.2m oc DIP-14',
+  'LM239 4 1.3u 0.8m oc DIP-14',
+  'LMV339 4 200n 40u oc SO-14',
+];
+
+function comparatorPackage(text: string): LibraryPartDef[] {
+  const [pn, chS, trS, iqS, out, footprint] = text.split(/\s+/);
+  const channels = Number(chS) === 4 ? 4 : 2;
+  const tresp = n(trS, pn);
+  const iq = n(iqS, pn);
+  const oc = out === 'oc';
+  const output = oc ? 'open-collector' : 'push-pull';
+  return opampPackageParts({
+    pn,
+    channels,
+    sub: comparatorSubckt(modelName(pn), { tresp, vhys: 0, iq, oc }),
+    footprint,
+    family: 'Comparator',
+    en: `${channels === 4 ? 'Quad' : 'Dual'} voltage comparator, ${output} output, response ≈ ${eng(tresp, 's')}, IQ ${eng(iq, 'A')}`,
+    vi: `Bộ so sánh điện áp ${channels === 4 ? 'bốn' : 'kép'}, ngõ ra ${oc ? 'collector hở' : 'kéo-đẩy'}, thời gian đáp ứng ≈ ${eng(tresp, 's')}, IQ ${eng(iq, 'A')}`,
+    provenance: `MachSim behavioural comparator parameterised from the ${pn} datasheet: response time ≈ ${eng(tresp, 's')}, supply current ${eng(iq, 'A')} per chip (typical values), ${output} output`,
+    keywords: [pn.toLowerCase(), 'comparator', oc ? 'open collector' : 'push-pull'],
+    ...(channels === 4 ? { numbers: COMPARATOR_QUAD_PINS } : {}),
+    section: comparatorSymbol,
+    noun: { en: 'comparator', vi: 'bộ so sánh' },
+  });
+}
+
+const comparatorPackages: LibraryPartDef[] = COMP_PACKAGE_TEXT.flatMap(comparatorPackage);
 /** One comparator table row ("pn tresp iq oc|pp vmax package"). */
 export function comparatorRow(t: string): LibraryPartDef {
   const [pn, trS, iqS, out, vmaxS, pkg] = t.split(/\s+/);
@@ -251,7 +295,7 @@ export function comparatorRow(t: string): LibraryPartDef {
   );
 }
 
-const comparators: LibraryPartDef[] = COMP_TEXT.map(comparatorRow);
+const comparators: LibraryPartDef[] = COMP_TEXT.map(comparatorRow).map(fitPackage);
 
 // ---------------------------------------------------------------------------------------------
 // instrumentation amplifiers (three-op-amp topology with external RG)
@@ -435,7 +479,7 @@ export function seriesRow(t: string): LibraryPartDef {
   );
 }
 
-const seriesRefs: LibraryPartDef[] = SERIES_TEXT.map(seriesRow);
+const seriesRefs: LibraryPartDef[] = SERIES_TEXT.map(seriesRow).map(fitReference);
 
 // ---------------------------------------------------------------------------------------------
 // timers
@@ -584,4 +628,4 @@ const dualTimerSections: LibraryPartDef[] = dualTimers.flatMap((pkg) => {
   return makeSectionParts(pkg, drafts, { en: '555 timer', vi: 'bộ định thời 555' });
 });
 
-export const ANALOG_CATALOG: LibraryPartDef[] = [...opamps, ...opampPackages, ...comparators, ...inamps, ...shuntRefs, ...seriesRefs, ...timers, ...dualTimers, ...dualTimerSections];
+export const ANALOG_CATALOG: LibraryPartDef[] = [...opamps, ...opampPackages, ...comparators, ...comparatorPackages, ...inamps, ...shuntRefs, ...seriesRefs, ...timers, ...dualTimers, ...dualTimerSections];

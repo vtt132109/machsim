@@ -185,8 +185,18 @@ describe('a design that becomes a block of another', () => {
     const target = newDesign('target');
     const r = childFromDesign(target, src.design, 'Sub');
     expect(r.design.ladderBlocks?.map((b) => b.name)).toEqual(['StartStop']);
-    // the target's own block of the same name is kept
+    // the target's own block of the same name is kept, and the imported DIFFERENT program is added
+    // under a free name that the imported call follows (round 4 fix: it used to answer to the target's block)
     const own = { ...target, ladderBlocks: [{ id: 'mine', name: 'startstop', inputs: ['A'], outputs: [], rungs: [] }] };
-    expect(childFromDesign(own, src.design, 'Sub2').design.ladderBlocks).toEqual(own.ladderBlocks);
+    const merged = childFromDesign(own, src.design, 'Sub2');
+    expect(merged.design.ladderBlocks?.map((b) => b.name)).toEqual(['startstop', 'StartStop_2']);
+    expect(merged.design.ladderBlocks?.[0]).toEqual(own.ladderBlocks[0]);
+    const child = merged.design.children!.find((c) => c.id === merged.childId)!;
+    const calls = child.sheets.flatMap((s) => s.ladder ?? []).flatMap((r) => r.outputs).filter((o) => o.kind === 'call');
+    expect(calls.map((o) => o.block)).toEqual(['StartStop_2']);
+    expect(merged.notes.some((n) => n.code === 'ladderBlockRenamed')).toBe(true);
+    // the same program under the same name is the same block
+    const same = { ...target, ladderBlocks: [{ id: 'mine', name: 'startstop', inputs: [], outputs: [], rungs: [] }] };
+    expect(childFromDesign(same, src.design, 'Sub3').design.ladderBlocks).toEqual(same.ladderBlocks);
   });
 });

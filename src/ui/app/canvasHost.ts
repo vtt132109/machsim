@@ -66,7 +66,7 @@ function variantEntry(design: Design, inst: PartInstance): MenuEntry[] {
   const v = activeVariant(design);
   if (!v) return [];
   const fitted = isFitted(inst, v.id);
-  return [{ label: t('variant.toggleFitted', { variant: v.name }), checked: fitted, onSelect: () => actions.applyDesign((d) => setFitted(d, [inst.id], v.id, !fitted)) }];
+  return [{ label: t('variant.toggleFitted', { variant: v.name }), checked: fitted, onSelect: () => actions.applyDesign((d) => setFitted(d, [inst.id], v.id, !fitted, partLookup)) }];
 }
 
 export function canvasMenuEntries(hit: HitResult | null): MenuEntry[] {

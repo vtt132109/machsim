@@ -725,6 +725,10 @@ export interface SavedVector {
   re: (number | null)[];
   im?: (number | null)[];
   digital?: boolean;
+  /** an X–Y trace (`vs(y, x)`): its own x values, name and unit */
+  xValues?: (number | null)[];
+  xName?: string;
+  xUnit?: string;
 }
 
 /** An analysis result stored with Grapher pages (the plotting part of AnalysisResult). */

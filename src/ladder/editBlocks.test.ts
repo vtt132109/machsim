@@ -109,8 +109,14 @@ describe('merging blocks when a design becomes a block of another', () => {
     expect(mergeLadderBlocks(undefined, undefined)).toEqual([]);
     expect(mergeLadderBlocks([a], undefined)).toEqual([a]);
     const merged = mergeLadderBlocks([a], [b, { ...a, id: 'zzz', inputs: ['changed'] }]);
-    expect(merged.map((x) => [x.id, x.name])).toEqual([['b1', 'Motor'], ['b1-2', 'Pump']]);
-    // the existing definition wins over an incoming one of the same name
+    // a DIFFERENT block of the same name is kept under a free name (round 4 fix): the existing
+    // definition is never replaced, and never answers calls meant for the incoming program
+    expect(merged.map((x) => [x.id, x.name])).toEqual([['b1', 'Motor'], ['b1-2', 'Pump'], ['zzz', 'Motor_2']]);
     expect(merged[0].inputs).toEqual([]);
+    expect(merged[2].inputs).toEqual(['changed']);
+  });
+
+  it('the same program under the same name is the same block and is not added twice', () => {
+    expect(mergeLadderBlocks([a], [{ ...a, id: 'other' }])).toEqual([a]);
   });
 });

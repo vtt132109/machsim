@@ -27,7 +27,7 @@ import { BLOCK_PREFIX, findSheet, updateChild } from '../../model/hierarchy';
 import { instancePins, samePoint, snap } from '../../model/geometry';
 import { packageKey, packageOf, sectionPartId } from '../../model/sections';
 import { joinableRefdes, joinTargets, packageUses, type JoinOptions } from '../../model/sectionPlan';
-import { fragmentNetNames, neededVariables, sanitizeIncoming, type IncomingExtras, type SanitizeNote } from '../../model/sanitize';
+import { fragmentNetNames, neededVariables, sanitizeIncoming, withVariantVariables, type IncomingExtras, type SanitizeNote } from '../../model/sanitize';
 import { relinkPastedContacts } from '../../model/relink';
 import { netSettings } from '../../model/netSettings';
 import { effectivePrefix } from '../../model/refdesRules';
@@ -699,10 +699,13 @@ export function clipboardExtras(design: Design, clip: Clipboard): IncomingExtras
   const customIds = new Set(all.filter((p) => isCustomPartId(p.partId)).map((p) => p.partId));
   const customParts = (design.customParts ?? []).filter((c) => customIds.has(c.id));
   if (customParts.length) out.customParts = JSON.parse(JSON.stringify(customParts)) as IncomingExtras['customParts'];
-  const names = neededVariables(all, design.variables);
+  const names = neededVariables(all, design.variables, design.variants);
   if (names.length) out.variables = Object.fromEntries(names.map((n) => [n, design.variables[n]]));
   const notFitted = new Set<string>();
   for (const p of all) for (const id of [...(p.notFitted ?? []), ...Object.keys(p.variantValues ?? {})]) notFitted.add(id);
+  // a variant that gives a needed parameter its own expression travels with it
+  const needed = new Set(names.map((n) => n.toLowerCase()));
+  for (const v of design.variants?.list ?? []) if (Object.keys(v.variables ?? {}).some((k) => needed.has(k.toLowerCase()))) notFitted.add(v.id);
   const list = (design.variants?.list ?? []).filter((v) => notFitted.has(v.id));
   if (list.length) out.variants = { list: list.map((v) => ({ ...v })), ...(design.variants?.active !== undefined ? { active: design.variants.active } : {}) };
   if (design.customSpice?.trim() && all.some((p) => p.modelOverride)) out.customSpice = design.customSpice;
@@ -746,7 +749,7 @@ export function pasteItems(
   // the integrity layer first: it decides what the fragment may still refer to in this design
   const safe = sanitizeIncoming(design, clip, opts.extras ?? clip.extras ?? {});
   clip = { ...clip, ...safe.fragment };
-  if (Object.keys(safe.variables).length) design = { ...design, variables: { ...design.variables, ...safe.variables } };
+  if (Object.keys(safe.variables).length) design = withVariantVariables({ ...design, variables: { ...design.variables, ...safe.variables } }, safe.variantVariables);
   if (safe.customParts.length) design = { ...design, customParts: [...(design.customParts ?? []), ...safe.customParts] };
   if (safe.customSpice) design = { ...design, customSpice: design.customSpice ? `${design.customSpice.replace(/\s+$/, '')}\n${safe.customSpice}\n` : `${safe.customSpice}\n` };
   if (Object.keys(safe.nets).length) design = { ...design, nets: { ...(design.nets ?? {}), ...safe.nets } };
@@ -869,7 +872,7 @@ export function pasteValuesOnly(design: Design, sheetId: string, clip: Clipboard
   // global parameters / references in the copied values follow the usual integrity rules
   const safe = sanitizeIncoming(design, { ...clip, parts: pairs.map((p) => p.source), wires: [], labels: [], probes: [], notes: [], shapes: [], children: [] }, clip.extras ?? {});
   let next = design;
-  if (Object.keys(safe.variables).length) next = { ...next, variables: { ...next.variables, ...safe.variables } };
+  if (Object.keys(safe.variables).length) next = withVariantVariables({ ...next, variables: { ...next.variables, ...safe.variables } }, safe.variantVariables);
   const cleaned = new Map(safe.fragment.parts.map((p) => [p.id, p]));
   let changed = 0;
   for (const { target, source } of pairs) {

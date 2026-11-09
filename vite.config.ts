@@ -1,6 +1,9 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
+/** Wall-clock paced tests (see the `timing` project below). */
+const TIMING_TESTS = ['src/ui/integration/audio.test.ts'];
+
 export default defineConfig({
   plugins: [react()],
   worker: { format: 'es' },
@@ -37,7 +40,28 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
     testTimeout: 60000,
+    // Tests that pace themselves against the wall clock (a simulation played through a fake sound
+    // card in real time) are only meaningful when the machine is not busy with the other test
+    // files: they get their own project, which runs after the parallel one has finished.
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'main',
+          include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
+          exclude: TIMING_TESTS,
+          sequence: { groupOrder: 1 },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'timing',
+          include: TIMING_TESTS,
+          sequence: { groupOrder: 2 },
+        },
+      },
+    ],
   },
 });

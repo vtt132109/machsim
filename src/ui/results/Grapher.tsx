@@ -69,6 +69,7 @@ interface TabState {
   yLog: number[];
 }
 
+const NO_EXPRS: string[] = [];
 const DEFAULT_TAB_STATE: TabState = { hidden: [], view: null, cursors: null, magnitude: 'db', exprs: [], yLog: [] };
 
 /** Legend key shared by the magnitude and phase traces of one complex vector. */
@@ -193,7 +194,11 @@ export function Grapher({ results, className, plotHeight = 380, initialTab = 0, 
     setStates((s) => ({ ...s, [tab.id]: { ...(s[tab.id] ?? DEFAULT_TAB_STATE), ...p } }));
   };
 
-  const evaluated = useMemo(() => (tab ? evaluateTab(tab, st.exprs, external) : null), [tab, st.exprs, external]);
+  // a page of the workspace keeps its postprocessor expressions in its properties, so they are saved
+  // with the page (Design.grapher) and drawn again when the file is opened; a bare Grapher keeps them in its view state
+  const exprs = onPagePropsChange ? (pageProps?.exprs ?? NO_EXPRS) : st.exprs;
+  const setExprs = (list: string[]) => (onPagePropsChange ? onPagePropsChange({ exprs: list }) : patch({ exprs: list }));
+  const evaluated = useMemo(() => (tab ? evaluateTab(tab, exprs, external) : null), [tab, exprs, external]);
   const plot = useMemo(
     () => decoratePlot(evaluated ? buildPlotData(evaluated.result, { magnitude: st.magnitude, showInternal }) : null, pageProps, traceStyles),
     [evaluated, st.magnitude, showInternal, pageProps, traceStyles],
@@ -483,8 +488,8 @@ export function Grapher({ results, className, plotHeight = 380, initialTab = 0, 
           <PostprocessorPanel
             names={availableVectorNames(tab.family && tab.result.runs?.length ? tab.result.runs[0].result : tab.result)}
             expressions={evaluated.exprs}
-            onAdd={(text) => patch({ exprs: [...st.exprs, text] })}
-            onRemove={(i) => patch({ exprs: st.exprs.filter((_, k) => k !== i) })}
+            onAdd={(text) => setExprs([...exprs, text])}
+            onRemove={(i) => setExprs(exprs.filter((_, k) => k !== i))}
           />
         )}
         {!plot && !showPost && (tab.result.vectors.length > 0 || tab.result.scalars) && (

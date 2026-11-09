@@ -238,15 +238,38 @@ export function sectionIssues<I extends Pick<PartInstance, 'refdes' | 'partId'>>
   return out;
 }
 
+/** True for a coil, timer coil or overload relay: the part contacts name (`LibraryPartDef.contactLink`). */
+export function isLinkDriver(def: PartDef | undefined): boolean {
+  return def ? asLibraryPart(def).contactLink?.role === 'driver' : false;
+}
+
+/**
+ * True for a contact that is part of the relay whose coil it names and that coil is placed on the
+ * same level (`drivers`: upper-case designator paths of the level's drivers, `prefix` the block
+ * path of the level): the BOM and the PCB netlist list the relay once, not the coil and each
+ * contact. A clip-on contact block (`separate`) and a contact whose coil is missing stay items.
+ */
+export function foldedIntoDriver(def: PartDef | undefined, params: Readonly<Record<string, string>>, drivers: ReadonlySet<string>, prefix = ''): boolean {
+  const link = def ? asLibraryPart(def).contactLink : undefined;
+  if (link?.role !== 'contact' || link.separate) return false;
+  const coil = (params[link.param] ?? '').trim();
+  return coil !== '' && drivers.has(`${prefix}${coil}`.toUpperCase());
+}
+
 /**
  * Collapse placed sections to one entry per package: the first section of each refdes is kept and
  * its definition replaced by the package definition, so the BOM, the PCB netlist and the component
- * reports see one 7400 instead of four gates. Parts without `pkg` pass through unchanged.
+ * reports see one 7400 instead of four gates. Contacts that follow a coil present on the same level
+ * are folded into that coil's device (a relay is one item). Other parts pass through unchanged.
  */
-export function packageParts<T extends { path: string; def: PartDef }>(parts: T[], lookup: (id: string) => PartDef | undefined): T[] {
+export function packageParts<T extends { path: string; def: PartDef; params?: Record<string, string>; prefix?: string }>(parts: T[], lookup: (id: string) => PartDef | undefined): T[] {
   const out: T[] = [];
   const seen = new Set<string>();
+  // the contacts of a relay, contactor or overload relay belong to the device whose coil they name
+  // (LibraryPartDef.contactLink): it is bought and soldered once
+  const drivers = new Set(parts.filter((p) => isLinkDriver(p.def)).map((p) => p.path.trim().toUpperCase()));
   for (const p of parts) {
+    if (foldedIntoDriver(p.def, p.params ?? {}, drivers, p.prefix ?? '')) continue;
     const pkg = packageOf(p.def);
     if (!pkg) {
       out.push(p);

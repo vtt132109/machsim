@@ -170,11 +170,12 @@ export function createDocumentManager(options: DocumentManagerOptions) {
     isActive: (id: string): boolean => id === activeId,
     dirtyDocuments: (): DocumentInfo[] => entries.map(infoOf).filter((d) => d.dirty),
     /** The designs with unsaved changes, with their file names (autosave / crash recovery). */
-    dirtyContents(): { id: string; fileName: string; design: Design }[] {
+    dirtyContents(): { id: string; fileName: string; design: Design; ext: Record<string, unknown> }[] {
       return entries
         .map((e) => ({ e, st: e.state ?? current() }))
         .filter(({ st }) => st.design !== st.savedDesign)
-        .map(({ e, st }) => ({ id: e.id, fileName: st.fileName, design: st.design }));
+        // the current document's extension state is live (the stored one is from when it was left)
+        .map(({ e, st }) => ({ id: e.id, fileName: st.fileName, design: st.design, ext: e.state ? e.ext : Object.fromEntries(extensions.map((x) => [x.id, x.capture()])) }));
     },
     /** The file layer says when the current document is "just the empty start-up design". */
     setReplaceable(fn: () => boolean): void {

@@ -68,7 +68,7 @@ function gateIc(pn: string, name: string, type: string, gates: GateDef[], descri
       pn,
       name,
       description,
-      pinCount: 14,
+      pinCount: strong ? 16 : 14, // the 4049 / 4050 buffers are 16-pin parts (pins 13 and 16 not connected)
       left,
       right,
       keywords,

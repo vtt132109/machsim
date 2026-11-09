@@ -145,6 +145,24 @@ function children(spec: AnalysisSpec): AnalysisSpec[] {
   }
 }
 
+/**
+ * The design with global parameter `key` set to `text`. The active assembly variant may give the
+ * same parameter its own expression (DesignVariant.variables), which variantView lays over the
+ * design's: the swept value must win there too, or every run of the sweep would be the same circuit.
+ */
+function withSweptVariable(design: Design, key: string, text: string): Design {
+  const out: Design = { ...design, variables: { ...design.variables, [key]: text } };
+  const list = design.variants?.list;
+  if (!design.variants || !list?.some((v) => v.id === design.variants?.active && v.variables && key in v.variables)) return out;
+  return {
+    ...out,
+    variants: {
+      ...design.variants,
+      list: list.map((v) => (v.id === design.variants?.active && v.variables && key in v.variables ? { ...v, variables: { ...v.variables, [key]: text } } : v)),
+    },
+  };
+}
+
 /** Copy of `spec` in which every design-variable sweep carries its rebuilt netlists. */
 function fill(design: Design, spec: AnalysisSpec, finish: (n: Netlist) => Netlist, errors: StepMessage[]): AnalysisSpec {
   let next: AnalysisSpec = spec;
@@ -158,7 +176,7 @@ function fill(design: Design, spec: AnalysisSpec, finish: (n: Netlist) => Netlis
       }
       const netlists: Netlist[] = [];
       for (const v of spec.values) {
-        const built = buildNetlist({ ...design, variables: { ...design.variables, [key]: variableText(v) } }, { includeAnalysis: false });
+        const built = buildNetlist(withSweptVariable(design, key, variableText(v)), { includeAnalysis: false });
         const bad = built.erc.find((m) => m.severity === 'error');
         if (bad) {
           errors.push({ code: 'valueError', params: { name: key, value: variableText(v), message: bad.message }, text: `${key} = ${variableText(v)}: ${bad.message}` });

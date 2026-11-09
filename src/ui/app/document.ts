@@ -539,7 +539,10 @@ export function installAutosave(): () => void {
  * in the record, the others in `others`), or null when nothing is unsaved.
  */
 export function buildRecoveryRecord(now: number = Date.now()): AutosaveRecord | null {
-  const docs: AutosaveDoc[] = documents.dirtyContents().map((d) => ({ fileName: d.fileName, savedAt: now, text: serializeDesign(d.design) }));
+  const docs: AutosaveDoc[] = documents.dirtyContents().map((d) => {
+    const where = (d.ext.file as { target?: FileTarget | null } | undefined)?.target;
+    return { fileName: d.fileName, savedAt: now, text: serializeDesign(d.design), ...(where?.kind === 'desktop' ? { path: where.path } : {}) };
+  });
   if (!docs.length) return null;
   const [first, ...others] = docs;
   return { ...first, ...(others.length ? { others } : {}) };
@@ -559,7 +562,8 @@ export function syncRecovery(): void {
 async function restoreRecord(rec: AutosaveRecord): Promise<boolean> {
   let any = false;
   for (const doc of recordDocuments(rec)) {
-    if (await loadDesignText(doc.text, doc.fileName, null, false)) any = true;
+    // a document that came from a desktop file goes back to it: Save writes there, not into a new dialog
+    if (await loadDesignText(doc.text, doc.fileName, doc.path ? { kind: 'desktop', path: doc.path } : null, false)) any = true;
   }
   if (any) await recoveryStore().clearRecord();
   return any;

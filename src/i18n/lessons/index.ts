@@ -371,6 +371,37 @@ export const NOTES: Record<string, LocalizedText> = {
   ...ROUND4B_NOTES,
 };
 
+const READING_NAMES: Record<string, LocalizedText> = {
+  final: L('giá trị cuối', 'final value'),
+  at: L('giá trị tại một thời điểm', 'value at a time'),
+  peak: L('đỉnh', 'peak'),
+  min: L('giá trị nhỏ nhất', 'minimum'),
+  pp: L('đỉnh – đỉnh', 'peak to peak'),
+  rms: L('giá trị hiệu dụng', 'RMS value'),
+  mean: L('giá trị trung bình', 'mean value'),
+  frequency: L('tần số', 'frequency'),
+  mag: L('biên độ', 'magnitude'),
+  db: L('biên độ (dB)', 'magnitude (dB)'),
+  phase: L('pha', 'phase'),
+};
+
+const READING_REASONS: Record<string, LocalizedText> = {
+  noSamples: L('mô phỏng chưa cho đủ điểm để đọc', 'the simulation gave too few points to read'),
+  noSignal: L('không tìm thấy tín hiệu ở chỗ cần đo', 'there is no signal at the place to measure'),
+  noRepeat: L('tín hiệu không lặp lại trong khoảng thời gian mô phỏng (mạch chưa dao động, hoặc thời gian mô phỏng quá ngắn)', 'the signal does not repeat within the simulated time (the circuit does not oscillate, or the run is too short)'),
+  noValue: L('phép đo không cho kết quả', 'the measurement gave no result'),
+};
+
+/** Learner-facing name of a transient / AC reading kind (`TranReading`, `AcReading`); the key itself when unknown. */
+export function readingNameText(reading: string): LocalizedText {
+  return READING_NAMES[reading] ?? L(reading, reading);
+}
+
+/** Learner-facing reason for a reading problem code (`readingProblem` in src/learn/lessonFile.ts). */
+export function readingReasonText(code: string): LocalizedText {
+  return READING_REASONS[code] ?? READING_REASONS.noValue;
+}
+
 /** Text of a feedback id ("okValue" or "note:<key>"); undefined for an unknown id. */
 export function feedbackText(id: string): LocalizedText | undefined {
   return id.startsWith('note:') ? NOTES[id.slice(5)] : FEEDBACK[id];

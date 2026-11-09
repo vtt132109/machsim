@@ -604,7 +604,7 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
           {shown.halted === 1 ? <p className="ms-mcu-error">{mt('halted', { pc: `${shown.pc.toString(16).toUpperCase()}h` })}</p> : null}
           {shown.halted === 2 ? <p className="ms-mcu-error">{mt('haltedStack')}</p> : null}
           {mode === 'live' && !liveView ? <p className="ms-hint">{mt('liveWaiting')}</p> : null}
-          <div className="ms-mcu-tabs" role="tablist">
+          <div className="ms-mcu-tabs" role="tablist" aria-label={mt('title')}>
             {TABS.map((x) => (
               <button
                 key={x.id}

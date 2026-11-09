@@ -128,7 +128,7 @@ export function buildSnippet(design: Design, fragment: SnippetFragment, now: Dat
   const customParts = (design.customParts ?? []).filter((c) => customIds.has(c.id)).map(clone);
   // the global parameters the copied values need, closed over the definitions they use
   // (src/model/sanitize.ts owns that rule, so paste and snippets answer the same)
-  const used = neededVariables(all, globals);
+  const used = neededVariables(all, globals, baked !== undefined ? undefined : design.variants);
   const data: SnippetData = {
     format: SNIPPET_FORMAT,
     version: SNIPPET_VERSION,
@@ -143,6 +143,9 @@ export function buildSnippet(design: Design, fragment: SnippetFragment, now: Dat
   // declare them (a part may only name variants its design has — src/model/serialize.ts)
   const notFitted = new Set<string>();
   for (const p of all) for (const id of [...(p.notFitted ?? []), ...Object.keys(p.variantValues ?? {})]) notFitted.add(id);
+  // a variant that gives a needed parameter its own expression travels with it
+  const usedLower = new Set(used.map((n) => n.toLowerCase()));
+  if (baked === undefined) for (const v of design.variants?.list ?? []) if (Object.keys(v.variables ?? {}).some((k) => usedLower.has(k.toLowerCase()))) notFitted.add(v.id);
   const list = (design.variants?.list ?? []).filter((v) => notFitted.has(v.id)).map(clone);
   if (list.length) {
     const active = design.variants?.active;

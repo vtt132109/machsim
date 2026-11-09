@@ -482,8 +482,11 @@ export class SimulationIntegration {
    * wait until it has ended, so the document can be left. The results stay.
    */
   async stopForDocumentSwitch(): Promise<void> {
+    const wasRunning = this.live.getState().mode !== 'idle';
     await this.stop();
     await this.idle();
+    // one simulation runs at a time: say why this one ended, and how to go on when the learner comes back
+    if (wasRunning) this.msg('info', t('docs.simStoppedBySwitch'), t('sim.source.documents'));
   }
 
   /**

@@ -85,6 +85,7 @@ export const AUDIO_TEXT = {
   exportCancel: L('Đóng', 'Close'),
   exportDone: L('Đã lưu {name}: {seconds} s, {rate} Hz, {bits}-bit.', 'Saved {name}: {seconds} s, {rate} Hz, {bits}-bit.'),
   exportNone: L('Chưa có đường nào để xuất. Hãy chạy một phân tích theo thời gian trước.', 'There is no trace to export. Run a time-domain analysis first.'),
+  exportTooLong: L('Âm thanh dài quá {max} giây (tốn rất nhiều bộ nhớ). Hãy giảm hệ số kéo giãn hoặc tần số lấy mẫu.', 'The sound would be longer than {max} seconds (it would need far too much memory). Lower the time stretch or the sample rate.'),
   exportTooShort: L('Đường này quá ngắn để thành âm thanh.', 'This trace is too short to become sound.'),
   exportClipped: L('Một phần tín hiệu vượt ±1 và bị xén; bật chuẩn hoá để tránh.', 'Part of the signal exceeds ±1 and is clipped; switch normalisation on to avoid it.'),
   exportMenu: L('Xuất WAV…', 'Export WAV…'),

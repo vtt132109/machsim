@@ -53,8 +53,10 @@ describe('component library', () => {
     // round 4 auto adds 8 simulatable parts (EKV, BSIM4 MOSFETs and Jiles-Atherton cores)
     // round 4 library breadth adds 6445 parts in five lazy packs (src/library/catalog/more): 6445 simulatable,
     // 0 drawn-only (every one has a model that solves in the bench below)
-    expect(simulatable.length).toBe(4867 + 6445);
-    expect(listParts()).toHaveLength(5072 + 6445);
+    // round 4 fix adds 38 comparator section parts to the core catalogue (LM393, LM339 … as chips with sections)
+    // and 12 package variants of those chips to the analog-more pack
+    expect(simulatable.length).toBe(4867 + 38 + 6445 + 12);
+    expect(listParts()).toHaveLength(5072 + 38 + 6445 + 12);
   });
 
   // the biggest group (RF: hundreds of transmission-line and mixer parts) takes about 45 s on its

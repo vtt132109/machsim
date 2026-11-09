@@ -12,7 +12,7 @@ import type { PartLookup, SelItem } from './types';
 import { getSheet, itemsBounds, mergeChildren, normalizeSheet, selIds, updateSheet } from './designOps';
 import { sanitizeIncomingSheets, type SanitizeNote } from '../../model/sanitize';
 import { newId } from './ids';
-import { mergeLadderBlocks } from '../../ladder/editBlocks';
+import { mergeLadderBlocksReport, renameBlockCalls } from '../../ladder/editBlocks';
 import { collectRefdes, nextRefdes } from './refdes';
 import { effectivePrefix } from '../../model/refdesRules';
 import { onWire, onWireInterior, wireEnds } from './wireOps';
@@ -267,6 +267,7 @@ function reidSheets(sheets: Sheet[], fixPart: (partId: string) => string = (p) =
  */
 export function childFromDesign(design: Design, source: Design, name: string, sourceFile?: string): { design: Design; childId: string; notes: SanitizeNote[] } {
   let next = design;
+  const extraNotes: SanitizeNote[] = [];
   let map = new Map<string, string>();
   if (source.children?.length) {
     const merged = mergeChildren(next, source.children);
@@ -284,7 +285,19 @@ export function childFromDesign(design: Design, source: Design, name: string, so
   });
   if (safe.customParts.length) next = { ...next, customParts: [...(next.customParts ?? []), ...safe.customParts] };
   // the function blocks its ladder sheets call come along (blocks are defined in the root design)
-  if (source.ladderBlocks?.length) next = { ...next, ladderBlocks: mergeLadderBlocks(next.ladderBlocks, source.ladderBlocks) };
+  let ladderSheets = safe.sheets;
+  if (source.ladderBlocks?.length) {
+    const merged = mergeLadderBlocksReport(next.ladderBlocks, source.ladderBlocks);
+    next = { ...next, ladderBlocks: merged.blocks };
+    if (merged.renamed.length) {
+      // a different block of the same name is already here: the imported calls follow the new name
+      const follow = (list: Sheet[]): Sheet[] => list.map((s) => (s.kind === 'ladder' && s.ladder ? { ...s, ladder: merged.renamed.reduce((rungs, r) => renameBlockCalls(rungs, r.from, r.to), s.ladder) } : s));
+      ladderSheets = follow(ladderSheets);
+      const before = new Set((design.children ?? []).map((c) => c.id));
+      next = { ...next, children: (next.children ?? []).map((c) => (before.has(c.id) ? c : { ...c, sheets: follow(c.sheets) })) };
+      for (const r of merged.renamed) extraNotes.push({ code: 'ladderBlockRenamed', count: 1, names: [`${r.from} → ${r.to}`] });
+    }
+  }
   if (safe.customSpice) next = { ...next, customSpice: next.customSpice ? `${next.customSpice.replace(/\s+$/, '')}
 ${safe.customSpice}
 ` : `${safe.customSpice}
@@ -298,13 +311,13 @@ ${safe.customSpice}
     id: childId,
     kind: 'hierarchical',
     name: uniqueChildName(next, name),
-    sheets: reidSheets(safe.sheets, fix),
+    sheets: reidSheets(ladderSheets, fix),
     // the block's instance parameters: the source's own globals plus the ones its values need
     variables: { ...source.variables, ...safe.variables },
     ...(sourceFile ? { sourceFile } : {}),
     ...(source.description ? { description: source.description } : {}),
   };
-  return { design: { ...next, children: [...(next.children ?? []), child] }, childId, notes: safe.notes };
+  return { design: { ...next, children: [...(next.children ?? []), child] }, childId, notes: [...safe.notes, ...extraNotes] };
 }
 
 /** A child design as a stand-alone design (to save a block as its own file); restrictions are kept. */

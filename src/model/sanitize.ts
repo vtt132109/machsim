@@ -57,7 +57,7 @@ import type { CustomPartData } from '../library/custom/types';
 import { isCustomPartId } from '../library/custom/types';
 import { ERC_PIN_TYPES, pinPairKey, type ErcLevel } from './ercMatrix';
 import { BLOCK_PREFIX, childIdOfPart, isBlockPartId } from './hierarchy';
-import { CURRENT_DESIGN_VERSION, DesignFormatError, parseDesign, validateDesign } from './serialize';
+import { CURRENT_DESIGN_VERSION, DesignFormatError, parseDesign, refdesRuleTextProblem, validateDesign } from './serialize';
 import type { ChildDesign, Design, DesignVariants, VariantValues, NetLabel, NetSettings, PartInstance, Point, Probe, Shape, Sheet, TextNote, Wire } from './types';
 import { isPlainNumber } from './variables';
 import { LADDER_LIMITS, type LadderNode, type LadderRung } from '../ladder/types';
@@ -80,6 +80,8 @@ export type SanitizeCode =
   | 'variableAdded'
   /** the design already defines that parameter with another value: its own value wins */
   | 'variableKept'
+  /** a variant of the source gives a global parameter its own expression, but this design has no variant of that name */
+  | 'variantVariableDropped'
   /** user components the incoming parts use were embedded */
   | 'customPartAdded'
   /** the design already embeds that user component: its own copy wins */
@@ -102,6 +104,10 @@ export type SanitizeCode =
   | 'libraryRefDropped'
   /** `Probe.refProbe` named no reference probe of the same level: the probe measures to ground */
   | 'probeRefDropped'
+  /** an incoming ladder function block shared its name with a different block of the design: it was added under a new name */
+  | 'ladderBlockRenamed'
+  /** a designator-prefix rule (Design.refdesRules) the Reference designator dialog would refuse was dropped */
+  | 'refdesRuleDropped'
   /** a duplicate sheet / item id got a fresh one */
   | 'idRenumbered'
   /** the design's custom SPICE text got the incoming models appended */
@@ -184,7 +190,7 @@ export function referencedVariables(text: string, byLower: ReadonlyMap<string, s
  * the names those definitions refer to in turn. `vars` are the declarations to look in (the source
  * design's `Design.variables`); the result keeps the declared spelling.
  */
-export function neededVariables(parts: readonly PartInstance[], vars: Readonly<Record<string, string>>): string[] {
+export function neededVariables(parts: readonly PartInstance[], vars: Readonly<Record<string, string>>, variants?: DesignVariants): string[] {
   const names = Object.keys(vars);
   const byLower = new Map(names.map((n) => [n.toLowerCase(), n]));
   const used = new Set<string>();
@@ -194,8 +200,20 @@ export function neededVariables(parts: readonly PartInstance[], vars: Readonly<R
     used.add(n);
     pending.push(n);
   };
-  for (const p of parts) for (const v of Object.values(p.params)) for (const n of referencedVariables(v, byLower)) need(n);
-  while (pending.length) for (const n of referencedVariables(vars[pending.pop()!] ?? '', byLower)) need(n);
+  for (const p of parts) {
+    for (const v of Object.values(p.params)) for (const n of referencedVariables(v, byLower)) need(n);
+    // a value a variant gives the part (PartInstance.variantValues) needs its parameters as well
+    for (const vv of Object.values(p.variantValues ?? {})) for (const v of Object.values(vv.params ?? {})) for (const n of referencedVariables(v, byLower)) need(n);
+  }
+  while (pending.length) {
+    const name = pending.pop()!;
+    for (const n of referencedVariables(vars[name] ?? '', byLower)) need(n);
+    // ... and so does an expression a variant gives the parameter itself (DesignVariant.variables)
+    for (const v of variants?.list ?? []) {
+      const own = Object.entries(v.variables ?? {}).find(([k]) => k.toLowerCase() === name.toLowerCase());
+      if (own) for (const n of referencedVariables(own[1], byLower)) need(n);
+    }
+  }
   return names.filter((n) => used.has(n));
 }
 
@@ -237,6 +255,11 @@ export interface SanitizedIncoming {
   variables: Record<string, string>;
   /** user components to embed (the target's own copies are never overwritten) */
   customParts: CustomPartData[];
+  /**
+   * The expressions variants of the source gave the added parameters, keyed by the id of the
+   * target's variant of the same name (apply with {@link withVariantVariables}).
+   */
+  variantVariables: Record<string, Record<string, string>>;
   /** SPICE model text to append, or undefined when the target already has it */
   customSpice?: string;
   /** per-net settings to add for the nets the fragment brings */
@@ -385,7 +408,8 @@ export function sanitizeIncoming(
   const variables: Record<string, string> = {};
   const parts = fragmentParts(frag);
   const mineLower = new Map(Object.keys(target.variables).map((n) => [n.toLowerCase(), n]));
-  for (const name of neededVariables(parts, extras.variables ?? {})) {
+  const variantVariables: Record<string, Record<string, string>> = {};
+  for (const name of neededVariables(parts, extras.variables ?? {}, extras.variants)) {
     const mine = mineLower.get(name.toLowerCase());
     if (mine !== undefined) {
       if (target.variables[mine].trim() !== (extras.variables?.[name] ?? '').trim()) log.add('variableKept', mine);
@@ -393,6 +417,18 @@ export function sanitizeIncoming(
     }
     variables[name] = extras.variables![name];
     log.add('variableAdded', name);
+    // the source's variants may give this parameter another expression: it follows to the target's
+    // variant of the same NAME (the id may differ), and is reported when there is none
+    for (const v of extras.variants?.list ?? []) {
+      const own = Object.entries(v.variables ?? {}).find(([k]) => k.toLowerCase() === name.toLowerCase());
+      if (!own) continue;
+      const hit = byName.get(lower(v.name));
+      if (hit === undefined) {
+        log.add('variantVariableDropped', `${v.name}: ${name}`);
+        continue;
+      }
+      (variantVariables[hit] ??= {})[name] = own[1];
+    }
   }
 
   // ---- model overrides: keep them only while some SPICE text defines the model
@@ -434,7 +470,17 @@ export function sanitizeIncoming(
     delete p.refProbe;
   }
 
-  return { fragment: frag, variables, customParts, ...(customSpice !== undefined ? { customSpice } : {}), nets, notes: log.notes };
+  return { fragment: frag, variables, customParts, variantVariables, ...(customSpice !== undefined ? { customSpice } : {}), nets, notes: log.notes };
+}
+
+/** `design` with the variant expressions of {@link SanitizedIncoming.variantVariables} written into its variants. */
+export function withVariantVariables(design: Design, additions: Readonly<Record<string, Record<string, string>>>): Design {
+  const list = design.variants?.list;
+  if (!design.variants || !list || !Object.keys(additions).length) return design;
+  return {
+    ...design,
+    variants: { ...design.variants, list: list.map((v) => (additions[v.id] ? { ...v, variables: { ...v.variables, ...additions[v.id] } } : v)) },
+  };
 }
 
 /** {@link sanitizeIncomingSheets} result: the sheets plus the design-level additions. */
@@ -741,6 +787,30 @@ export function repairRawDesign(input: unknown): { raw: unknown; notes: Sanitize
       if (keep.length) p.notFitted = keep;
       else delete p.notFitted;
     }
+  }
+
+  // ---- designator-prefix rules: texts the dialog would refuse would name parts "R X1" or "R11"
+  if (isObj(raw.refdesRules)) {
+    const rules: Raw = { ...raw.refdesRules };
+    let global = '';
+    if (typeof rules.global === 'string' && rules.global !== '') {
+      if (refdesRuleTextProblem(rules.global) === null) global = rules.global;
+      else {
+        log.add('refdesRuleDropped', `*: ${rules.global}`);
+        delete rules.global;
+      }
+    } else if (rules.global !== undefined) delete rules.global;
+    if (isObj(rules.map)) {
+      const map: Record<string, unknown> = {};
+      for (const [k, text] of Object.entries(rules.map)) {
+        if (typeof text === 'string' && refdesRuleTextProblem(text, global) === null) map[k] = text;
+        else log.add('refdesRuleDropped', `${k}: ${String(text)}`);
+      }
+      if (Object.keys(map).length) rules.map = map;
+      else delete rules.map;
+    } else delete rules.map;
+    if (rules.global || rules.map) raw.refdesRules = rules;
+    else delete raw.refdesRules;
   }
 
   // ---- ERC matrix: unknown pin-type pairs / levels would be refused

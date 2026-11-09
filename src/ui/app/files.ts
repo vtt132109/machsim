@@ -219,6 +219,8 @@ export interface AutosaveDoc {
   savedAt: number;
   /** serialised design */
   text: string;
+  /** the desktop file the document was opened from or saved to, so Save after a recovery writes there again */
+  path?: string;
 }
 
 /**
@@ -232,7 +234,7 @@ export interface AutosaveRecord extends AutosaveDoc {
 
 /** The documents of a record, first one first. */
 export function recordDocuments(rec: AutosaveRecord): AutosaveDoc[] {
-  return [{ fileName: rec.fileName, savedAt: rec.savedAt, text: rec.text }, ...(rec.others ?? [])];
+  return [{ fileName: rec.fileName, savedAt: rec.savedAt, text: rec.text, ...(rec.path !== undefined ? { path: rec.path } : {}) }, ...(rec.others ?? [])];
 }
 
 /** Parse the JSON of a recovery record (null for anything that is not one). */
@@ -242,9 +244,9 @@ export function parseAutosave(text: string | null): AutosaveRecord | null {
     const raw = JSON.parse(text) as (Partial<AutosaveRecord> & { others?: unknown }) | null;
     if (!raw || typeof raw.text !== 'string' || typeof raw.fileName !== 'string' || typeof raw.savedAt !== 'number') return null;
     const others = Array.isArray(raw.others)
-      ? raw.others.filter((o): o is AutosaveDoc => !!o && typeof o.text === 'string' && typeof o.fileName === 'string' && typeof o.savedAt === 'number').map((o) => ({ fileName: o.fileName, savedAt: o.savedAt, text: o.text }))
+      ? raw.others.filter((o): o is AutosaveDoc => !!o && typeof o.text === 'string' && typeof o.fileName === 'string' && typeof o.savedAt === 'number').map((o) => ({ fileName: o.fileName, savedAt: o.savedAt, text: o.text, ...(typeof o.path === 'string' ? { path: o.path } : {}) }))
       : [];
-    return { fileName: raw.fileName, savedAt: raw.savedAt, text: raw.text, ...(others.length ? { others } : {}) };
+    return { fileName: raw.fileName, savedAt: raw.savedAt, text: raw.text, ...(typeof raw.path === 'string' ? { path: raw.path } : {}), ...(others.length ? { others } : {}) };
   } catch {
     return null;
   }

@@ -340,7 +340,7 @@ const light: LibraryPartDef[] = [
         };
       },
       provenance: 'MachSim phototransistor: base photocurrent 5 nA/lux, βF = 400 (typical 5 mm NPN phototransistor)',
-      footprint: 'LED-5MM',
+      footprint: 'TO-92',
       keywords: ['phototransistor', 'light sensor', 'optical', 'interactive'],
     },
     sensorMeta("Phototransistor NPN (cực C, cực E, cực B tuỳ chọn): dòng collector ≈ 2 mA ở 1000 lux; phím 'L' thay đổi độ rọi", 'Phototransistor'),

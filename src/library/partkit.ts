@@ -187,7 +187,7 @@ export interface LibraryPartDef extends PartDef {
    * node, through `ToSpiceContextExt.linkTarget`. The netlister reports a contact whose driver
    * does not exist as an ERC warning (`contactNoCoil` / `contactNotCoil`).
    */
-  contactLink?: { role: 'driver' } | { role: 'contact'; param: string };
+  contactLink?: { role: 'driver' } | { role: 'contact'; param: string; separate?: boolean };
   /**
    * The part has a time–current characteristic the Properties panel draws (src/ui/editor/TripCurve.tsx):
    * a breaker (curve letter in `curveParam`, rated current in `ratedParam`), an I²t fuse

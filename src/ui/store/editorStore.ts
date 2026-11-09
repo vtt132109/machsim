@@ -1121,13 +1121,20 @@ export function createEditor(options: EditorOptions = {}) {
       else delete next.titleBlock;
       commit(next);
     },
-    setPrintSetup(setup: PrintSetup | undefined) {
-      const d = getState().design;
+    /**
+     * Keep the page setup in the design. With `quiet` the change does not make a saved design
+     * "unsaved" (printing a sample must not ask "save changes?" when it is closed); a design that
+     * already has unsaved changes stays as it was.
+     */
+    setPrintSetup(setup: PrintSetup | undefined, options: { quiet?: boolean } = {}) {
+      const before = getState();
+      const d = before.design;
       if (JSON.stringify(d.printSetup ?? null) === JSON.stringify(setup ?? null)) return;
       const next: Design = { ...d };
       if (setup && Object.keys(setup).length) next.printSetup = setup;
       else delete next.printSetup;
-      commit(next);
+      const clean = !isDirty(before);
+      if (commit(next) && options.quiet && clean) setState((s) => ({ ...s, savedDesign: s.design }));
     },
 
     // -------------------------------------------------------------------- hierarchy

@@ -11,6 +11,7 @@
  */
 import type { ErcMessage } from '../model/types';
 import { hasMessage, t, tDynamic, type MessageParams } from './index';
+import { ladderProblemText } from './ladderErrors';
 
 export interface Explanation {
   /** what is wrong (one line, with the part / net names) */
@@ -48,7 +49,11 @@ function texts(id: string, params: MessageParams | undefined, fallbackTitle: str
 
 /** Explanation of one ERC message in the current language. */
 export function explainErc(m: ErcMessage): Explanation {
-  if (m.detail && hasMessage(`erc.${m.detail.id}.title`)) return { ...texts(m.detail.id, m.detail.params, m.message), detail: m.message };
+  if (m.detail && hasMessage(`erc.${m.detail.id}.title`)) {
+    // the compiler's problem codes of a ladder program read as the ladder editor words them
+    const params = m.detail.id === 'ladderRung' ? { ...m.detail.params, summary: ladderProblemText(m.detail.params as Parameters<typeof ladderProblemText>[0]) } : m.detail.params;
+    return { ...texts(m.detail.id, params, m.message), detail: m.message };
+  }
   // messages without structured detail: explain by rule, keep the technical line as the title
   const id = CODE_FALLBACK[m.code] ?? 'other';
   const e = texts(id, { refdes: m.refdes ?? '?', pin: m.pin ?? '?', net: m.net ?? '?' }, m.message);

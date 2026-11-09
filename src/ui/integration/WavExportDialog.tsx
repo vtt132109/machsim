@@ -3,7 +3,7 @@
  * the level options, and save it as a .wav file (src/audio/export.ts). Loads with the Grapher.
  */
 import { useMemo, useState } from 'react';
-import { WavExportError, traceToWav } from '../../audio/export';
+import { WAV_EXPORT_MAX_SAMPLES, WAV_EXPORT_MAX_SECONDS, WavExportError, traceToWav } from '../../audio/export';
 import type { WavEncoding } from '../../audio/wav';
 import { aut } from '../../i18n/audioText';
 import { useLang } from '../../i18n/react';
@@ -42,6 +42,7 @@ function ExportBody({ result, close }: { result: AnalysisResult; close: () => vo
   const span = scale.length ? scale[scale.length - 1] - scale[0] : 0;
   const duration = span * (stretch > 0 ? stretch : 1);
   const samples = Math.floor(duration * rate);
+  const tooLong = samples > WAV_EXPORT_MAX_SAMPLES;
 
   const save = async () => {
     const v = result.vectors.find((x) => x.name === name);
@@ -55,7 +56,7 @@ function ExportBody({ result, close }: { result: AnalysisResult; close: () => vo
       if (out.clipped > 0) actions.addSimMessage('warning', aut('exportClipped'), 'audio');
       close();
     } catch (e) {
-      await alertDialog({ title: aut('exportTitle'), message: e instanceof WavExportError ? (e.code === 'rate' ? aut('exportIntro') : aut('exportTooShort')) : e instanceof Error ? e.message : String(e) });
+      await alertDialog({ title: aut('exportTitle'), message: e instanceof WavExportError ? (e.code === 'rate' ? aut('exportIntro') : e.code === 'long' ? aut('exportTooLong', { max: WAV_EXPORT_MAX_SECONDS }) : aut('exportTooShort')) : e instanceof RangeError ? aut('exportTooLong', { max: WAV_EXPORT_MAX_SECONDS }) : e instanceof Error ? e.message : String(e) });
     }
   };
 
@@ -70,7 +71,7 @@ function ExportBody({ result, close }: { result: AnalysisResult; close: () => vo
           <button type="button" className="ms-btn" onClick={close}>
             {aut('exportCancel')}
           </button>
-          <button type="button" className="ms-btn ms-btn-primary" disabled={!name || samples < 2} onClick={() => void save()}>
+          <button type="button" className="ms-btn ms-btn-primary" disabled={!name || samples < 2 || tooLong} onClick={() => void save()}>
             {aut('exportSave')}
           </button>
         </>
@@ -104,6 +105,11 @@ function ExportBody({ result, close }: { result: AnalysisResult; close: () => vo
           <input type="number" min={0.001} step="any" value={stretch} onChange={(e) => setStretch(Number(e.target.value))} />
         </label>
         <p className="ms-hint">{aut('exportSeconds', { t: formatEng(duration, 's', 3), n: Number.isFinite(samples) ? samples : 0 })}</p>
+        {tooLong ? (
+          <p className="ms-hint" role="alert" style={{ color: 'var(--ms-error, #c0392b)' }}>
+            {aut('exportTooLong', { max: WAV_EXPORT_MAX_SECONDS })}
+          </p>
+        ) : null}
         <label className="ms-field">
           <span>{aut('exportEncoding')}</span>
           <select value={encoding} onChange={(e) => setEncoding(e.target.value as WavEncoding)}>

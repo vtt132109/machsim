@@ -287,7 +287,7 @@ function VariantDialog({ close }: { close: () => void }) {
                   <td className="ms-hint">{pt('varCount', { n: notFittedCount(design, v.id) })}</td>
                   <td className="ms-hint">{pt('varValueCount', { n: variantChanges(design, v.id).filter((c) => c.kind !== 'notFitted').length })}</td>
                   <td>
-                    <button type="button" className="ms-btn ms-btn-small" onClick={() => apply((d) => setFitted(d, rows.map((r) => r.inst.id), v.id, true))}>
+                    <button type="button" className="ms-btn ms-btn-small" onClick={() => apply((d) => setFitted(d, rows.map((r) => r.inst.id), v.id, true, partLookup))}>
                       {pt('varAllFitted')}
                     </button>{' '}
                     <button type="button" className="ms-btn ms-btn-small" onClick={() => void remove(v.id, v.name)}>
@@ -335,7 +335,7 @@ function VariantDialog({ close }: { close: () => void }) {
                         <td>{r.value}</td>
                         {variants.map((v) => (
                           <td key={v.id} className="ms-variant-cell">
-                            <input type="checkbox" checked={isFitted(r.inst, v.id)} title={pt('tipVarFitted', { name: v.name })} aria-label={`${r.path}: ${pt('tipVarFitted', { name: v.name })}`} onChange={(e) => apply((d) => setFitted(d, [r.inst.id], v.id, e.target.checked))} />
+                            <input type="checkbox" checked={isFitted(r.inst, v.id)} title={pt('tipVarFitted', { name: v.name })} aria-label={`${r.path}: ${pt('tipVarFitted', { name: v.name })}`} onChange={(e) => apply((d) => setFitted(d, [r.inst.id], v.id, e.target.checked, partLookup))} />
                             {main ? (
                               <VariantValueInput
                                 def={main}

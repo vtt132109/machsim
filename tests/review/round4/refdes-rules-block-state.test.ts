@@ -50,6 +50,7 @@ describe('prefix rules keep the per-copy state of a block', () => {
     const ref = resolveLivePart(back, ['A_X2'], 'A_R1');
     expect(ref).not.toBeNull();
     expect(liveParams(ref!).value).toBe('5k');
-    expect(midOf(back, 'A_X2')).toBeCloseTo(1.875, 3);
+    // SPICE needs subcircuit instances to start with X, so the netlist calls the renamed block XA_X2
+    expect(midOf(back, 'XA_X2')).toBeCloseTo(1.875, 3);
   });
 });

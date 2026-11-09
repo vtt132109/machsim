@@ -480,17 +480,41 @@ function sheetLayers(c: Checker, v: unknown, path: string): SheetLayers | undefi
   return out;
 }
 
-/** Design.refdesRules: texts only (letters, digits, "_"); whether they make sense is src/model/refdesRules.ts. */
+const RULE_TEXT_MAX = 12;
+const RULE_TEXT = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+/**
+ * Why a designator-prefix rule text cannot be used, or null. `global` is the common prefix the
+ * text is placed after: the resulting prefix must not end in a digit ("R1" + 3 could not be told
+ * from "R13"). The same rules as src/model/refdesRules.ts `validateRules` (kept in step by a test),
+ * written out here because the file reader must not depend on the library.
+ */
+export function refdesRuleTextProblem(text: string, global = ''): string | null {
+  if (!RULE_TEXT.test(text)) return 'must be letters, digits and "_" and start with a letter or "_"';
+  if (text.length > RULE_TEXT_MAX) return `is longer than ${RULE_TEXT_MAX} characters`;
+  if (/\d$/.test(`${global}${text}`)) return 'would make designators that end in a digit';
+  return null;
+}
+
+/** Design.refdesRules: texts that make designators ("A_", "U1_"); whether they suit the parts is src/model/refdesRules.ts. */
 function refdesRules(c: Checker, v: unknown): RefdesRules | undefined {
   const o = c.obj(v, 'refdesRules');
   if (!o) return undefined;
   const out: RefdesRules = {};
   if (o.global !== undefined && o.global !== null) {
     const g = c.str(o, 'global', 'refdesRules');
-    if (g) out.global = g;
+    if (g) {
+      const why = refdesRuleTextProblem(g);
+      if (why) c.issue('refdesRules.global', why);
+      out.global = g;
+    }
   }
   if (o.map !== undefined && o.map !== null) {
     const map = c.record(o, 'map', 'refdesRules');
+    for (const [k, text] of Object.entries(map)) {
+      const why = refdesRuleTextProblem(text, out.global ?? '');
+      if (why) c.issue(`refdesRules.map.${k}`, why);
+    }
     if (Object.keys(map).length) out.map = map;
   }
   return out.global || out.map ? out : undefined;
@@ -1218,6 +1242,12 @@ function savedVector(c: Checker, v: unknown, path: string): SavedVector | null {
     if (out.im.length !== out.re.length) c.issue(`${path}.im`, 'must have as many samples as re');
   }
   if (c.bool(o, 'digital', path)) out.digital = true;
+  if (o.xValues !== undefined && o.xValues !== null) {
+    out.xValues = samples(c, o.xValues, `${path}.xValues`);
+    if (out.xValues.length !== out.re.length) c.issue(`${path}.xValues`, 'must have as many samples as re');
+    if (typeof o.xName === 'string') out.xName = o.xName;
+    if (typeof o.xUnit === 'string') out.xUnit = o.xUnit;
+  }
   return out;
 }
 

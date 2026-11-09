@@ -321,7 +321,7 @@ export function ScriptPanel() {
               </div>
             </div>
           )}
-          <div className="msx-script-tabs" role="tablist">
+          <div className="msx-script-tabs" role="tablist" aria-label={st('title')}>
             <button type="button" role="tab" aria-selected={tab === 'out'} className={tab === 'out' ? 'is-active' : ''} onClick={() => setTab('out')}>
               {st('outputTab')}
             </button>

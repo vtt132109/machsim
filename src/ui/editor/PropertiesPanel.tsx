@@ -67,6 +67,31 @@ const PROBE_READINGS: ProbeReading[] = ['value', 'pp', 'rms', 'dc', 'freq'];
 // parameter field
 // ---------------------------------------------------------------------------
 
+/**
+ * "Pick a coil": the coils and overload relays of the design level, to fill the `coil` field of a
+ * relay contact without typing a designator (a contact follows the coil it names; the default "K1"
+ * silently points at whatever K1 exists).
+ */
+function CoilPicker({ inst, def }: { inst: PartInstance; def: ParamDef }) {
+  const sheets = useEditor((s) => levelSheetsOf(s));
+  const drivers = useMemo(
+    () => sheets.flatMap((s) => s.parts).filter((p) => asLibraryPart(partLookup(p.partId) ?? ({} as PartDef)).contactLink?.role === 'driver').map((p) => p.refdes),
+    [sheets],
+  );
+  const unique = [...new Set(drivers)];
+  if (!unique.length) return null;
+  return (
+    <select className="ms-select" value="" title={t('editor.properties.pickCoilTip')} aria-label={t('editor.properties.pickCoil')} onChange={(e) => e.target.value && actions.setPartParam(inst.id, def.key, e.target.value)}>
+      <option value="">{t('editor.properties.pickCoil')}</option>
+      {unique.map((r) => (
+        <option key={r} value={r}>
+          {r}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 function ParamField({ def, inst }: { def: ParamDef; inst: PartInstance }) {
   const value = paramValue(def, inst.params);
   const modified = isParamModified(def, inst.params);
@@ -122,8 +147,18 @@ function ParamField({ def, inst }: { def: ParamDef; inst: PartInstance }) {
     case 'text':
       if (def.binaryImport === 'wav') return <WavField def={def} inst={inst} label={label} trailing={reset} />;
       if (def.fileImport) return <DataFileField def={def} inst={inst} label={label} trailing={reset} />;
+      if (isCoilParam(inst, def)) {
+        return <CommitField label={label} value={value} unit={def.unit} onCommit={commit} hint={paramHelp(def)} trailing={<><CoilPicker inst={inst} def={def} />{reset}</>} />;
+      }
       return <CommitField label={label} value={value} unit={def.unit} onCommit={commit} hint={paramHelp(def)} trailing={reset} />;
   }
+}
+
+/** True for the `coil` field of a relay contact (LibraryPartDef.contactLink). */
+function isCoilParam(inst: PartInstance, def: ParamDef): boolean {
+  const d = partLookup(inst.partId);
+  const link = d ? asLibraryPart(d).contactLink : undefined;
+  return link?.role === 'contact' && link.param === def.key;
 }
 
 /**
@@ -177,7 +212,7 @@ function VariantFields({ inst }: { inst: PartInstance }) {
         const text = own ? [...Object.entries(own.params ?? {}).map(([k, x]) => `${k} = ${x}`), ...Object.entries(own.fields ?? {}).map(([k, x]) => `${k} = ${x}`)].join(', ') : '';
         return (
           <div key={v.id}>
-            <CheckField label={t('variant.toggleFitted', { variant: v.name })} checked={isFitted(inst, v.id)} onChange={(on) => actions.applyDesign((d) => setFitted(d, [inst.id], v.id, on))} />
+            <CheckField label={t('variant.toggleFitted', { variant: v.name })} checked={isFitted(inst, v.id)} onChange={(on) => actions.applyDesign((d) => setFitted(d, [inst.id], v.id, on, partLookup))} />
             {text ? <div className="ms-hint">{t('variant.ownValues', { variant: v.name, values: text })}</div> : null}
           </div>
         );

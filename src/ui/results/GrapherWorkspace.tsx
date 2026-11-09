@@ -301,8 +301,8 @@ export function GrapherWorkspace({ doc, dispatch, canCapture, onCapture, initial
                 {doc.pages
                   .filter((p) => p.runId === run.id)
                   .map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {pageTitle(doc, p)} [{p.key}]
+                    <option key={p.id} value={p.id} title={t('tip.grapher.pageRef', { key: p.key })}>
+                      {pageTitle(doc, p)} ({t('grapher.pageRef', { key: p.key })})
                     </option>
                   ))}
               </optgroup>

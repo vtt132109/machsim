@@ -22,6 +22,7 @@ import type { LibraryPartDef } from '../../partkit';
 import { ALL_PARTS } from '../../parts';
 import { comparatorRow, opampRowPackages, opampRowParts, seriesRow, shuntRow } from '../analogics';
 import { buckFromText, regulatorFromText } from '../power';
+import { fitPackage, fitReference, SOT5, withPinNumbers } from '../packagePins';
 import { repackage, variantId, type VariantSpec } from './variants';
 
 // ---------------------------------------------------------------------------------------------
@@ -284,15 +285,8 @@ function pinMap(text: string | undefined): Record<string, string> | undefined {
   return out;
 }
 
-/** SOT-23-5 / SC-70-5 numbering of a single op-amp or comparator (the usual DBV / DCK pin-out). */
-const SOT5: Record<string, string> = { OUT: '1', 'V-': '2', 'IN+': '3', 'IN-': '4', 'V+': '5' };
 /** The DIP-8 / SOIC-8 / TSSOP-8 numbering of a single op-amp or comparator. */
 const DIP8_SINGLE: Record<string, string> = { 'IN-': '2', 'IN+': '3', 'V-': '4', OUT: '6', 'V+': '7' };
-
-function withPinNumbers(part: LibraryPartDef, map: Record<string, string> | undefined): LibraryPartDef {
-  if (!map) return part;
-  return { ...part, symbol: { ...part.symbol, pins: part.symbol.pins.map((p) => (map[p.name] !== undefined ? { ...p, number: map[p.name] } : p)) } };
-}
 
 function regulatorRow(text: string): LibraryPartDef {
   const f = text.trim().split(/\s+/);
@@ -308,21 +302,6 @@ const fresh = (parts: LibraryPartDef[]): LibraryPartDef[] => {
     return true;
   });
 };
-
-/**
- * A table row names one package for all of its types, but a dual or quad is never sold in a 5-pin SOT-23
- * (its single-amplifier part is drawn in the SO-8 / SO-14 of the chip), and a genuine 5-pin part has the
- * SOT-23-5 numbering instead of the DIP-8 one.
- */
-function fitPackage(part: LibraryPartDef): LibraryPartDef {
-  if ((part.footprint !== 'SOT-23-5' && part.footprint !== 'SOT-23-6') || part.pkg) return part;
-  const quad = /one section of the quad/.test(part.description);
-  if (quad || /one section of the dual/.test(part.description)) return { ...part, footprint: quad ? 'SOIC-14' : 'SOIC-8' };
-  return withPinNumbers(part, part.footprint === 'SOT-23-6' ? { ...SOT5, 'V+': '6' } : SOT5);
-}
-
-/** The usual SOT-23-3 numbering of a series voltage reference: IN 1, OUT 2, GND 3 (the SO-8 versions keep IN 2, OUT 6, GND 4). */
-const fitReference = (part: LibraryPartDef): LibraryPartDef => (part.footprint === 'SOT-23' && part.symbol.pins.some((p) => p.name === 'IN') ? withPinNumbers(part, { IN: '1', OUT: '2', GND: '3' }) : part);
 
 /** Op-amp bases: one part per name and the whole chip and sections of each dual / quad. */
 export const OPAMP_MORE: LibraryPartDef[] = fresh([...OPAMP_MORE_TEXT.flatMap(opampRowParts).map(fitPackage), ...OPAMP_MORE_TEXT.flatMap(opampRowPackages)]);

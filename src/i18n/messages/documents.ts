@@ -33,6 +33,7 @@ export default {
   'docs.tooMany.title': ['Đang mở quá nhiều thiết kế', 'Too many designs open'],
   'docs.tooMany.message': ['MachSim giữ tối đa {n} thiết kế mở cùng lúc. Hãy đóng bớt một thiết kế (nhớ lưu trước) rồi thử lại.', 'MachSim keeps at most {n} designs open at once. Close one (save it first) and try again.'],
   'docs.recover.many': ['MachSim tìm thấy bản lưu tự động của {n} thiết kế chưa lưu ({names}), lần cuối lúc {when}. Khôi phục tất cả?', 'MachSim found autosaved copies of {n} unsaved designs ({names}), last written at {when}. Recover them all?'],
+  'docs.simStoppedBySwitch': ['Mô phỏng của thiết kế này đã dừng vì bạn chuyển sang thiết kế khác (mỗi lúc chỉ chạy được một mô phỏng). Kết quả vẫn còn; quay lại đây và nhấn Chạy để chạy tiếp.', 'The simulation of this design stopped because you switched to another design (only one simulation runs at a time). The results are kept; come back here and press Run to go on.'],
   'sim.source.documents': ['Nhiều thiết kế', 'Documents'],
   'sim.source.editing': ['Sửa sơ đồ', 'Editing'],
   'sim.source.print': ['In', 'Print'],

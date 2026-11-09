@@ -79,7 +79,11 @@ function PrintPreviewDialog({ close, initialChoices }: { close: () => void; init
       setBusy(true);
       buildContents({ design: s.design, activeSheetId: s.activeSheetId, selection: s.selection, probeValues: s.probeValues, monochrome, beginner: s.ui.beginner === true }, choices)
         .then((c) => live && setContents(c))
-        .catch((err) => live && setMessage(err instanceof Error ? err.message : String(err)))
+        .catch((err) => {
+          if (!live) return;
+          setMessage(err instanceof Error ? err.message : String(err));
+          setContents((c) => c ?? []);
+        })
         .finally(() => live && setBusy(false));
     }, 120);
     return () => {
@@ -116,7 +120,7 @@ function PrintPreviewDialog({ close, initialChoices }: { close: () => void; init
     const base = design.printSetup ?? {};
     const next = setupToDesign(setup, { ...base, sheets: choices.scope === 'current' ? 'active' : 'all', includeChildren: choices.children || undefined, includeInstruments: choices.instruments || undefined });
     for (const k of Object.keys(next) as (keyof typeof next)[]) if (next[k] === undefined) delete next[k];
-    actions.setPrintSetup(next);
+    actions.setPrintSetup(next, { quiet: true });
   };
 
   const props = { job, layout, setup, title: design.title, date };
@@ -155,7 +159,7 @@ function PrintPreviewDialog({ close, initialChoices }: { close: () => void; init
       footer={
         <>
           <span className="ms-pv-summary" role="status">
-            {busy ? pt('preparing') : pt('summary', { printed: count.printed, total: count.total })}
+            {busy || contents === null ? pt('preparing') : pt('summary', { printed: count.printed, total: count.total })}
           </span>
           <span style={{ flex: 1 }} />
           <button type="button" className="ms-btn" title={pt('helpTip')} onClick={() => void openHelp({ kind: 'guide', page: 'printing' })}>
@@ -279,7 +283,7 @@ function PrintPreviewDialog({ close, initialChoices }: { close: () => void; init
         </div>
         <div className="ms-pv-pages" ref={pagesRef} aria-label={pt('pages')}>
           {layout.pages.length === 0 ? (
-            <p className="ms-pv-empty">{busy ? pt('preparing') : layout.rangeError ? pt('rangeInvalid', { text: layout.rangeError, total: count.total }) : pt('nothing')}</p>
+            <p className="ms-pv-empty">{busy || contents === null ? pt('preparing') : layout.rangeError ? pt('rangeInvalid', { text: layout.rangeError, total: count.total }) : pt('nothing')}</p>
           ) : (
             layout.pages.map((p) => (
               <div key={p.number} className="ms-pv-slot" style={{ width: layout.paperMm.w * PX_PER_MM * zoom, height: layout.paperMm.h * PX_PER_MM * zoom }}>

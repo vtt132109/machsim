@@ -563,6 +563,17 @@ function readingNets(c: LessonCircuit, p: LessonProbe): { pos: string; neg: stri
   return fail('note:fileReadingProbe');
 }
 
+/**
+ * The stable code of a reading problem. The engines word their errors in English; the learner reads
+ * a localized sentence chosen by this code (`readingReasonText` in src/i18n/lessons/index.ts).
+ */
+export function readingProblem(error: string): 'noSamples' | 'noSignal' | 'noRepeat' | 'noValue' {
+  if (error === 'no samples') return 'noSamples';
+  if (error === 'no such signal') return 'noSignal';
+  if (/does not repeat/.test(error)) return 'noRepeat';
+  return 'noValue';
+}
+
 /** A `measure` step that runs a transient or an AC analysis (see src/learn/readings.ts). */
 async function measureOther(c: LessonCircuit, spec: Extract<LessonCheckSpec, { kind: 'measure' }>, analysis: Exclude<LessonAnalysis, { kind: 'op' }>): Promise<CheckResult> {
   const nets = readingNets(c, spec.probe);
@@ -572,12 +583,12 @@ async function measureOther(c: LessonCircuit, spec: Extract<LessonCheckSpec, { k
   if (analysis.kind === 'tran') {
     const sim = await c.tran(analysis.tstop);
     const r = transientReading(sim.result, nets.pos, nets.neg, analysis);
-    if (r.error && !Number.isFinite(r.value)) return fail('note:fileReading', { reading: analysis.reading, message: r.error });
+    if (r.error && !Number.isFinite(r.value)) return fail('note:fileReading', { reading: analysis.reading, message: readingProblem(r.error) });
     value = r.value;
   } else {
     const sim = await c.acAt(analysis.freq);
     const phasor = phasorBetween(sim.result, nets.pos, nets.neg);
-    if (!phasor) return fail('note:fileReading', { reading: analysis.reading, message: 'no such signal' });
+    if (!phasor) return fail('note:fileReading', { reading: analysis.reading, message: 'noSignal' });
     value = acReading(phasor, analysis.reading);
   }
   return measured(value, spec.target, spec.tolerancePct, unit, spec.toleranceAbs);

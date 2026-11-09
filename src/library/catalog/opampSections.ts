@@ -33,8 +33,23 @@ const QUAD_PINS: Record<string, string> = {
   '3OUT': '8', '3IN-': '9', '3IN+': '10', 'V-': '11', '4IN+': '12', '4IN-': '13', '4OUT': '14',
 };
 
+/**
+ * DIP-14 numbers of the quad COMPARATOR (LM339, LM2901, LMV339, LM239): the outputs of comparators 1
+ * and 2 sit on pins 2 and 1, so the pin-out is not the op-amp quad's.
+ */
+export const COMPARATOR_QUAD_PINS: Record<string, string> = {
+  '1OUT': '2', '2OUT': '1', 'V+': '3', '1IN-': '4', '1IN+': '5', '2IN-': '6', '2IN+': '7',
+  '3IN-': '8', '3IN+': '9', '4IN-': '10', '4IN+': '11', 'V-': '12', '4OUT': '13', '3OUT': '14',
+};
+
 /** What a dual / quad op-amp type needs to become a package with sections. */
 export interface OpampPackageSpec {
+  /** pin numbers of the package (default: the standard dual / quad op-amp DIP numbering) */
+  numbers?: Record<string, string>;
+  /** the drawing of one section (default: the op-amp triangle) */
+  section?: () => SymbolDef;
+  /** what each section is called in the texts (default: op-amp) */
+  noun?: { en: string; vi: string };
   /** part number: 'TL072' */
   pn: string;
   channels: 2 | 4;
@@ -69,8 +84,8 @@ function packageSymbol(spec: OpampPackageSpec, numbers: Record<string, string>):
 }
 
 /** One channel: the op-amp triangle with the package's pin names and DIP numbers. */
-function sectionSymbol(k: number, numbers: Record<string, string>): SymbolDef {
-  const base = ampSymbol({ supplies: true });
+function sectionSymbol(k: number, numbers: Record<string, string>, draw: () => SymbolDef): SymbolDef {
+  const base = draw();
   const rename = (name: string): string => (name === 'V+' || name === 'V-' ? name : `${k}${name}`);
   const pins: PinDef[] = base.pins.map((p) => ({ ...p, name: rename(p.name), number: numbers[rename(p.name)] }));
   return { ...base, pins };
@@ -78,7 +93,11 @@ function sectionSymbol(k: number, numbers: Record<string, string>): SymbolDef {
 
 /** The whole chip and its sections: `[<pn> (dual), <pn>A, <pn>B]` (a quad adds C and D). */
 export function opampPackageParts(spec: OpampPackageSpec): LibraryPartDef[] {
-  const numbers = spec.channels === 4 ? QUAD_PINS : DUAL_PINS;
+  const numbers = spec.numbers ?? (spec.channels === 4 ? QUAD_PINS : DUAL_PINS);
+  const noun = spec.noun ?? { en: 'op-amp', vi: 'bộ khuếch đại thuật toán' };
+  const spare = spec.noun === undefined ? ' (tie its + input to ground and its - input to its output)' : '';
+  const spareVi = spec.noun === undefined ? ' (nối ngõ vào + xuống đất, ngõ vào - nối với ngõ ra)' : '';
+  const draw = spec.section ?? (() => ampSymbol({ supplies: true }));
   const kind = spec.channels === 4 ? 'quad' : 'dual';
   const kindVi = spec.channels === 4 ? 'bốn' : 'kép';
   const nodes = (ctx: ToSpiceContext, k: number): string[] => {
@@ -91,7 +110,7 @@ export function opampPackageParts(spec: OpampPackageSpec): LibraryPartDef[] {
     name: `${spec.pn} (${kind})`,
     group: 'analog',
     family: spec.family ?? 'Op-amp',
-    description: `${spec.en}: the whole ${kind} chip with all ${spec.channels} amplifiers and the shared supply pins. Place the sections one by one (${spec.pn}A, ${spec.pn}B …) to draw each amplifier where it is used.`,
+    description: `${spec.en}: the whole ${kind} chip with all ${spec.channels} ${noun.en}s and the shared supply pins. Place the sections one by one (${spec.pn}A, ${spec.pn}B …) to draw each ${noun.en} where it is used.`,
     prefix: 'U',
     symbol: packageSymbol(spec, numbers),
     params: [],
@@ -103,19 +122,19 @@ export function opampPackageParts(spec: OpampPackageSpec): LibraryPartDef[] {
     provenance: spec.provenance,
     footprint: spec.footprint,
     keywords: [...spec.keywords, kind, 'package', 'whole chip'],
-    textVi: { name: `${spec.pn} (${kindVi})`, description: `${spec.vi}: cả vi mạch ${kindVi} với ${spec.channels} bộ khuếch đại và chân nguồn dùng chung. Có thể đặt từng phần (${spec.pn}A, ${spec.pn}B …) để vẽ mỗi bộ khuếch đại đúng chỗ dùng nó.` },
+    textVi: { name: `${spec.pn} (${kindVi})`, description: `${spec.vi}: cả vi mạch ${kindVi} với ${spec.channels} ${noun.vi} và chân nguồn dùng chung. Có thể đặt từng phần (${spec.pn}A, ${spec.pn}B …) để vẽ mỗi ${noun.vi} đúng chỗ dùng nó.` },
   };
   const drafts = Array.from({ length: spec.channels }, (_, i) => {
     const k = i + 1;
-    return { letter: letter(k), symbol: sectionSymbol(k, numbers), own: [`${k}IN+`, `${k}IN-`, `${k}OUT`, 'V+', 'V-'] };
+    return { letter: letter(k), symbol: sectionSymbol(k, numbers, draw), own: [`${k}IN+`, `${k}IN-`, `${k}OUT`, 'V+', 'V-'] };
   });
-  const sections = makeSectionParts(pkg, drafts, { en: 'op-amp', vi: 'bộ khuếch đại thuật toán', nameBase: spec.pn }).map((s) => ({
+  const sections = makeSectionParts(pkg, drafts, { en: noun.en, vi: noun.vi, nameBase: spec.pn }).map((s) => ({
     ...s,
-    description: `${spec.pn} section ${s.pkg!.section}: one op-amp of the ${kind} ${spec.pn}. ${spec.en}. Sections share the reference designator (U1A … U1${letter(spec.channels)}) and the supply pins V+ / V-, and are netlisted as one chip; an unplaced section is a spare amplifier (tie its + input to ground and its - input to its output).`,
-    keywords: [...spec.keywords, `${spec.pn.toLowerCase()}${s.pkg!.section.toLowerCase()}`, 'section', 'op-amp', 'opamp'],
+    description: `${spec.pn} section ${s.pkg!.section}: one ${noun.en} of the ${kind} ${spec.pn}. ${spec.en}. Sections share the reference designator (U1A … U1${letter(spec.channels)}) and the supply pins V+ / V-, and are netlisted as one chip; an unplaced section is a spare ${noun.en}${spare}.`,
+    keywords: [...spec.keywords, `${spec.pn.toLowerCase()}${s.pkg!.section.toLowerCase()}`, 'section', ...(spec.noun === undefined ? ['op-amp', 'opamp'] : [noun.en])],
     textVi: {
       name: `${spec.pn}${s.pkg!.section}`,
-      description: `${spec.pn} phần ${s.pkg!.section}: một bộ khuếch đại thuật toán của ${spec.pn} ${kindVi}. ${spec.vi}. Các phần dùng chung tên linh kiện (U1A … U1${letter(spec.channels)}) và chân nguồn V+ / V-, chỉ sinh ra một vi mạch trong netlist; phần chưa dùng là bộ khuếch đại thừa (nối ngõ vào + xuống đất, ngõ vào - nối với ngõ ra).`,
+      description: `${spec.pn} phần ${s.pkg!.section}: một ${noun.vi} của ${spec.pn} ${kindVi}. ${spec.vi}. Các phần dùng chung tên linh kiện (U1A … U1${letter(spec.channels)}) và chân nguồn V+ / V-, chỉ sinh ra một vi mạch trong netlist; phần chưa dùng là ${noun.vi} thừa${spareVi}.`,
     },
   }));
   return [pkg, ...sections];

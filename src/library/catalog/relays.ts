@@ -387,7 +387,9 @@ function contactPart(s: ContactSpec): LibraryPartDef {
       prefix: s.prefix,
       symbol: poleSymbol(s.poles, s.glyph),
       params: contactParams(s.defCoil),
-      contactLink: { role: 'contact', param: 'coil' },
+      // a contact is part of the relay whose coil it names (one item in the BOM / PCB netlist); a
+      // clip-on contact block is its own item
+      contactLink: { role: 'contact', param: 'coil', ...(s.slug.startsWith('supplementary') ? { separate: true } : {}) },
       ...(s.optional || s.poles.length > 1 || s.poles[0].form === 'co' ? { optionalPins: pins } : {}),
       toSpice: (ctx) => poleElements(ctx, s.poles, ctx.params.coil ?? ''),
       provenance: 'MachSim contact follower: SW poles (RON 50 mΩ, ROFF 1 GΩ) switched by the state node of the named coil',
@@ -447,7 +449,7 @@ const limitSwitch2: LibraryPartDef = withMeta(
       return { elements: [elR(ctx.name('R', 'no'), ctx.node('13'), ctx.node('14'), on ? ron : roff), elR(ctx.name('R', 'nc'), ctx.node('21'), ctx.node('22'), on ? roff : ron)] };
     },
     provenance: 'MachSim momentary position contacts (constant topology resistors, the state changes with the interactive key)',
-    footprint: 'SW-4P',
+    footprint: 'DIN-RAIL',
     keywords: ['limit switch', 'position switch', 'end stop', 'roller lever', '1no 1nc', 'interactive'],
   },
   { vi: "Công tắc hành trình cần con lăn có một tiếp điểm thường hở (13-14) và một thường đóng (21-22) đổi trạng thái cùng lúc khi cần bị ấn; phím 'K' ấn cần khi mô phỏng", nameVi: 'Công tắc hành trình 1 hở + 1 đóng', sortKey: 50, series: 'Limit switch' },

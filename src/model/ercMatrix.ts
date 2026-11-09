@@ -155,6 +155,8 @@ export interface ErcNetPins {
   pins: ErcPinEntry[];
   /** the net is a power / ground rail (ground symbol, VCC symbol, power-named label) */
   rail?: boolean;
+  /** the net reaches the outside of its block through a hierarchical connector (the parent drives it) */
+  port?: boolean;
 }
 
 const pinText = (p: ErcPinEntry): string => `${p.refdes}.${p.pin}`;
@@ -194,7 +196,8 @@ export function checkUndrivenInputs(nets: ErcNetPins[], options: PinTypeCheckOpt
   const prefix = options.prefix ?? '';
   const out: ErcMessage[] = [];
   for (const net of nets) {
-    if (net.rail || net.pins.length < 2) continue;
+    // a block port is driven by whatever the parent connects to it: the child level cannot see that
+    if (net.rail || net.port || net.pins.length < 2) continue;
     const live = net.pins.filter((p) => !p.nc && p.type !== 'nc');
     if (live.length < 2 || live.some((p) => p.type !== 'input')) continue;
     const first = live[0];

@@ -112,17 +112,50 @@ export function renameLadderBlock(design: Design, id: string, name: string): Des
  * call blocks defined in the root design it came from, and those calls must still find them.
  */
 export function mergeLadderBlocks(existing: readonly LadderBlock[] | undefined, incoming: readonly LadderBlock[] | undefined): LadderBlock[] {
+  return mergeLadderBlocksReport(existing, incoming).blocks;
+}
+
+/** What a block's behaviour is, without ids (two blocks with the same program are the same block). */
+function blockProgram(b: LadderBlock): string {
+  return JSON.stringify([b.inputs, b.outputs, b.rungs.map((r) => [r.logic, r.outputs])]);
+}
+
+/** {@link mergeLadderBlocksReport} result. */
+export interface LadderBlockMerge {
+  blocks: LadderBlock[];
+  /** incoming blocks that kept their program but had to take another name (a DIFFERENT block of that name was already there) */
+  renamed: { from: string; to: string }[];
+}
+
+/**
+ * {@link mergeLadderBlocks} that also tells what it renamed. A block of the same name and the same
+ * program is the same block and is not added again; a block of the same name with ANOTHER program
+ * is added under a free name ("Motor" -> "Motor_2"), because letting the existing block answer to
+ * its calls would silently run the wrong logic. The calls inside the added blocks follow the new
+ * names; the caller applies `renamed` to the incoming sheets with {@link renameBlockCalls}.
+ */
+export function mergeLadderBlocksReport(existing: readonly LadderBlock[] | undefined, incoming: readonly LadderBlock[] | undefined): LadderBlockMerge {
   const out = [...(existing ?? [])];
   const names = new Set(out.map((b) => b.name.trim().toLowerCase()));
   const ids = new Set(out.map((b) => b.id));
+  const renamed: { from: string; to: string }[] = [];
+  const added: number[] = [];
   for (const b of incoming ?? []) {
     const key = b.name.trim().toLowerCase();
-    if (names.has(key)) continue;
-    names.add(key);
+    let name = b.name;
+    if (names.has(key)) {
+      const same = out.find((x) => x.name.trim().toLowerCase() === key);
+      if (same && blockProgram(same) === blockProgram(b)) continue;
+      for (let k = 2; names.has(name.trim().toLowerCase()) || name === b.name; k++) name = `${b.name}_${k}`;
+      renamed.push({ from: b.name, to: name });
+    }
+    names.add(name.trim().toLowerCase());
     let id = b.id;
     for (let k = 2; ids.has(id); k++) id = `${b.id}-${k}`;
     ids.add(id);
-    out.push(id === b.id ? b : { ...b, id });
+    added.push(out.length);
+    out.push(id === b.id && name === b.name ? b : { ...b, id, name });
   }
-  return out;
+  for (const r of renamed) for (const i of added) out[i] = { ...out[i], rungs: renameBlockCalls(out[i].rungs, r.from, r.to) };
+  return { blocks: out, renamed };
 }

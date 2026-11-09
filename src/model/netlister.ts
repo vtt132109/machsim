@@ -789,10 +789,16 @@ function emitLevel(a: LevelAnalysis, scope: VariableScope, shared: Shared, set: 
     /** pins that two sections both carry (the supply pins of a dual op-amp): which section gave the node */
     const owner = new Map<string, PlacedPartInfo>();
     const open = new Set<string>();
+    // pins of the chip that more than one placed section carries (V+, V-, VCC, GND): they belong to
+    // the CHIP, so a section that is left out of the simulation (excluded, or not fitted in the
+    // active variant) still supplies them — the other sections keep their power
+    const sharedPins = new Map<string, number>();
+    for (const s of g.placed) for (const pin of new Set((s.def?.symbol.pins ?? []).map((x) => x.name))) sharedPins.set(pin, (sharedPins.get(pin) ?? 0) + 1);
     for (const s of g.placed) {
-      if (g.active && s.inst.excludeFromSim) continue;
+      const idle = g.active && s.inst.excludeFromSim;
       const part = a.placed[s.index];
       for (const pin of part.pins) {
+        if (idle && (sharedPins.get(pin.name) ?? 0) < 2) continue;
         const n = nodeOf(part, pin.name);
         if (n === undefined) continue;
         const id = netIdOf(part, pin.name);
@@ -822,6 +828,25 @@ function emitLevel(a: LevelAnalysis, scope: VariableScope, shared: Shared, set: 
       }
     }
     packageNodes.set(g, m);
+    // some sections of ONE chip take part and others do not: a chip cannot be half on the board
+    // (the variant manager fits a chip as a unit; this catches a hand-set "exclude from simulation")
+    if (g.active) {
+      const left = g.placed.filter((s) => s.inst.excludeFromSim);
+      if (left.length) {
+        const first = a.placed[left[0].index];
+        const names = left.map((s) => refdesOfSection(a.placed[s.index])).join(', ');
+        push({
+          severity: 'warning',
+          code: 'other',
+          message: `${prefix}${names} of chip ${g.refdes} ${left.length > 1 ? 'are' : 'is'} left out of the simulation while other sections of the same chip take part`,
+          detail: { id: 'sectionPartlyLeftOut', params: { refdes: g.refdes, names } },
+          sheetId: first.sheetId,
+          refdes: g.refdes,
+          x: first.inst.x,
+          y: first.inst.y,
+        });
+      }
+    }
   }
 
   // partNets (first occurrence of a refdes wins; the sections of a package contribute together)
@@ -1302,7 +1327,8 @@ function pinTypeNets(a: LevelAnalysis): ErcNetPins[] {
     if (pins.length < 2) continue;
     const rail = net.ground || net.globals.length > 0;
     const label = net.labels[0]?.name ?? net.globals[0];
-    out.push({ node, name: label && label.trim() ? label.trim() : node, pins, ...(rail ? { rail: true } : {}) });
+    const port = net.labels.some((l) => l.kind === 'hier');
+    out.push({ node, name: label && label.trim() ? label.trim() : node, pins, ...(rail ? { rail: true } : {}), ...(port ? { port: true } : {}) });
   }
   return out;
 }
