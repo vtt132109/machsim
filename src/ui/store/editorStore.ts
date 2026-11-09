@@ -69,6 +69,7 @@ import type {
 import * as ops from './designOps';
 import { levelSheets, validateRefdes } from './refdes';
 import { followNetColors, renameNetAcrossSettings } from './netColors';
+import { relinkRenamedCoils } from '../../model/relink';
 import { centerOn, DEFAULT_VIEW, fitRect, zoomAt } from './viewport';
 import { nextInteractiveValue, type InteractionPhase } from './interactive';
 import { newId } from './ids';
@@ -331,7 +332,8 @@ export function createEditor(options: EditorOptions = {}) {
     }
     // keep the embedded user components equal to the used ones (in-use list), and give every wire
     // of a coloured net that net's colour (a net's settings follow the NET, not the wires)
-    const next = proposed === s.design ? proposed : followNetColors(syncCustomParts(proposed, customData), lookup);
+    // (a renamed coil takes its contacts along: they name it by designator, src/model/relink.ts)
+    const next = proposed === s.design ? proposed : followNetColors(syncCustomParts(relinkRenamedCoils(s.design, proposed, lookup), customData), lookup);
     if (next === s.design) {
       if (o.selection) patch({ selection: pruneSelection(o.selection, next, s.activeSheetId) });
       return false;

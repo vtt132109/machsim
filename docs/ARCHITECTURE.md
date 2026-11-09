@@ -44,6 +44,9 @@ Có thể đóng gói thành ứng dụng Windows (Electron/Tauri) ở giai đo�
 | Giao diện gọn cho người mới (MachSim thêm) | Bộ lọc menu / thanh công cụ / phép phân tích theo danh sách lệnh cho phép; mọi lệnh mà một bài học đi kèm bảo dùng đều phải có trong danh sách (test đọc chữ của bài học) | `src/ui/app/beginner.ts`, `tests/review/round3/beginner-lessons.test.ts` |
 | Tệp bài học do giáo viên soạn (MachSim thêm) | `.msimlesson` với 4 loại bước mô tả; tiến độ `.msimprog` hoặc lưu trong dự án | `src/learn/lessonFile.ts`, `src/ui/learn/LessonEditor.tsx`, `src/ui/learn/customLessons.ts` |
 | IC thật trong bài học (MachSim thêm) | Tìm cổng / flip-flop trong vỏ nhiều phân đoạn, kiểm chân `~PRE` / `~CLR` | `src/learn/gates.ts` |
+| Âm thanh: loa, micrô, tệp WAV (MachSim thêm, thay cho thiết bị LabVIEW) | Loa / tai nghe phát điện áp ra card âm thanh theo thời gian thực (kéo giãn thời gian khi mô phỏng chậm), micrô là nguồn PCM streaming, nguồn tệp WAV, xuất WAV từ Grapher; codec WAV tự viết | `src/audio`, `src/library/catalog/audio.ts`, `src/ui/integration/AudioPanel.tsx` |
+| Cơ điện nối bằng tên: cuộn + tiếp điểm, rơ-le nhiệt, khởi động từ, biến áp nguồn, bảo vệ | Cuộn là "driver" xuất nút trạng thái `<refdes>.st`, tiếp điểm theo tên cuộn (kể cả ở trang khác), ERC tiếp điểm mất cuộn; cầu chì I²t, áp-tô-mát B/C/D/K/Z có đồ thị | `src/library/catalog/relays.ts`, `protection.ts`, `lineMagnetics.ts`, `src/library/partkit.ts` (`followDriver`), `src/model/netlister.ts` |
+| Pin không lý tưởng, nguồn từ thông, nguồn tệp đo lường (LVM / CSV) | Pin theo mức điện tích + điện trở trong + đường cong xả, e = N·dΦ/dt, PWL đọc từ tệp văn bản | `src/library/catalog/batteries.ts`, `lineMagnetics.ts`, `measurementSource.ts` |
 
 ## Ngôn ngữ, trợ giúp và nạp theo nhu cầu
 
@@ -858,6 +861,31 @@ giáo viên báo đúng chứ không báo "không có gì".
   `src/ui/app/files.test.ts`, `src/model/fileInfo.test.ts`, `src/model/ercNetlist.test.ts`,
   `tests/review/round4/{invariants,beginner-menu-paths,logic-pin-types}.test.ts`.
 
+## Âm thanh, cơ điện nối bằng tên và nguồn mới (vòng 4 bước 5)
+
+**Âm thanh** (`src/audio`, thuần trừ hai tệp nối với trình duyệt)
+
+- `wav.ts` — codec WAV tự viết (không phụ thuộc ngoài): đọc PCM 8 / 16 / 24 / 32 bit, float 32 / 64, tiêu đề extensible, chunk lạ, tệp bị cắt; ghi PCM 8 / 16 / 24 và float32; `bytesToBase64` / `base64ToBytes`, `wavToParam` / `wavFromParam` (tệp WAV là tham số văn bản base64 của linh kiện).
+- `resample.ts` — `hermiteAt` / `resampleUniform` (nội suy Hermite cubic với tiếp tuyến ba điểm, mẫu của mô phỏng thưa đều ở đâu cũng được), `PlaybackScheduler` (hàng đợi mẫu mô phỏng → khối âm thanh thời gian thực; tốc độ phát = lượng mẫu có sẵn / mức đệm, tối đa 1: mô phỏng chậm thì phát chậm lại — **kéo giãn thời gian**, mô phỏng nhanh thì bỏ phần dư), `PcmResampler` (micrô: hạ tần số bằng trung bình ô, kể cả tỉ lệ lẻ), `ToneGenerator`.
+- `monitor.ts` — `AudioMonitor` (mỗi loa một `PlaybackScheduler` mỗi kênh, trộn rồi xén ±1, đọc âm lượng / tắt tiếng của linh kiện mỗi khối nên chỉnh Thuộc tính có tác dụng ngay), `PcmFeeder` (giữ luồng micrô đi trước thời gian mô phỏng 0.25 s, trả về các `ParamEdit` `pcm`), `AudioRun` (một lần chạy: loa + micrô + bộ hẹn giờ bơm), `audioState` (store cho cửa sổ Âm thanh; âm lượng chung lưu `machsim.audio.v1`). `AudioSink` và `PcmSource` là giao diện được tiêm vào: test dùng card âm thanh giả.
+- `webAudioSink.ts` — card âm thanh qua Web Audio: xếp liên tiếp các `AudioBufferSourceNode` trên đồng hồ của context (không dùng ScriptProcessor). `input.ts` — `InputBuffer`, `ToneSource` và `openInput` (xin quyền micrô; ghi âm bằng AudioWorklet dựng từ Blob, dự phòng ScriptProcessor; bị từ chối / không có thì sóng thử và trạng thái `denied` / `unavailable`). `host.ts` nạp theo nhu cầu từ bộ điều khiển, `audioBackend` là chỗ tiêm cho test. `export.ts` — `traceToWav` (Grapher › Xuất WAV…), `wavParam.ts` — nhập tệp WAV cho linh kiện (mono 16-bit, ≤ 16 kHz, ≤ 240 000 mẫu).
+- Nối vào mô phỏng: `SimulationIntegration.startAudio` (chỉ khi thiết kế có loa hoặc micrô: `import('../../audio/host')`) → `AudioRun.chunk(chunk, simTime)` ở mỗi gói `onChunk`, `setPaused` theo trạng thái phiên, đóng khi phiên kết thúc. `needsStreaming` coi micrô như một lý do để chạy tương tác.
+- **Micrô trong engine**: phần tử `V` có tham số `pcmfs` (`src/sim/devices/linear/sources.ts`) nhận `setParam('pcm', mẫu)`; mẫu k nằm ở thời điểm k / pcmfs, nội suy tuyến tính, giữ giá trị cuối khi hết mẫu, mỗi thời điểm mẫu là một breakpoint, chỉ giữ ~2 s lịch sử; `setParam('pcmreset')` làm rỗng. Linh kiện `sources/microphone` = nguồn stream ±1 + VCVS hệ số `gain` (phần tử `V<ref>_mic`).
+- UI: lệnh `simulate.audio` (Mô phỏng › Âm thanh…, có trong chế độ người mới) mở cửa sổ nổi `audio` (`AudioPanel.tsx`, nạp lười): âm lượng chung, tắt tiếng, vạch mức, thông báo "mô phỏng chậm hơn thời gian thực: ×0.4", từng loa, trạng thái micrô. Chữ ở `src/i18n/audioText.ts` (bảng lười) và `messages/audio.ts` (nhãn menu). Thuộc tính tệp WAV: `ParamDef.binaryImport = 'wav'` → `WavField.tsx`.
+
+**Cơ điện nối bằng tên** (`src/library/catalog/relays.ts`, `protection.ts`, `lineMagnetics.ts`)
+
+- `LibraryPartDef.contactLink`: `{ role: 'driver' }` (cuộn rơ-le / công-tắc-tơ / thời gian, rơ-le nhiệt, khởi động từ) xuất nút trạng thái `<refdes>.st` ∈ 0 … 1 (đóng ở 0.75, nhả ở 0.1 như rơ-le một linh kiện); `{ role: 'contact', param: 'coil' }` (tiếp điểm) theo nút đó. Netlister dựng bảng `linkTargets` cho mỗi cấp thiết kế (mọi trang, bỏ phần loại khỏi mô phỏng) và đưa vào `ToSpiceContextExt.linkTarget(name)` / `warn(id, params)`; `followDriver(ctx, tên)` trong `partkit.ts` là chỗ duy nhất dùng chúng. Thiếu cuộn → cảnh báo ERC `contactNoCoil` / `contactNotCoil` / `contactNoName` (chữ ở `messages/erc.ts`), tiếp điểm nằm ở vị trí nghỉ. Tiếp điểm trong khối phân cấp chỉ thấy cuộn cùng khối.
+- Mô hình: `coil()` và `timerState()` của `electromech.ts` (đã xuất); rơ-le nhiệt = nhiệt ∫I²/Ir² qua trễ τ theo cấp (`overloadTau`), tác động ở 1.2·Ir, chốt cho tới Reset; `overloadTripTime(cấp, m) = τ·ln(m²/(m²−1.2))`. Cầu chì I²t: `fuseMeltTime(I, Imin, I²t) = I²t/(I²−Imin²)`; áp-tô-mát: `breakerTripTime` (nhiệt `τ·ln(m²/(m²−1.69))`, từ ~1 ms ở bội số của đường cong). **Mọi phần tử bảo vệ mới bắt đầu nguội ở t = 0** (`u(time)`): điểm làm việc không mang lịch sử nhiệt, nên cầu chì không bao giờ "đã cháy sẵn" khi bắt đầu. `tripElement(..., cold)` của `electromech.ts` có thêm tham số đó (cầu chì / MCB cũ giữ hành vi cũ).
+- `LibraryPartDef.tripCurve` + `TripCurve.tsx` (`curveOf`): đồ thị log-log thời gian – dòng điện trong Thuộc tính, vẽ từ chính các công thức trên.
+- Biến áp nguồn: `lineTransformerDesign` (điện áp đầy tải → tỉ số vòng theo Vs0, điện trở cuộn dây giải từ `V0² = (Vs + a)² + (ρa)²`, điện kháng tản ρ = 0.5, điện cảm từ hoá từ dòng không tải); mô hình biến áp lý tưởng E/F như biến áp bão hoà. 30 bản có sẵn (230 / 115 V → 6…24 V, 5 / 25 / 100 VA) + bản chỉnh được.
+
+- **Tên cuộn đi theo cuộn** (`src/model/relink.ts`): tiếp điểm gọi cuộn bằng ký hiệu, nên `relinkRenamedCoils(trước, sau)` (gọi trong `commit` của editor: đổi tên ở Thuộc tính, Đánh số lại, Annotate, Tìm & thay đều qua đó) đưa các tiếp điểm cùng cấp theo ký hiệu mới của cuộn (hoán đổi K1 ↔ K2 cũng đúng), còn `relinkPastedContacts` (trong `pasteItems`) cho tiếp điểm dán cùng cuộn trỏ vào cuộn vừa dán. Hàm thuần `annotateDesign` / `replaceInDesign` / `renumberParts` KHÔNG tự làm việc này: ai gọi chúng ngoài store phải tự gọi `relinkRenamedCoils`.
+
+**Nguồn**: pin (`batteries.ts`: mức điện tích là điện áp nút 1 F, `SoC' = I/(3600·Ah)`, giữ điểm làm việc bằng nguồn lệch sau 100 MΩ và `u(time)`; `batteryCellVoltage` / `batteryResistance` / `batteryRuntime`), từ thông (`lineMagnetics.ts`: tụ 1 µF + điện trở 10 Ω dập dao động của luật hình thang), tệp đo lường (`measurementSource.ts` dùng `parseMeasurement` của Grapher), tệp WAV (`audio.ts`: PWL từ mẫu).
+
+**Ba mạch mẫu** (`src/ui/integration/electroSamples.ts`, tệp `examples/70…72`): mở – dừng công-tắc-tơ hai trang, rơ-le thời gian, loa sau lọc RC. Test: `src/library/catalog/electro.test.ts` (liên kết cuộn – tiếp điểm giữa các trang, thời gian rơ-le thời gian, I²t, đường cong áp-tô-mát và rơ-le nhiệt, điều áp biến áp, thời gian xả pin, từ thông, tệp đo lường, WAV), `src/audio/*.test.ts`, `src/sim/devices/linear/pcm.test.ts`, `src/ui/integration/{audio,electroSamples}.test.ts`.
+
 ## Hợp đồng dùng chung (chỉ thêm, không đổi nghĩa)
 
 - `src/sim/netlist.ts` — Netlist IR, analysis specs, options.
@@ -872,6 +900,7 @@ giáo viên báo đúng chứ không báo "không có gì".
 - `src/mecha/models.ts` — mô hình máy (chân vào / chân cảm biến / nút báo trạng thái), dùng bởi code model `A_MECHA` và bởi giao diện để vẽ chuyển động.
 - `src/model/ercMatrix.ts`, `ercReport.ts`, `netSettings.ts`, `sections.ts`, `src/library/footprints.ts` — tuỳ chọn ERC + ma trận loại chân, phạm vi / báo cáo ERC, cài đặt theo net, vi mạch nhiều phần, danh mục chân vỏ (thuần).
 - `src/model/sanitize.ts` — lớp toàn vẹn dùng chung: mọi nội dung vào một thiết kế đi qua đây (`sanitizeIncoming`, `sanitizeIncomingSheets`, `sanitizeDesign`, `parseDesignSafely` / `validateDesignSafely` / `repairRawDesign`, `neededVariables` / `referencedVariables`, `SanitizeNote`). Thuần; `src/i18n/sanitize.ts` dịch ghi chú.
+- `src/audio/*` — WAV, lấy mẫu lại, phát thời gian thực và nguồn micrô (thuần trừ `webAudioSink.ts` / `input.ts`); `ToSpiceContextExt.linkTarget` / `warn` và `followDriver` (`src/library/partkit.ts`) cho phần tử nối bằng tên.
 
 ## Luồng dữ liệu
 

@@ -171,6 +171,22 @@ export interface LibraryPartDef extends PartDef {
    * short name the learner sees ('A', 'B', 'Y').
    */
   pkg?: { id: string; section: string; sections: string[] };
+  /**
+   * Linked electromechanical parts (src/library/catalog/relays.ts). A **driver** (relay coil, timer
+   * coil, thermal overload relay) publishes its switching state as the internal node `<refdes>.st`
+   * (0 … 1, switching at 0.75 / 0.1); a **contact** names its driver in the instance parameter
+   * `param` (the driver's reference designator, on any sheet of the same level) and follows that
+   * node, through `ToSpiceContextExt.linkTarget`. The netlister reports a contact whose driver
+   * does not exist as an ERC warning (`contactNoCoil` / `contactNotCoil`).
+   */
+  contactLink?: { role: 'driver' } | { role: 'contact'; param: string };
+  /**
+   * The part has a time–current characteristic the Properties panel draws (src/ui/editor/TripCurve.tsx):
+   * a breaker (curve letter in `curveParam`, rated current in `ratedParam`), an I²t fuse
+   * (`i2tParam`, `kminParam`) or a thermal overload relay (trip class in `curveParam`, setting in
+   * `ratedParam`).
+   */
+  tripCurve?: { kind: 'breaker' | 'fuse' | 'overload'; ratedParam: string; curveParam?: string; i2tParam?: string; kminParam?: string };
   /** build the InstrumentBinding channels / driven elements for an instrument part */
   bindInstrument?(ctx: InstrumentBindContext): InstrumentChannels;
   /** build the signals of an indicator part (see PartDef.indicator); null when not observable */
@@ -200,6 +216,14 @@ export interface ToSpiceContextExt extends ToSpiceContext {
    * netlister sets it on the leading section only; see src/library/sectionKit.ts.
    */
   packagePins?(pin: string): string | undefined;
+  /**
+   * The part placed on this level (any sheet) with this reference designator (case-insensitive),
+   * or undefined: `driver` says whether it is a linked-part driver (`LibraryPartDef.contactLink`),
+   * `node` is its state node `<refdes>.st`.
+   */
+  linkTarget?(name: string): { refdes: string; partId: string; driver: boolean; node: string } | undefined;
+  /** Report an ERC warning for this instance (explained by the i18n keys erc.<id>.title / why / fix). */
+  warn?(id: string, params?: Record<string, string | number>): void;
 }
 
 /**
@@ -253,6 +277,32 @@ export function internalNodeName(refdes: string, suffix: string): string {
 export function internalNode(ctx: ToSpiceContext, suffix: string): string {
   const ext = ctx as ToSpiceContextExt;
   return typeof ext.internal === 'function' ? ext.internal(suffix) : internalNodeName(ctx.refdes, suffix);
+}
+
+/**
+ * State node of the driver a contact follows (see LibraryPartDef.contactLink), or null when the
+ * driver is missing: an ERC warning is raised and the contact stays in its rest position. `coil` is
+ * the reference designator the contact names.
+ */
+export function followDriver(ctx: ToSpiceContext, coil: string): string | null {
+  const ext = ctx as ToSpiceContextExt;
+  const name = coil.trim();
+  // a context that cannot look parts up (a stub): the contact gets its own, undriven control node
+  if (typeof ext.linkTarget !== 'function') return name === '' ? null : internalNodeName(ctx.refdes, 'link');
+  if (name === '') {
+    ext.warn?.('contactNoName');
+    return null;
+  }
+  const hit = ext.linkTarget(name);
+  if (!hit) {
+    ext.warn?.('contactNoCoil', { coil: name });
+    return null;
+  }
+  if (!hit.driver) {
+    ext.warn?.('contactNotCoil', { coil: hit.refdes });
+    return null;
+  }
+  return hit.node;
 }
 
 /** Whether a pin is connected to anything (true when the context cannot tell). */

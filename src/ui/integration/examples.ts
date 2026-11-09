@@ -99,6 +99,9 @@ export const DESIGN_EXAMPLES: readonly ExampleMeta[] = [
   { file: '55-ladder-start-stop.msim', topic: 'automation', title: 'Motor start / stop with a ladder diagram', summary: 'Khởi động / dừng động cơ bằng sơ đồ bậc thang' },
   { file: '56-ladder-traffic.msim', topic: 'automation', title: 'Traffic-light junction with ladder timers', summary: 'Đèn giao thông bằng bộ định thời bậc thang' },
   { file: '57-ladder-tank.msim', topic: 'automation', title: 'Tank filling control with a ladder diagram', summary: 'Điều khiển mức nước bằng sơ đồ bậc thang' },
+  { file: '70-contactor-start-stop.msim', topic: 'automation', title: 'Start-stop contactor with holding contact and overload', summary: 'Mạch mở – dừng bằng công-tắc-tơ: cuộn và tiếp điểm ở hai trang, tự giữ, rơ-le nhiệt' },
+  { file: '71-timer-relays.msim', topic: 'automation', title: 'On-delay and off-delay timer relays', summary: 'Rơ-le thời gian trễ đóng và trễ mở cùng một xung 24 V' },
+  { file: '72-speaker-filter.msim', topic: 'mixed', title: 'Listen to a filter: two tones through an RC low-pass', summary: 'Hai âm qua lọc RC và mạch đệm tới loa · nghe tác dụng của bộ lọc' },
 ];
 
 /** Metadata of the SPICE decks in examples/spice (title = the deck's first line). */

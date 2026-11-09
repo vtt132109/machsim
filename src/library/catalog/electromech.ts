@@ -43,14 +43,14 @@ const pos = (ctx: ToSpiceContext, key: string): number => {
 // ---------------------------------------------------------------------------------------------
 // coil + contacts
 
-interface CoilOut {
+export interface CoilOut {
   els: ElementIR[];
   /** node holding the averaged |coil current| / nominal current (1.0 = rated) */
   level: string;
 }
 
 /** Coil R–L between a and b with a sense source; `level` = averaged |I| / Inom. */
-function coil(ctx: ToSpiceContext, a: string, b: string, r: number, l: number, inom: number): CoilOut {
+export function coil(ctx: ToSpiceContext, a: string, b: string, r: number, l: number, inom: number): CoilOut {
   const m1 = internalNode(ctx, 'c1');
   const m2 = internalNode(ctx, 'c2');
   const raw = internalNode(ctx, 'craw');
@@ -69,8 +69,8 @@ function coil(ctx: ToSpiceContext, a: string, b: string, r: number, l: number, i
   };
 }
 
-const CONTACT_MODEL_NO = (tag: string): ModelCard => swModel(`MS_CONTACT_${tag}_NO`, 0.425, 0.325, 0.05, 1e9);
-const CONTACT_MODEL_NC = (tag: string): ModelCard => swModel(`MS_CONTACT_${tag}_NC`, -0.425, 0.325, 0.05, 1e9);
+export const CONTACT_MODEL_NO = (tag: string): ModelCard => swModel(`MS_CONTACT_${tag}_NO`, 0.425, 0.325, 0.05, 1e9);
+export const CONTACT_MODEL_NC = (tag: string): ModelCard => swModel(`MS_CONTACT_${tag}_NC`, -0.425, 0.325, 0.05, 1e9);
 
 /** NO / NC contact pair driven by a level node (pull-in 0.75, drop-out 0.1). */
 function contacts(ctx: ToSpiceContext, level: string, set: { com: string; no?: string; nc?: string; tag: string }[], models: ModelCard[]): ElementIR[] {
@@ -308,7 +308,7 @@ const contactors: LibraryPartDef[] = CONTACTORS.map(([amps, label, v, ac]) => {
 // ---------------------------------------------------------------------------------------------
 // timed contacts (timer relays)
 
-type TimerKind = 'on-delay' | 'off-delay' | 'interval';
+export type TimerKind = 'on-delay' | 'off-delay' | 'interval';
 
 const TIMER_SYMBOL: SymbolDef = boxSymbol({ w: 80, h: 60, left: [{ name: 'A1', number: 'A1' }, { name: 'A2', number: 'A2' }], right: [{ name: 'COM', number: '15' }, { name: 'NO', number: '18' }, { name: 'NC', number: '16' }], title: 'KT', extra: [circle(-14, 18, 5), line(-14, 18, -14, 14), line(-14, 18, -11, 18)] });
 
@@ -317,6 +317,39 @@ const TIMER_TEXT: Record<TimerKind, { en: string; vi: string; name: string; name
   'off-delay': { en: 'Off-delay timer relay: the contact changes over at once when the coil is energised and returns the set delay after it is released', vi: 'Rơ-le thời gian trễ mở: tiếp điểm chuyển ngay khi cấp điện và trở lại sau thời gian trễ kể từ khi mất điện', name: 'Timer Relay Off-Delay', nameVi: 'Rơ-le thời gian trễ mở' },
   interval: { en: 'Interval timer relay: the contact changes over when the coil is energised and returns after the set time even if the coil stays energised', vi: 'Rơ-le thời gian khoảng: tiếp điểm chuyển khi cấp điện và tự trở lại sau thời gian đặt dù cuộn hút vẫn có điện', name: 'Timer Relay Interval', nameVi: 'Rơ-le thời gian khoảng' },
 };
+
+/**
+ * Timer behaviour of a time-delay coil: a behavioural timer node ramps 0 → 1 over `delay` while
+ * the coil is energised (on-delay, interval) or after it is released (off-delay), and `stNode`
+ * becomes the contact state in 0 … 1 (switching at 0.75 / 0.1 like every contact). `level` is the
+ * averaged coil current / nominal current from {@link coil}.
+ */
+export function timerState(ctx: ToSpiceContext, kind: TimerKind, delay: number, level: string, stNode: string): ElementIR[] {
+  const e = internalNode(ctx, 'e');
+  const tn = internalNode(ctx, 't');
+  const k = ex(1 / delay);
+  const fast = ex(1000 / delay);
+  // energised state e in [0, 1] (pull-in 0.75), timer node t in [0, 1.05]
+  let dt: string;
+  let state: string;
+  if (kind === 'on-delay') {
+    dt = `V(${e})*${k}-(1-V(${e}))*V(${tn})*${fast}`;
+    state = `V(${e})*0.5*(1+tanh(200*(V(${tn})-1)))`;
+  } else if (kind === 'off-delay') {
+    dt = `V(${e})*(1.02-V(${tn}))*${fast}-(1-V(${e}))*${k}`;
+    state = `0.5*(1+tanh(200*(V(${tn})-0.02)))`;
+  } else {
+    dt = `V(${e})*${k}-(1-V(${e}))*V(${tn})*${fast}`;
+    state = `V(${e})*0.5*(1-tanh(200*(V(${tn})-1)))`;
+  }
+  return [
+    elB(ctx.name('B', 'e'), e, '0', 'V', `0.5+0.5*tanh(20*(V(${level})-0.6))`),
+    elB(ctx.name('B', 't'), '0', tn, 'I', `${dt}+max(-V(${tn}),0)*1000-max(V(${tn})-1.05,0)*1000`),
+    elC(ctx.name('C', 't'), tn, '0', 1),
+    elR(ctx.name('R', 't'), tn, '0', 1e9),
+    elB(ctx.name('B', 's'), stNode, '0', 'V', state),
+  ];
+}
 
 const timerRelays: LibraryPartDef[] = (['on-delay', 'off-delay', 'interval'] as TimerKind[]).map((kind) =>
   withMeta(
@@ -334,33 +367,9 @@ const timerRelays: LibraryPartDef[] = (['on-delay', 'off-delay', 'interval'] as 
         const delay = pos(ctx, 'delay');
         const r = pos(ctx, 'rcoil');
         const c = coil(ctx, ctx.node('A1'), ctx.node('A2'), r, 0.005 * r, pos(ctx, 'vcoil') / r);
-        const e = internalNode(ctx, 'e');
-        const tn = internalNode(ctx, 't');
         const st = internalNode(ctx, 's');
-        const k = ex(1 / delay);
-        const fast = ex(1000 / delay);
-        // energised state e in [0, 1] (pull-in 0.75), timer node t in [0, 1.05]
-        let dt: string;
-        let state: string;
-        if (kind === 'on-delay') {
-          dt = `V(${e})*${k}-(1-V(${e}))*V(${tn})*${fast}`;
-          state = `V(${e})*0.5*(1+tanh(200*(V(${tn})-1)))`;
-        } else if (kind === 'off-delay') {
-          dt = `V(${e})*(1.02-V(${tn}))*${fast}-(1-V(${e}))*${k}`;
-          state = `0.5*(1+tanh(200*(V(${tn})-0.02)))`;
-        } else {
-          dt = `V(${e})*${k}-(1-V(${e}))*V(${tn})*${fast}`;
-          state = `V(${e})*0.5*(1-tanh(200*(V(${tn})-1)))`;
-        }
         const models: ModelCard[] = [];
-        const els: ElementIR[] = [
-          ...c.els,
-          elB(ctx.name('B', 'e'), e, '0', 'V', `0.5+0.5*tanh(20*(V(${c.level})-0.6))`),
-          elB(ctx.name('B', 't'), '0', tn, 'I', `${dt}+max(-V(${tn}),0)*1000-max(V(${tn})-1.05,0)*1000`),
-          elC(ctx.name('C', 't'), tn, '0', 1),
-          elR(ctx.name('R', 't'), tn, '0', 1e9),
-          elB(ctx.name('B', 's'), st, '0', 'V', state),
-        ];
+        const els: ElementIR[] = [...c.els, ...timerState(ctx, kind, delay, c.level, st)];
         els.push(...contacts(ctx, st, [{ com: 'COM', no: 'NO', nc: 'NC', tag: '' }], models));
         return { elements: els, models };
       },
@@ -472,7 +481,7 @@ const sensingSwitches: LibraryPartDef[] = [
  * stays consistent although the current — and with it the heat input — has stopped. The contact
  * itself is 10 µΩ; `ron` is the element's cold resistance in series.
  */
-function tripElement(ctx: ToSpiceContext, a: string, b: string, inom: number, tau: number, thermalTrip: number, magnetic: number | null, ron: number): { els: ElementIR[]; model: ModelCard } {
+export function tripElement(ctx: ToSpiceContext, a: string, b: string, inom: number, tau: number, thermalTrip: number, magnetic: number | null, ron: number, cold = false): { els: ElementIR[]; model: ModelCard } {
   const sense = ctx.name('V', 'sense');
   const m = internalNode(ctx, 'm');
   const c = internalNode(ctx, 'c');
@@ -486,10 +495,11 @@ function tripElement(ctx: ToSpiceContext, a: string, b: string, inom: number, ta
     els: [
       elSense(sense, a, m),
       elR(ctx.name('R', 'cold'), m, c, ron),
-      elB(ctx.name('B', 'heat'), '0', heat, 'I', `I(${sense})*I(${sense})/${ex(inom * inom)}`),
+      // cold: the element starts at ambient temperature at t = 0 (its operating point carries no history)
+      elB(ctx.name('B', 'heat'), '0', heat, 'I', `${cold ? 'u(time)*' : ''}I(${sense})*I(${sense})/${ex(inom * inom)}`),
       elR(ctx.name('R', 'heat'), heat, '0', 1),
       elC(ctx.name('C', 'heat'), heat, '0', tau),
-      elB(ctx.name('B', 'stress'), stress, '0', 'V', `${terms.length > 1 ? `max(${terms.join(',')})` : terms[0]}+0.5*${vsw}/(${vsw}+0.001)`),
+      elB(ctx.name('B', 'stress'), stress, '0', 'V', `${terms.length > 1 ? `max(${terms.join(',')})` : terms[0]}+${cold ? 'u(time)*' : ''}0.5*${vsw}/(${vsw}+0.001)`),
       { ...elS(ctx.name('S', 'trip'), c, b, '0', stress, model.name), params: { on: 1 } },
     ],
     model,

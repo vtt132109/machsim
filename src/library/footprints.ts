@@ -128,6 +128,12 @@ const CATALOG: Footprint[] = [
   sip('XFMR-6P', 6, 7.62, 'Biến áp 6 chân (hai thứ cấp)', '6-pin transformer (two secondaries)'),
   sip('XFMR-8P', 8, 7.62, 'Biến áp 8 chân (hai sơ cấp, hai thứ cấp)', '8-pin transformer (two primaries, two secondaries)'),
   sip('RELAY-5P', 5, 5, 'Rơ-le 5 chân (một tiếp điểm đổi chiều)', '5-pin relay (one changeover contact)'),
+  sip('RELAY-COIL', 2, 5, 'Cuộn hút rơ-le hai chân', '2-pin relay coil'),
+  sip('SW-4P', 4, 5, 'Công tắc hành trình 4 chân (một hở, một đóng)', '4-pin limit switch (one NO, one NC contact)'),
+  sip('SPEAKER-2P', 2, 5, 'Loa hai chân', '2-pin loudspeaker'),
+  sip('MIC-2P', 2, 2.54, 'Micrô hai chân', '2-pin microphone capsule'),
+  sip('JACK-3.5MM', 3, 5, 'Giắc tai nghe 3.5 mm (trái, phải, chung)', '3.5 mm headphone jack (left, right, common)'),
+  sip('BATTERY-HOLDER', 2, 20, 'Đế pin hai chân', '2-pin battery holder'),
 
   // ---- resistors, capacitors, inductors
   leads('RES-AXIAL-400', 'axial', 10.16, 2.5, 'Điện trở hướng trục, thân 6.5 mm, hai lỗ cách 10.16 mm (0.4 inch)', 'Axial resistor, 6.5 mm body, 10.16 mm (0.4 inch) lead spacing'),

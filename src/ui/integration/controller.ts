@@ -58,6 +58,7 @@ import { appendRun, type RunRecord, type RunSource } from '../results/runs';
 import { ChunkRecorder } from './recorder';
 import { effectiveSaves, resolveInteractive, zeroInitialState, type ResolvedInteractive } from './simSettings';
 import { applyFixToNetlist, classifyFailure, convergenceFixes, type Fix, type FixAttempt } from '../analysis/convergence';
+import type { AudioRun } from '../../audio/monitor';
 
 export type LiveMode = 'idle' | 'analysis' | 'interactive';
 
@@ -198,6 +199,8 @@ export class SimulationIntegration {
   /** generation under which the current interactive session was started */
   private sessionGeneration = -1;
   private disposed = false;
+  /** sound of the current interactive session (speakers, microphone), see src/audio */
+  private audio: AudioRun | null = null;
   private structureWarned = false;
   private fatal: string | null = null;
   private lastDesign: Design;
@@ -431,6 +434,8 @@ export class SimulationIntegration {
     this.cancelPending();
     for (const u of this.unsubs.splice(0)) u();
     if (this.liveTimer) clearTimeout(this.liveTimer);
+    this.audio?.close();
+    this.audio = null;
     this.session?.stop();
     this.batch?.cancel();
   }
@@ -725,6 +730,7 @@ export class SimulationIntegration {
           if (this.session !== session) return;
           if (state === 'running' || state === 'paused') {
             this.live.setState((s) => ({ ...s, session: state }));
+            this.audio?.setPaused(state === 'paused');
             this.status({ state, message: state === 'paused' ? t('integration.controller.paused') : rateText(this.live.getState().rate, this.live.getState().speed), simTime });
           }
         },
@@ -735,6 +741,7 @@ export class SimulationIntegration {
       },
     );
     this.session = session;
+    void this.startAudio(build, session);
     this.longRunHinted = false;
     this.status({ state: 'running', message: t('integration.controller.startingInteractiveSimulation'), simTime: 0 });
     void session.done.then((end) => this.sessionEnded(session, end));
@@ -756,6 +763,7 @@ export class SimulationIntegration {
       for (let k = 0; k < chunk.time.length; k++) h.push(chunk.time[k], i ? v[k] * i[k] : v[k]);
     }
     this.latest = info.latest;
+    this.audio?.chunk(chunk, info.simTime);
     this.recorder.push(chunk);
     // rated parts: a stress reaching 1 burns the part out (opened live through its blow source)
     for (const b of build.ratings ?? []) {
@@ -802,9 +810,24 @@ export class SimulationIntegration {
     }
   }
 
+  /**
+   * Sound of the session: speakers play the streamed chunks, microphone parts are kept fed.
+   * The audio code loads on demand and only when the design has a speaker or a live microphone.
+   */
+  private async startAudio(build: NetlistBuildEx, session: InteractiveSession): Promise<void> {
+    const design = this.editor.getState().design;
+    const wanted = build.indicators.some((b) => b.kind === 'speaker') || design.sheets.some((s) => s.parts.some((p) => !p.excludeFromSim && p.partId === 'sources/microphone'));
+    if (!wanted) return;
+    const host = await import('../../audio/host');
+    if (this.session !== session || this.disposed) return;
+    this.audio = host.startAudioRun(build, design, () => this.editor.getState().design, (edits) => session.setParams(edits));
+  }
+
   private sessionEnded(session: InteractiveSession, end: SessionEnd): void {
     if (this.session !== session) return;
     this.session = null;
+    this.audio?.close();
+    this.audio = null;
     if (this.liveTimer) {
       clearTimeout(this.liveTimer);
       this.liveTimer = null;

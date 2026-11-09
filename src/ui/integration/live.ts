@@ -88,7 +88,9 @@ export function needsStreaming(build: Pick<NetlistBuildEx, 'instruments' | 'indi
     (build.ratings?.length ?? 0) > 0 ||
     (build.mcus?.length ?? 0) > 0 ||
     build.ladder !== undefined ||
-    hasInteractiveParts(design, lookup)
+    hasInteractiveParts(design, lookup) ||
+    // a microphone part streams the input device into the run
+    design.sheets.some((s) => s.parts.some((p) => !p.excludeFromSim && p.partId === 'sources/microphone'))
   );
 }
 

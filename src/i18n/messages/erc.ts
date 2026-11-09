@@ -248,6 +248,27 @@ export default {
     'Nối net này vào ngõ ra đang điều khiển nó, hoặc vào nguồn / đất qua một điện trở (treo lên 1 kΩ … 10 kΩ, hoặc xuống đất) nếu mức phải cố định. Nếu bạn cố ý để hở, dùng Sửa › Dấu không nối (NC) trên chân đó, hoặc tắt phép kiểm tra trong Công cụ › Tuỳ chọn ERC.',
     'Wire the net to the output that is supposed to drive it, or to the supply / ground through a resistor (a 1 kΩ … 10 kΩ pull-up, or a pull-down) when the level has to be fixed. If you left it open on purpose, mark the pin with Edit › NC marker, or switch the check off in Tools › ERC options.',
   ],
+  'erc.contactNoCoil.title': ['{refdes}: không có cuộn hút “{coil}”', '{refdes}: there is no coil “{coil}”'],
+  'erc.contactNoCoil.why': [
+    'Tiếp điểm này chạy theo cuộn hút (hoặc rơ-le nhiệt) có ký hiệu “{coil}”, nhưng trên sơ đồ không có linh kiện nào mang ký hiệu đó, nên không có gì điều khiển nó: tiếp điểm giữ nguyên vị trí nghỉ (thường hở vẫn hở, thường đóng vẫn đóng).',
+    'This contact follows the coil (or overload relay) with the designator “{coil}”, but no part on the schematic has that designator, so nothing operates it: the contact stays in its rest position (normally open stays open, normally closed stays closed).',
+  ],
+  'erc.contactNoCoil.fix': [
+    'Mở Thuộc tính của tiếp điểm và sửa ô “Cuộn hút” thành ký hiệu đúng của cuộn (ví dụ K1, KM1, KT1, FR1), hoặc đặt một cuộn hút mang ký hiệu “{coil}”. Cuộn có thể nằm ở trang khác của cùng một mức thiết kế.',
+    'Open the contact’s Properties and set the “Coil” field to the real designator of the coil (for example K1, KM1, KT1, FR1), or place a coil with the designator “{coil}”. The coil may be on another sheet of the same design level.',
+  ],
+  'erc.contactNotCoil.title': ['{refdes}: “{coil}” không phải là cuộn hút', '{refdes}: “{coil}” is not a coil'],
+  'erc.contactNotCoil.why': [
+    'Tiếp điểm gọi tên {coil}, nhưng linh kiện mang ký hiệu đó không phải cuộn rơ-le, cuộn công-tắc-tơ, cuộn thời gian hay rơ-le nhiệt nên không có trạng thái để tiếp điểm theo. Tiếp điểm giữ nguyên vị trí nghỉ.',
+    'The contact names {coil}, but the part with that designator is not a relay coil, contactor coil, timer coil or overload relay, so it has no state for the contact to follow. The contact stays in its rest position.',
+  ],
+  'erc.contactNotCoil.fix': ['Sửa ô “Cuộn hút” của tiếp điểm thành ký hiệu của một cuộn hút thật, hoặc đổi ký hiệu của cuộn cho đúng.', 'Set the contact’s “Coil” field to the designator of a real coil, or correct the designator of the coil.'],
+  'erc.contactNoName.title': ['{refdes}: tiếp điểm chưa gắn với cuộn hút nào', '{refdes}: the contact is not linked to any coil'],
+  'erc.contactNoName.why': [
+    'Ô “Cuộn hút” của tiếp điểm đang để trống, nên không biết nó thuộc cuộn nào. Tiếp điểm giữ nguyên vị trí nghỉ.',
+    'The contact’s “Coil” field is empty, so it does not know which coil it belongs to. The contact stays in its rest position.',
+  ],
+  'erc.contactNoName.fix': ['Điền ký hiệu của cuộn hút vào ô “Cuộn hút” trong Thuộc tính (ví dụ K1).', 'Type the designator of the coil into the “Coil” field of Properties (for example K1).'],
   'erc.sectionDuplicate.title': ['Phần {label} được đặt nhiều hơn một lần', 'Section {label} is placed more than once'],
   'erc.sectionDuplicate.why': [
     'Một vi mạch nhiều phần (ví dụ 7400 có 4 cổng) chỉ có một phần {section}. Hai linh kiện cùng tên {refdes} và cùng phần {section} nghĩa là hai lần dùng cùng một cổng của cùng một vi mạch.',
