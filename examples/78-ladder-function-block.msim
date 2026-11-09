@@ -1,0 +1,502 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Tank control with a function block and word math",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "24"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 100,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "misc-digital/plc-controller",
+          "refdes": "PLC1",
+          "x": 260,
+          "y": 460,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "scan": "20m"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "misc-digital/plc-input-8",
+          "refdes": "PLCI1",
+          "x": 340,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "byte": "0"
+          }
+        },
+        {
+          "id": "p10",
+          "partId": "misc-digital/plc-analog-in-2",
+          "refdes": "PLCA1",
+          "x": 340,
+          "y": 400,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "chan": "0"
+          }
+        },
+        {
+          "id": "p13",
+          "partId": "misc-digital/plc-output-8",
+          "refdes": "PLCQ1",
+          "x": 620,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "byte": "0"
+          }
+        },
+        {
+          "id": "p17",
+          "partId": "misc-digital/plc-analog-out-2",
+          "refdes": "PLCO1",
+          "x": 620,
+          "y": 420,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "chan": "0",
+            "vmax": "10"
+          }
+        },
+        {
+          "id": "p20",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 860,
+          "y": 440,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p24",
+          "partId": "misc/water-tank",
+          "refdes": "TK1",
+          "x": 900,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "volume": "10",
+            "qin": "500m",
+            "qout": "350m",
+            "low": "20",
+            "high": "80",
+            "start": "0"
+          }
+        },
+        {
+          "id": "p31",
+          "partId": "basic/switch-spst",
+          "refdes": "S1",
+          "x": 640,
+          "y": 560,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "key": "V"
+          }
+        },
+        {
+          "id": "p34",
+          "partId": "indicators/lamp",
+          "refdes": "X1",
+          "x": 760,
+          "y": 120,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "vrated": "24",
+            "prated": "5"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 100,
+              "y": 230
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l4",
+          "x": 100,
+          "y": 170,
+          "name": "P24",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 280,
+          "y": 130,
+          "name": "LOW",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 280,
+          "y": 150,
+          "name": "HIGH",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 340,
+          "y": 300,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 275,
+          "y": 390,
+          "name": "LVL",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 340,
+          "y": 440,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 680,
+          "y": 130,
+          "name": "PUMP",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 680,
+          "y": 170,
+          "name": "ALARM",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 620,
+          "y": 300,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 685,
+          "y": 410,
+          "name": "GAUGE",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 620,
+          "y": 460,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 860,
+          "y": 410,
+          "name": "GAUGE",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 860,
+          "y": 470,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l25",
+          "x": 820,
+          "y": 250,
+          "name": "PUMP",
+          "rotation": 0
+        },
+        {
+          "id": "l26",
+          "x": 820,
+          "y": 270,
+          "name": "DRAIN",
+          "rotation": 0
+        },
+        {
+          "id": "l27",
+          "x": 980,
+          "y": 240,
+          "name": "LOW",
+          "rotation": 0
+        },
+        {
+          "id": "l28",
+          "x": 980,
+          "y": 260,
+          "name": "HIGH",
+          "rotation": 0
+        },
+        {
+          "id": "l29",
+          "x": 980,
+          "y": 280,
+          "name": "LVL",
+          "rotation": 0
+        },
+        {
+          "id": "l30",
+          "x": 900,
+          "y": 320,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l32",
+          "x": 610,
+          "y": 560,
+          "name": "P24",
+          "rotation": 0
+        },
+        {
+          "id": "l33",
+          "x": 670,
+          "y": 560,
+          "name": "DRAIN",
+          "rotation": 0
+        },
+        {
+          "id": "l35",
+          "x": 760,
+          "y": 90,
+          "name": "ALARM",
+          "rotation": 0
+        },
+        {
+          "id": "l36",
+          "x": 760,
+          "y": 150,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l38",
+          "x": 740,
+          "y": 200,
+          "name": "PUMP",
+          "rotation": 0
+        }
+      ],
+      "probes": [
+        {
+          "id": "pr23",
+          "kind": "voltage",
+          "x": 685,
+          "y": 410,
+          "name": "GAUGE",
+          "color": "#e53935"
+        },
+        {
+          "id": "pr37",
+          "kind": "digital",
+          "x": 740,
+          "y": 200,
+          "name": "PUMP",
+          "color": "#e53935"
+        }
+      ],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 100,
+          "y": 620,
+          "text": "Thử: đổi khối “BomHaiMuc” (nhấn Khối hàm › BomHaiMuc) rồi chạy lại; mọi lời gọi đổi theo. MW0 là từ nhớ 16 bit có dấu; số lần bơm khởi động hiện trong dải trạng thái của trang bậc thang khi chạy.",
+          "size": 11
+        }
+      ]
+    },
+    {
+      "id": "sheet2",
+      "name": "Ladder 1",
+      "parts": [],
+      "wires": [],
+      "labels": [],
+      "probes": [],
+      "notes": [],
+      "kind": "ladder",
+      "ladder": [
+        {
+          "id": "rung1",
+          "comment": "Bơm: gọi khối BomHaiMuc, nối mức thấp I0.0, mức cao I0.1 và cuộn dây Q0.0",
+          "outputs": [
+            {
+              "kind": "call",
+              "address": "P1",
+              "block": "BomHaiMuc",
+              "args": {
+                "MUCTHAP": "I0.0",
+                "MUCCAO": "I0.1",
+                "BOM": "Q0.0"
+              }
+            }
+          ]
+        },
+        {
+          "id": "rung2",
+          "comment": "Đồng hồ mức: AQ0 = AI0 × 0,5 (bồn đầy 10 V cho 5 V)",
+          "outputs": [
+            {
+              "kind": "mul",
+              "address": "AQ0",
+              "a": "AI0",
+              "b": "0.5"
+            }
+          ]
+        },
+        {
+          "id": "rung3",
+          "comment": "Đếm số lần bơm khởi động: sườn lên của Q0.0 cộng 1 vào MW0",
+          "outputs": [
+            {
+              "kind": "add",
+              "address": "MW0",
+              "a": "MW0",
+              "b": "1"
+            }
+          ],
+          "logic": {
+            "kind": "contact",
+            "type": "rising",
+            "address": "Q0.0"
+          }
+        },
+        {
+          "id": "rung4",
+          "comment": "Báo bơm đã khởi động từ 2 lần trở lên",
+          "outputs": [
+            {
+              "kind": "coil",
+              "address": "Q0.2"
+            }
+          ],
+          "logic": {
+            "kind": "compare",
+            "op": "ge",
+            "left": "MW0",
+            "right": "2"
+          }
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.1,
+        "tstop": 25
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Cùng bồn nước của mẫu 57, viết gọn hơn bằng ba thứ mới của sơ đồ bậc thang. (1) KHỐI HÀM “BomHaiMuc”: bài toán bơm tự giữ giữa hai công tắc phao được viết MỘT lần (nhấn “Khối hàm” trên thanh công cụ của trang bậc thang để xem), bậc 1 chỉ gọi nó và nối ba tham số với I0.0, I0.1 và Q0.0. Muốn thêm một bồn thứ hai, chỉ cần gọi khối lần nữa. (2) LỆNH SỐ: bậc 2 là MUL AQ0 = AI0 × 0,5 (đồng hồ mức 0 … 5 V), bậc 3 dùng tiếp điểm SƯỜN LÊN của Q0.0 để ADD MW0 = MW0 + 1 mỗi lần bơm khởi động, bậc 4 so sánh MW0 ≥ 2 để báo bơm khởi động lại. (3) NGÕ RA TƯƠNG TỰ: mô-đun AQ đưa điện áp của AQ0 ra chân GAUGE; bồn đầy 80 % thì mức là 8 V và đồng hồ chỉ 4 V. Nhấn Chạy (F5); sau 16 s bơm nghỉ. Nhấp công tắc S1 (phím V) để xả nước, bơm chạy lại và đèn báo sáng ở lần khởi động thứ hai. Nhấn “Tham chiếu chéo” để thấy MW0 được ghi ở bậc 3 và đọc ở bậc 4. The tank of sample 57, written more compactly with three new things of the ladder editor. (1) A FUNCTION BLOCK “BomHaiMuc”: the self-holding pump between the two float switches is written ONCE (press “Function blocks” on the ladder sheet’s toolbar to see it); rung 1 only calls it and ties three parameters to I0.0, I0.1 and Q0.0. A second tank needs only another call. (2) WORD INSTRUCTIONS: rung 2 is MUL AQ0 = AI0 × 0.5 (a level gauge of 0 … 5 V), rung 3 uses a RISING-EDGE contact of Q0.0 to ADD MW0 = MW0 + 1 each time the pump starts, rung 4 compares MW0 ≥ 2 to flag a pump that restarted. (3) AN ANALOG OUTPUT: the AQ module drives the voltage of AQ0 onto the pin GAUGE; with the tank 80 % full the level is 8 V and the gauge reads 4 V. Press Run (F5); after 16 s the pump rests. Click switch S1 (key V) to drain the tank, the pump starts again and the alarm lamp lights on the second start. Press “Cross-reference” to see MW0 written in rung 3 and read in rung 4.",
+  "ladderBlocks": [
+    {
+      "id": "blk-pump",
+      "name": "BomHaiMuc",
+      "comment": "Bơm tự giữ giữa hai công tắc phao: chạy khi nước dưới mức thấp, nghỉ khi tới mức cao",
+      "inputs": [
+        "MUCTHAP",
+        "MUCCAO"
+      ],
+      "outputs": [
+        "BOM"
+      ],
+      "rungs": [
+        {
+          "id": "blk-pump-1",
+          "comment": "Tự giữ: (nước dưới mức thấp HOẶC đang bơm) VÀ chưa tới mức cao → bơm",
+          "logic": {
+            "kind": "series",
+            "items": [
+              {
+                "kind": "contact",
+                "type": "nc",
+                "address": "MUCCAO"
+              },
+              {
+                "kind": "parallel",
+                "items": [
+                  {
+                    "kind": "contact",
+                    "type": "nc",
+                    "address": "MUCTHAP"
+                  },
+                  {
+                    "kind": "contact",
+                    "type": "no",
+                    "address": "BOM"
+                  }
+                ]
+              }
+            ]
+          },
+          "outputs": [
+            {
+              "kind": "coil",
+              "address": "BOM"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

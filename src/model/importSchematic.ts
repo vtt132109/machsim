@@ -17,15 +17,21 @@
  * Placement keeps the source positions when every component has one (orientation chosen so the
  * MachSim pins fall closest to the source pins), otherwise the SPICE-import placement is used;
  * nets are routed by the SPICE-import router (src/model/spiceSchematic.ts placeAndRoute).
+ *
+ * Also carried over when the source positions are kept: buses (bus wires with their names) and bus
+ * entries (a short wire with a bus-entry label), the hierarchical connectors of a sheet (`hierLabels`
+ * become connectors, so the sheet can be a block), and sheet symbols that arrive as components with
+ * a `block` (the child design they stand for; src/model/kicadProject.ts builds it).
  */
 import { getPart, listParts } from '../library';
+import { BLOCK_PREFIX, blockPartDef } from './hierarchy';
 import type { CustomPartData } from '../library/custom/types';
 import { customPartDef } from '../library/custom/partDef';
 import type { PartDef } from '../library/types';
 import { parseUserNumber, toSpiceNumber } from '../util/units';
 import { localToSheet } from './geometry';
 import { blockSymbol, placeAndRoute, type ImportNote, type SchematicItem } from './spiceSchematic';
-import type { Design, PartInstance, Rotation } from './types';
+import type { ChildDesign, Design, NetLabel, PartInstance, Rotation, Wire } from './types';
 import { newDesign, newSheet } from './types';
 import { sanitizeDesign, type SanitizeNote } from './sanitize';
 
@@ -48,6 +54,23 @@ export interface ImportedComponent {
   at?: { x: number; y: number; pins: Record<string, { x: number; y: number }> };
   /** other source fields (footprint, SPICE fields such as Sim.Params / Sim.Device) */
   fields?: Record<string, string>;
+  /**
+   * A sheet symbol: the child design it stands for. The component is placed as the hierarchical
+   * block of that child, its pins (named like the child's connectors) joined to the nets given.
+   */
+  block?: ChildDesign;
+  /** never matched to a library part (a sheet symbol whose file is missing): always a plain box */
+  box?: boolean;
+}
+
+/** A hierarchical sheet symbol of the source: where it stands, its file and its pins. */
+export interface ImportedSheet {
+  name: string;
+  /** file name of the sub-sheet, as written in the source */
+  file: string;
+  /** position and size, MachSim units */
+  at: { x: number; y: number; w: number; h: number };
+  pins: { name: string; type: string; net: string; x: number; y: number }[];
 }
 
 export interface ImportedNetlist {
@@ -65,6 +88,14 @@ export interface ImportedNetlist {
   warnings: string[];
   /** symbols the source had not annotated yet, which MachSim numbered itself */
   unannotated?: number;
+  /** bus wires (names in MachSim bus syntax, points in MachSim units) */
+  buses?: { name: string; points: { x: number; y: number }[] }[];
+  /** bus entries: the point on the bus, the point where the entry's wire starts, the line name */
+  busEntries?: { name: string; bus: { x: number; y: number }; wire: { x: number; y: number } }[];
+  /** names of the hierarchical labels of the sheet (they become hierarchical connectors) */
+  hierLabels?: string[];
+  /** sheet symbols (hierarchical sub-sheets) */
+  sheets?: ImportedSheet[];
 }
 
 export type SchematicImportNote =
@@ -73,6 +104,8 @@ export type SchematicImportNote =
   | { kind: 'supply'; net: string; volts: number }
   | { kind: 'defaultValue'; refdes: string; value: string }
   | { kind: 'unannotated'; count: number }
+  | { kind: 'buses'; buses: number; entries: number }
+  | { kind: 'blocks'; names: string[] }
   | { kind: 'warning'; what: string };
 
 export interface SchematicImportResult {
@@ -104,7 +137,7 @@ export function powerNetVolts(name: string): number | null {
 let nameIndex: Map<string, PartDef[]> | null = null;
 
 /** Library parts by lower-case name ("2n3904" → [transistors/2n3904]). */
-function partsNamed(name: string): PartDef[] {
+export function partsNamed(name: string): PartDef[] {
   if (!nameIndex) {
     nameIndex = new Map();
     for (const d of listParts()) {
@@ -227,7 +260,7 @@ function mapComponent(c: ImportedComponent, diode: 'KA' | 'AK', notes: Schematic
     }
     return { partId: isR ? 'basic/resistor' : isC ? 'basic/capacitor' : 'basic/inductor', params: { value: v }, pins: [['1', two[0]], ['2', two[1]]] };
   }
-  if ((pre === 'D' || /^(d|d_\w+|led|led_\w+|diode|zener)/.test(sym)) && c.pins.length === 2) {
+  if ((pre === 'D' || /^(d|d_\w+|led|led_\w+|diode\w*|zener\w*)$/.test(sym)) && c.pins.length === 2) {
     const a = pinBy(c, 'a', 'anode', '+') ?? (diode === 'KA' ? two[1] : two[0]);
     const k = c.pins.find((p) => p !== a)!;
     const led = /led/.test(sym);
@@ -345,7 +378,7 @@ function bestOrientation(def: PartDef, origin: { x: number; y: number }, pins: [
 const cleanNet = (n: string) => n.replace(/^\//, '').replace(/[^A-Za-z0-9_+\-.]/g, '_') || 'N';
 
 /** Build a MachSim design from an imported netlist (see the module comment). */
-export function importedToDesign(imp: ImportedNetlist, opts: { title?: string; sheetName?: string } = {}): SchematicImportResult {
+export function importedToDesign(imp: ImportedNetlist, opts: { title?: string; sheetName?: string; children?: ChildDesign[] } = {}): SchematicImportResult {
   const notes: SchematicImportNote[] = imp.warnings.map((w) => ({ kind: 'warning' as const, what: w }));
   if (imp.unannotated) notes.push({ kind: 'unannotated', count: imp.unannotated });
   // ---- net names: ground → '0'; named nets keep a clean name; automatic ones N1, N2 …
@@ -391,10 +424,28 @@ export function importedToDesign(imp: ImportedNetlist, opts: { title?: string; s
     return ref;
   };
   const withAt = imp.components.length > 0 && imp.components.every((c) => c.at);
+  const blockNames: string[] = [];
   let generic = 0;
   for (const c of imp.components) {
     const refdes = uniqueRef(c.refdes);
-    const m = mapComponent(c, imp.diodeNumbering, notes);
+    if (c.block) {
+      // a sheet symbol: the hierarchical block of the child design, pins named like its connectors
+      const def = blockPartDef(c.block);
+      const srcPins: [string, ImportedPin][] = [];
+      for (const pin of def.symbol.pins) {
+        const p = c.pins.find((q) => q.name?.toLowerCase() === pin.name.toLowerCase() || q.number.toLowerCase() === pin.name.toLowerCase());
+        if (p) srcPins.push([pin.name, p]);
+      }
+      const item: SchematicItem = { refdes, partId: `${BLOCK_PREFIX}${c.block.id}`, def, params: {}, pins: srcPins.map(([pin, p]) => ({ pin, node: net(p.net) })), source: false };
+      if (withAt && c.at) {
+        const o = bestOrientation(def, c.at, srcPins.map(([pin, p]) => [pin, c.at!.pins[p.number]]));
+        item.at = { x: c.at.x, y: c.at.y, ...o };
+      }
+      blockNames.push(c.block.name);
+      items.push(item);
+      continue;
+    }
+    const m = c.box ? null : mapComponent(c, imp.diodeNumbering, notes);
     let def: PartDef | undefined;
     let pinNets: { pin: string; node: string }[];
     let partId: string;
@@ -475,7 +526,45 @@ export function importedToDesign(imp: ImportedNetlist, opts: { title?: string; s
   sheet.parts = layout.parts;
   sheet.wires = layout.wires;
   sheet.labels = layout.labels;
+  // hierarchical connectors of the source sheet: one label of each such net becomes a connector
+  for (const name of imp.hierLabels ?? []) {
+    const wanted = cleanNet(name);
+    const at = sheet.labels.findIndex((l) => (l.kind ?? 'label') === 'label' && l.name === wanted);
+    if (at >= 0) sheet.labels[at] = { ...sheet.labels[at], kind: 'hier' };
+  }
+  if ((imp.buses?.length || imp.busEntries?.length) && !withAt) {
+    notes.push({ kind: 'warning', what: 'buses and bus entries need the source positions and are left out of this import' });
+  } else if (imp.buses?.length || imp.busEntries?.length) {
+    const grid = (v: number) => Math.round(v / 10) * 10;
+    const orthogonal = (pts: { x: number; y: number }[]): { x: number; y: number }[] => {
+      const out: { x: number; y: number }[] = [];
+      for (const p of pts.map((q) => ({ x: grid(q.x), y: grid(q.y) }))) {
+        const last = out[out.length - 1];
+        if (last && last.x === p.x && last.y === p.y) continue;
+        // a diagonal becomes a corner
+        if (last && last.x !== p.x && last.y !== p.y) out.push({ x: p.x, y: last.y });
+        out.push(p);
+      }
+      return out;
+    };
+    const wires: Wire[] = [];
+    const labels: NetLabel[] = [];
+    (imp.buses ?? []).forEach((b, i) => {
+      const points = orthogonal(b.points);
+      if (points.length >= 2) wires.push({ id: `kb${i + 1}`, points, bus: true, busName: b.name });
+    });
+    (imp.busEntries ?? []).forEach((e, i) => {
+      const points = orthogonal([e.bus, e.wire]);
+      labels.push({ id: `ke${i + 1}`, x: points[0].x, y: points[0].y, name: e.name, rotation: 0, kind: 'bus-entry' });
+      if (points.length >= 2) wires.push({ id: `kw${i + 1}`, points });
+    });
+    sheet.wires = [...sheet.wires, ...wires];
+    sheet.labels = [...sheet.labels, ...labels];
+    notes.push({ kind: 'buses', buses: wires.filter((w) => w.bus).length, entries: labels.length });
+  }
+  if (blockNames.length) notes.push({ kind: 'blocks', names: blockNames });
   design.sheets = [sheet];
+  if (opts.children?.length) design.children = opts.children;
   if (customParts.length) design.customParts = customParts;
   design.analysis = { active: 'op', specs: { op: { type: 'op' }, tran: { type: 'tran', tstep: 1e-5, tstop: 1e-2 }, ac: { type: 'ac', sweep: 'dec', points: 20, fstart: 1, fstop: 1e8 } } };
   // the shared integrity layer has the last word: the imported design must save and reopen

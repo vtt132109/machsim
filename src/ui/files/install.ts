@@ -18,13 +18,14 @@ import { t } from '../../i18n';
 const flows = () => import('./flows');
 
 /** Files File > Open understands (dropped on the window). */
-const OPENABLE = /\.(msim|json|xml|kicad_sch|edf|edif|edn|edo|cir|sp|spi|spice|net|ckt|bak\d*|dsn|ms\d{1,2}|utsch|msmx|mp14|mpzip|prz|mst1[34]|oecl|mspc|pcb3?)$/i;
+const OPENABLE = /\.(msim|json|xml|kicad_sch|sch|kicad_sym|edf|edif|edn|edo|cir|sp|spi|spice|net|ckt|bak\d*|dsn|ms\d{1,2}|utsch|msmx|mp14|mpzip|prz|mst1[34]|oecl|mspc|pcb3?)$/i;
 
 const isPng = (f: File) => f.type === 'image/png' || /\.png$/i.test(f.name);
 
 async function placeFile(file: File, at?: { x: number; y: number }): Promise<void> {
   const bytes = new Uint8Array(await file.arrayBuffer());
-  await (await flows()).placeSnippetBytes(bytes, file.name, at);
+  // a picture without circuit data is explained before anything is attempted
+  await (await import('./systemClipboard')).placePastedPicture(bytes, file.name, at);
 }
 
 /** Closed formats of other programs: opening them only explains how to export (nothing is replaced). */
@@ -82,7 +83,10 @@ export function installFileFeatures(): () => void {
       return;
     }
     if (!getState().clipboardAvailable && !files.length) {
-      void flows().then((m) => actions.addSimMessage('info', m.pasteNothingText(), 'snippet'));
+      // MachSim's own clipboard is empty: look at the system clipboard (the private circuit format, a
+      // snippet picture) and explain what can be pasted before trying
+      e.preventDefault();
+      void import('./systemClipboard').then((m) => m.pasteFromSystemClipboard());
     }
   };
   window.addEventListener('dragover', onDragOver);

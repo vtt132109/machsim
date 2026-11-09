@@ -82,7 +82,7 @@ function measurementSource(kind: 'V' | 'I'): LibraryPartDef {
       prefix: kind,
       symbol: sourceSymbol(isV ? 'pwl' : 'ac-current'),
       params: [
-        textParam('data', 'Measurement data', DEFAULT_DATA, { group: 'waveform', fileImport: '.lvm,.txt,.csv,.tsv,.dat', help: 'The text of the file: an X (time) column and one column per channel; use Open file… to load an LVM text, CSV or TSV file' }),
+        textParam('data', 'Measurement data', DEFAULT_DATA, { group: 'waveform', fileImport: '.lvm,.txt,.csv,.tsv,.dat,.tdms', help: 'The text of the file: an X (time) column and one column per channel; use Open file… to load an LVM text, CSV, TSV or binary TDMS file (a TDMS file is converted to this text)' }),
         numParam('channel', 'Channel', '1', '', { group: 'waveform', min: 1, showOnSchematic: true, help: 'Which value column to play (1 = the first after the time column)' }),
         numParam('tscale', 'Time scale', '1', '', { group: 'waveform', min: 0, help: '2 plays the recording twice as slowly, 0.5 twice as fast' }),
         numParam('vscale', 'Value scale', '1', '×', { group: 'waveform', help: 'Multiplies every value (e.g. 1000 for a file in kV)' }),

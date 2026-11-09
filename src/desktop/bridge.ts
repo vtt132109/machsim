@@ -21,6 +21,17 @@ export interface DesktopFileStat {
 }
 
 /** Page options the desktop shell needs to print the print-only pages (src/ui/print). */
+/** What the desktop shell read from the system clipboard (binary data as base64). */
+export interface DesktopClipboardContent {
+  formats: string[];
+  /** the private format, when present */
+  privateData?: string;
+  html?: string;
+  /** the picture, re-encoded as PNG */
+  png?: string;
+  text?: string;
+}
+
 export interface DesktopPrintOptions {
   /** paper size in millimetres, as printed (landscape already applied) */
   widthMm: number;
@@ -77,6 +88,16 @@ export interface MachsimDesktopBridge {
   onCloseRequest?(callback: () => void): () => void;
   /** Close the window now, without asking again. */
   confirmQuit?(): void;
+  // ---- the system clipboard (optional: older desktop builds lack it)
+  /**
+   * Put a circuit on the system clipboard: the picture (`png`), the plain text, the HTML form that
+   * carries the circuit and — when the platform lets it sit next to the others — the private format
+   * `privateFormat` holding `privateData`. All binary data is base64. Resolves the formats that ended up on the clipboard.
+   */
+  clipboardWrite?(opts: { png: string; text: string; html: string; privateFormat: string; privateData: string }): Promise<{ formats: string[] }>;
+  /** Read the system clipboard: its formats, the private format, the HTML, the picture (PNG) and the text. */
+  clipboardRead?(privateFormat: string): Promise<DesktopClipboardContent>;
+
   /** Print the current page (the print-only pages of the print preview) with the system print dialog. */
   printPage?(opts: DesktopPrintOptions): Promise<{ ok: boolean; error?: string }>;
   /** Save the current page (the print-only pages) as a PDF through a save dialog; null when cancelled. */

@@ -14,6 +14,7 @@
  *   Li<n>      input image byte n       Lq<n> output image byte n     Lm<n> memory byte n
  *   Lt<n>      elapsed time of timer n+1 (s)        Ltd<n> its done bit
  *   Lc<n>      present value of counter n+1         Lcd<n> its done bit
+ *   Lw<n>      memory word MWn           Lo<n> analog output AQn (volts)   Lerr  divisions by zero
  *   Ls<w>      element states, 24 per word, in compile order (LadderMachine.slotWord)
  */
 import { SLOT_BITS, type LadderMachine } from './machine';
@@ -41,6 +42,13 @@ export function ladderImageSizes(ir: LadderIR): ImageSizes {
   return { inputs: max.I + 1, outputs: max.Q + 1, mem: max.M + 1 };
 }
 
+/** Analog output channels a program writes or whose port is wired (at least what the ports say). */
+export function analogOutCount(ir: LadderIR): number {
+  let n = ir.aouts ?? 0;
+  for (const p of ir.ports) if (p.kind === 'aq') n = Math.max(n, p.index + 1);
+  return n;
+}
+
 /** Number of packed element-state words of a program. */
 export function slotWordCount(ir: LadderIR): number {
   return Math.ceil(Math.max(0, ir.slots) / SLOT_BITS);
@@ -55,6 +63,9 @@ export function ladderProbeKeys(ir: LadderIR): string[] {
   for (let k = 0; k < sizes.mem; k++) keys.push(`Lm${k}`);
   for (let k = 0; k < ir.timers; k++) keys.push(`Lt${k}`, `Ltd${k}`);
   for (let k = 0; k < ir.counters; k++) keys.push(`Lc${k}`, `Lcd${k}`);
+  for (let k = 0; k < (ir.words ?? 0); k++) keys.push(`Lw${k}`);
+  for (let k = 0; k < analogOutCount(ir); k++) keys.push(`Lo${k}`);
+  if ((ir.words ?? 0) > 0 || analogOutCount(ir) > 0) keys.push('Lerr');
   for (let k = 0; k < slotWordCount(ir); k++) keys.push(`Ls${k}`);
   return keys;
 }
@@ -75,6 +86,9 @@ export function fillLadderProbes(m: LadderMachine, into: Record<string, number>)
     into[`Lc${k}`] = m.counterValue[k];
     into[`Lcd${k}`] = m.counterDone[k];
   }
+  for (let k = 0; k < (ir.words ?? 0); k++) into[`Lw${k}`] = m.words[k];
+  for (let k = 0; k < analogOutCount(ir); k++) into[`Lo${k}`] = m.analogOut[k];
+  if ((ir.words ?? 0) > 0 || analogOutCount(ir) > 0) into.Lerr = m.mathErrors;
   for (let k = 0; k < slotWordCount(ir); k++) into[`Ls${k}`] = m.slotWord(k);
 }
 
@@ -93,6 +107,12 @@ export interface LadderLive {
   mem: number[];
   timers: { elapsed: number; done: boolean }[];
   counters: { value: number; done: boolean }[];
+  /** memory words MW0 ... (empty for a program without word instructions) */
+  words?: number[];
+  /** analog outputs AQ0 ... in volts */
+  analogOut?: number[];
+  /** divisions by zero met so far */
+  mathErrors?: number;
 }
 
 /** Read {@link LadderLive} from a live vector snapshot (lower-case keys), null when not recorded. */
@@ -117,5 +137,8 @@ export function ladderLive(values: Map<string, number> | Record<string, number>,
     mem: Array.from({ length: sizes.mem }, (_, k) => Math.round(get(`Lm${k}`) ?? 0)),
     timers: Array.from({ length: ir.timers }, (_, k) => ({ elapsed: get(`Lt${k}`) ?? 0, done: (get(`Ltd${k}`) ?? 0) > 0.5 })),
     counters: Array.from({ length: ir.counters }, (_, k) => ({ value: get(`Lc${k}`) ?? 0, done: (get(`Lcd${k}`) ?? 0) > 0.5 })),
+    words: Array.from({ length: ir.words ?? 0 }, (_, k) => Math.round(get(`Lw${k}`) ?? 0)),
+    analogOut: Array.from({ length: analogOutCount(ir) }, (_, k) => get(`Lo${k}`) ?? 0),
+    mathErrors: Math.round(get('Lerr') ?? 0),
   };
 }

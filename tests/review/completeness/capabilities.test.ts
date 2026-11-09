@@ -49,8 +49,9 @@ describe('component library', () => {
   const groups = [...new Set(simulatable.map((p) => p.group))];
 
   it('counts the simulatable parts of the catalogue', () => {
+    // the PLC analog output module (round 4, xchg) is a rack part without toSpice: one more part, not simulatable on its own
     expect(simulatable.length).toBe(4859);
-    expect(listParts()).toHaveLength(5063);
+    expect(listParts()).toHaveLength(5064);
   });
 
   // the biggest group (RF: hundreds of transmission-line and mixer parts) takes about 45 s on its

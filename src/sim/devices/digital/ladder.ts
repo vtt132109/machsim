@@ -12,6 +12,8 @@
  *     di  digital input channel — thresholded by the machine itself, with hysteresis, at the scan
  *         boundary (I0.0 …); an unwired channel reads 0 V, that is "off"
  *     q   output channel — driven to `von` while its bit of the output image is 1 (Q0.0 …)
+ *     aq  analog output channel — driven to the voltage last written to AQn by a MOV / ADD / …
+ *         instruction, limited to ±vmax of the module
  *   `pwr` = 1, so the last node is the common (0 V) of the modules: every channel voltage is read
  *   against it and every output drives against it, exactly like the common terminal of a rack.
  *
@@ -68,6 +70,10 @@ const ladder: BehaviourFactory = (ctx) => {
     if (p.kind === 'q') {
       outPorts.push(port);
       aoutputs.push({ port, lo: REF, hi: REF, span: 1, fullScale: Math.max(1e-9, Math.abs(p.von)), slew, delay: 0, rout });
+    } else if (p.kind === 'aq') {
+      // an analog output channel drives its pin to the value last written to AQn (limited to ±vmax)
+      outPorts.push(port);
+      aoutputs.push({ port, lo: REF, hi: REF, span: 1, fullScale: Math.max(1e-9, 2 * Math.abs(p.vmax)), slew, delay: 0, rout });
     } else analogPorts.push(port);
   });
 

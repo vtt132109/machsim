@@ -31,6 +31,9 @@ export const LADDER_TEXT_VI: Record<string, string> = {
   'Series resistance of the switching element (a real transistor output drops a little)':
     'Điện trở nối tiếp của phần tử đóng cắt (ngõ ra transistor thật sụt một chút)',
   'First channel': 'Kênh đầu tiên',
+  'Channel number of the first pin: 0 gives AQ0, AQ1 …': 'Số kênh của chân đầu tiên: 0 cho AQ0, AQ1 …',
+  'Output range': 'Phạm vi ra',
+  'The pin never goes beyond plus or minus this voltage, whatever the program writes': 'Chân không bao giờ vượt quá ± điện áp này, dù chương trình ghi bao nhiêu',
   'Channel number of the first pin: 0 gives AI0, AI1 …': 'Số kênh của chân đầu tiên: 0 cho AI0, AI1 …',
 
   // ---- shared parameters of the machines

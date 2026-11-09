@@ -100,11 +100,12 @@ export interface RatingSpec {
  *   input         digital input channels, thresholded with `vth` / `vhys`
  *   output        digital output channels, driven to `von`
  *   analog-input  analog input channels, read in volts
+ *   analog-output analog output channels (AQ0 …), driven to the voltage a ladder instruction wrote
  * Channel k of a module gets address byte `startParam` (inputs / outputs) or channel number
  * `startParam` + k (analog inputs).
  */
 export interface LadderIoSpec {
-  kind: 'cpu' | 'input' | 'output' | 'analog-input';
+  kind: 'cpu' | 'input' | 'output' | 'analog-input' | 'analog-output';
   /** number of channels (0 for the CPU) */
   channels: number;
   /** pin name of each channel, in channel order */

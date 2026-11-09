@@ -12,6 +12,7 @@ import type { PartLookup, SelItem } from './types';
 import { getSheet, itemsBounds, mergeChildren, normalizeSheet, selIds, updateSheet } from './designOps';
 import { sanitizeIncomingSheets, type SanitizeNote } from '../../model/sanitize';
 import { newId } from './ids';
+import { mergeLadderBlocks } from '../../ladder/editBlocks';
 import { collectRefdes, nextRefdes } from './refdes';
 import { effectivePrefix } from '../../model/refdesRules';
 import { onWire, onWireInterior, wireEnds } from './wireOps';
@@ -282,6 +283,8 @@ export function childFromDesign(design: Design, source: Design, name: string, so
     nets: source.nets,
   });
   if (safe.customParts.length) next = { ...next, customParts: [...(next.customParts ?? []), ...safe.customParts] };
+  // the function blocks its ladder sheets call come along (blocks are defined in the root design)
+  if (source.ladderBlocks?.length) next = { ...next, ladderBlocks: mergeLadderBlocks(next.ladderBlocks, source.ladderBlocks) };
   if (safe.customSpice) next = { ...next, customSpice: next.customSpice ? `${next.customSpice.replace(/\s+$/, '')}
 ${safe.customSpice}
 ` : `${safe.customSpice}

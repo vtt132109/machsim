@@ -82,7 +82,7 @@ import type {
   SheetLayers,
 } from './types';
 import { newDesign } from './types';
-import type { LadderContactKind, LadderCompareOp, LadderNode, LadderOutput, LadderOutputKind, LadderRung } from '../ladder/types';
+import type { LadderBlock, LadderContactKind, LadderCompareOp, LadderNode, LadderOutput, LadderOutputKind, LadderRung } from '../ladder/types';
 import { ERC_PIN_TYPES, pinPairKey, type ErcLevel, type ErcPinType, type ErcSettings, type HiddenPowerMode } from './ercMatrix';
 import type { CustomPartData } from '../library/custom/types';
 import { readCustomPart } from '../library/custom/validate';
@@ -628,7 +628,7 @@ function uniqueItemIds(c: Checker, sheets: Sheet[], paths: string[] = sheets.map
 
 const CONTACT_KINDS: LadderContactKind[] = ['no', 'nc', 'rising', 'falling'];
 const COMPARE_OPS: LadderCompareOp[] = ['eq', 'ne', 'lt', 'le', 'gt', 'ge'];
-const OUTPUT_KINDS: LadderOutputKind[] = ['coil', 'coil-not', 'set', 'reset', 'ton', 'tof', 'ctu', 'ctd', 'creset'];
+const OUTPUT_KINDS: LadderOutputKind[] = ['coil', 'coil-not', 'set', 'reset', 'ton', 'tof', 'ctu', 'ctd', 'creset', 'mov', 'add', 'sub', 'mul', 'div', 'call'];
 
 /** One element of a rung's logic (a contact, a comparison or a group). */
 function ladderNode(c: Checker, v: unknown, path: string, depth = 0): LadderNode | null {
@@ -683,6 +683,13 @@ function ladderRung(c: Checker, v: unknown, path: string): LadderRung | null {
       }
       const out: LadderOutput = { kind, address: c.str(oo, 'address', p) };
       if (oo.preset !== undefined && oo.preset !== null) out.preset = c.str(oo, 'preset', p);
+      if (oo.a !== undefined && oo.a !== null) out.a = c.str(oo, 'a', p);
+      if (oo.b !== undefined && oo.b !== null) out.b = c.str(oo, 'b', p);
+      if (oo.block !== undefined && oo.block !== null) out.block = c.str(oo, 'block', p);
+      if (oo.args !== undefined && oo.args !== null) {
+        const args = c.record(oo, 'args', p);
+        if (args) out.args = args;
+      }
       if (oo.comment !== undefined && oo.comment !== null) out.comment = c.str(oo, 'comment', p);
       return out;
     })
@@ -690,6 +697,36 @@ function ladderRung(c: Checker, v: unknown, path: string): LadderRung | null {
   const disabled = c.bool(o, 'disabled', path);
   if (disabled !== undefined) rung.disabled = disabled;
   return rung;
+}
+
+/** Design.ladderBlocks: the user function blocks of the ladder program (src/ladder/blocks.ts). */
+function ladderBlocks(c: Checker, v: unknown): LadderBlock[] | undefined {
+  if (!Array.isArray(v)) {
+    c.issue('ladderBlocks', 'expected a list');
+    return undefined;
+  }
+  const out: LadderBlock[] = [];
+  v.forEach((x, i) => {
+    const path = `ladderBlocks[${i}]`;
+    const o = c.obj(x, path);
+    if (!o) return;
+    // key order of LadderBlock, so a file written by the editor round-trips byte for byte
+    const block: LadderBlock = { id: c.str(o, 'id', path), name: c.str(o, 'name', path), ...(o.comment !== undefined && o.comment !== null ? { comment: c.str(o, 'comment', path) } : {}), inputs: [], outputs: [], rungs: [] };
+    const names = (key: 'inputs' | 'outputs'): string[] =>
+      c.array(o, key, path).map((n, k) => {
+        if (typeof n === 'string') return n;
+        c.issue(`${path}.${key}[${k}]`, 'expected a name');
+        return '';
+      });
+    block.inputs = names('inputs');
+    block.outputs = names('outputs');
+    block.rungs = c
+      .array(o, 'rungs', path)
+      .map((r, k) => ladderRung(c, r, `${path}.rungs[${k}]`))
+      .filter((r): r is LadderRung => r !== null);
+    out.push(block);
+  });
+  return out;
 }
 
 function sheet(c: Checker, v: unknown, path: string, index: number): Sheet | null {
@@ -1025,6 +1062,10 @@ export function validateDesign(input: unknown): Design {
   if (o.refdesRules !== undefined && o.refdesRules !== null) {
     const rr = refdesRules(c, o.refdesRules);
     if (rr) design.refdesRules = rr;
+  }
+  if (o.ladderBlocks !== undefined && o.ladderBlocks !== null) {
+    const lb = ladderBlocks(c, o.ladderBlocks);
+    if (lb && lb.length) design.ladderBlocks = lb;
   }
   if (c.issues.length) throw new DesignFormatError(c.issues);
   return design;

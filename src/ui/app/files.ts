@@ -322,11 +322,11 @@ export interface OpenedFile {
 }
 
 /** Files read as bytes instead of text: snippet pictures and closed formats of other programs. */
-export const BINARY_OPEN_RE = /\.(png|dsn|ms\d{1,2}|msm|utsch|msmx|mp14|mpzip|prz|mst1[34]|oecl|mspc|pcb3?)$/i;
+export const BINARY_OPEN_RE = /\.(tdms|png|dsn|ms\d{1,2}|msm|utsch|msmx|mp14|mpzip|prz|mst1[34]|oecl|mspc|pcb3?)$/i;
 
 /** Everything File > Open understands (browser file picker). */
 export const OPEN_ACCEPT = [
-  DESIGN_EXTENSION, '.json', '.xml', '.kicad_sch', '.edf', '.edif', '.edn', '.png', '.bak', '.msimtpl',
+  DESIGN_EXTENSION, '.json', '.xml', '.kicad_sch', '.sch', '.kicad_sym', '.edf', '.edif', '.edn', '.png', '.bak', '.msimtpl',
   '.cir', '.sp', '.spi', '.spice', '.net', '.ckt',
   '.dsn', '.ms14', '.ms13', '.ms12', '.ms11', '.ms10', '.ms9', '.ms8', '.ms7', '.utsch', '.msmx', '.mp14', '.mpzip', '.prz', '.mst14',
   // closed PCB-side formats: opening one only explains how to export a netlist (nothing is replaced)

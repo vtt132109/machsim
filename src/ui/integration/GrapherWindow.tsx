@@ -21,9 +21,11 @@ import { createStore } from '../store/createStore';
 import { actions, useEditor } from '../store';
 import { registerSaveTransform } from '../app/document';
 import { documents } from '../app/documentSet';
-import { pickTextFile } from '../app/files';
+import { pickBinaryFile } from '../app/files';
 import { alertDialog } from '../common/dialogs';
 import { measurementResult, MeasurementError, parseMeasurement } from '../../util/traceImport';
+import { isTdms, parseTdms, tdmsMeasurement } from '../../util/tdms';
+import { tdmsNotes, tdmsReason } from './tdmsFlow';
 import type { SimulationIntegration } from './controller';
 import { pendingGrapherPages } from './grapherPersist';
 import { registerPrintContribution } from '../print/printSources';
@@ -75,12 +77,31 @@ registerPrintContribution({
   pages: async ({ monochrome }) => renderGraphPages(currentDoc(), { monochrome }),
 });
 
-/** Grapher > Import measurement…: a CSV / text file becomes a page of its own. */
+const MEASUREMENT_EXTENSIONS = ['.csv', '.txt', '.tsv', '.dat', '.lvm', '.prn', '.tdms'];
+
+/**
+ * Grapher > Import measurement…: a CSV / text file or a binary TDMS file becomes a page of its own.
+ * The desktop dialog hands every file over as bytes, so a text file is decoded here.
+ */
 export async function importMeasurementFlow(ctrl: SimulationIntegration): Promise<boolean> {
-  const f = await pickTextFile(['.csv', '.txt', '.tsv', '.dat', '.lvm', '.prn']);
+  const f = await pickBinaryFile(MEASUREMENT_EXTENSIONS, { name: ft('measureFilter'), extensions: MEASUREMENT_EXTENSIONS.map((e) => e.slice(1)) });
   if (!f) return false;
+  if (f.bytes && (isTdms(f.bytes) || /\.tdms$/i.test(f.name))) {
+    try {
+      const imp = tdmsMeasurement(parseTdms(f.bytes), {}, f.name);
+      ctrl.importRun(f.name, [measurementResult(imp.data, f.name)]);
+      const points = imp.data.traces.reduce((n, tr) => n + tr.x.length, 0);
+      actions.addSimMessage('info', ft('measureDone', { name: f.name, n: imp.data.traces.length, points }), 'grapher');
+      for (const note of tdmsNotes(imp)) actions.addSimMessage('warning', note, 'grapher');
+      return true;
+    } catch (err) {
+      await alertDialog({ title: ft('measureTitle'), message: ft('tdmsFailed', { name: f.name, reason: tdmsReason(err) }) });
+      return false;
+    }
+  }
+  const text = f.text || (f.bytes ? new TextDecoder('utf-8').decode(f.bytes) : '');
   try {
-    const data = parseMeasurement(f.text, f.name);
+    const data = parseMeasurement(text, f.name);
     ctrl.importRun(f.name, [measurementResult(data, f.name)]);
     const points = data.traces.reduce((n, tr) => n + tr.x.length, 0);
     actions.addSimMessage('info', ft('measureDone', { name: f.name, n: data.traces.length, points }), 'grapher');

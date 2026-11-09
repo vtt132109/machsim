@@ -61,6 +61,7 @@ function PrintPreviewDialog({ close, initialChoices }: { close: () => void; init
   const [zoomPick, setZoomPick] = useState<'fit' | '50' | '75' | '100'>('fit');
   const hasSelection = useEditor((s) => s.selection.length > 0);
   const hasChildren = (design.children?.length ?? 0) > 0;
+  const hasLadderProgram = useMemo(() => design.sheets.some((s) => s.kind === 'ladder') || (design.children ?? []).some((c) => c.sheets.some((s) => s.kind === 'ladder')) || (design.ladderBlocks?.length ?? 0) > 0, [design]);
   const date = useMemo(() => new Date().toLocaleDateString(localeTag()), []);
 
   useEffect(() => {
@@ -191,6 +192,7 @@ function PrintPreviewDialog({ close, initialChoices }: { close: () => void; init
             {hasChildren ? <CheckField label={pt('children')} checked={choices.children} disabled={!choices.sheets || choices.scope !== 'all'} onChange={(v) => choose({ children: v })} /> : null}
             <CheckField label={pt('frame')} checked={choices.frame} disabled={!choices.sheets || choices.scope === 'selection'} onChange={(v) => choose({ frame: v })} />
             <CheckField label={pt('instruments')} checked={choices.instruments} onChange={(v) => choose({ instruments: v })} />
+            {hasLadderProgram ? <CheckField label={pt('ladder')} checked={!!choices.ladder} onChange={(v) => choose({ ladder: v })} /> : null}
             <CheckField label={pt('grapher')} checked={choices.grapher && grapherAvailable} disabled={!grapherAvailable} onChange={(v) => choose({ grapher: v })} />
             {!grapherAvailable ? <p className="ms-hint">{pt('grapherNone')}</p> : null}
             <SelectField label={pt('report')} value={choices.report} options={[{ value: '', label: pt('none') }, ...reports.map((r) => ({ value: r.id, label: r.title }))]} onChange={(v) => choose({ report: v })} />

@@ -11,7 +11,7 @@
  */
 'use strict';
 
-const { app, BrowserWindow, protocol, ipcMain, dialog, Menu, shell, net } = require('electron');
+const { app, BrowserWindow, protocol, ipcMain, dialog, Menu, shell, net, clipboard, nativeImage } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
@@ -496,6 +496,52 @@ function registerIpc() {
     // Chromium wants the portrait size plus the landscape flag
     return { landscape: Boolean(mm.landscape), color: mm.color !== false, size: { width: Math.round(Math.min(w, h) * 1000), height: Math.round(Math.max(w, h) * 1000) } };
   };
+  // ---- the system clipboard. A circuit goes there as a picture, plain text, HTML that carries the
+  // circuit and, where the platform allows it next to the others, a private format. Writing a custom
+  // format can replace what is already on the clipboard (each write empties it on Windows), so the
+  // standard formats are written first, the private one second, and if the picture did not survive
+  // the standard formats are written again; the renderer is told which formats ended up there.
+  const clip64 = (v) => (typeof v === 'string' ? v : '');
+  ipcMain.handle('machsim:clipboard-write', (_e, opts) => {
+    const o = opts && typeof opts === 'object' ? opts : {};
+    const formatName = typeof o.privateFormat === 'string' && /^[A-Za-z0-9._\/+-]{3,80}$/.test(o.privateFormat) ? o.privateFormat : '';
+    const data = { text: String(o.text || '').slice(0, 2000), html: String(o.html || '') };
+    const png = clip64(o.png);
+    if (png) {
+      const img = nativeImage.createFromBuffer(Buffer.from(png, 'base64'));
+      if (!img.isEmpty()) data.image = img;
+    }
+    clipboard.write(data);
+    if (formatName && clip64(o.privateData)) {
+      try {
+        clipboard.writeBuffer(formatName, Buffer.from(clip64(o.privateData), 'base64'));
+        const after = clipboard.availableFormats();
+        if (data.image && !after.some((f) => /^image\//i.test(f))) {
+          // the private format replaced the picture: put the standard formats back (the HTML still carries the circuit)
+          clipboard.write(data);
+        }
+      } catch {
+        clipboard.write(data);
+      }
+    }
+    return { formats: clipboard.availableFormats() };
+  });
+  ipcMain.handle('machsim:clipboard-read', (_e, privateFormat) => {
+    const formats = clipboard.availableFormats();
+    const out = { formats };
+    const name = typeof privateFormat === 'string' ? privateFormat : '';
+    if (name && formats.includes(name)) {
+      const buf = clipboard.readBuffer(name);
+      if (buf && buf.length && buf.length < 64 * 1024 * 1024) out.privateData = buf.toString('base64');
+    }
+    const html = clipboard.readHTML();
+    if (html) out.html = html.slice(0, 64 * 1024 * 1024);
+    const text = clipboard.readText();
+    if (text) out.text = text.slice(0, 64 * 1024 * 1024);
+    const img = clipboard.readImage();
+    if (!img.isEmpty()) out.png = img.toPNG().toString('base64');
+    return out;
+  });
   ipcMain.handle('machsim:print-page', (_e, opts) => {
     if (!mainWindow) return { ok: false, error: 'no window' };
     const p = printOptions(opts);

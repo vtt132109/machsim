@@ -163,6 +163,8 @@ export function buildMenus(ctx: MenuContext): TopMenu[] {
     item('edit.cut', { enabled: hasSel }),
     item('edit.copy', { enabled: hasSel }),
     item('edit.paste', { enabled: s.clipboardAvailable }),
+    item('edit.copySystem', { enabled: hasSel }),
+    item('edit.pasteSystem'),
     {
       type: 'submenu',
       id: 'menu.pasteSpecial',
@@ -357,7 +359,7 @@ export function buildMenus(ctx: MenuContext): TopMenu[] {
     {
       type: 'submenu',
       label: t('menu.componentTools'),
-      items: [item('tools.componentWizard'), item('tools.modelMaker'), item('tools.symbolEditor'), SEP, item('tools.databaseManager'), item('tools.importModel')],
+      items: [item('tools.componentWizard'), item('tools.modelMaker'), item('tools.symbolEditor'), SEP, item('tools.databaseManager'), item('tools.importModel'), item('tools.importKicadSymbols'), item('tools.exportKicadSymbols')],
     },
     {
       type: 'submenu',

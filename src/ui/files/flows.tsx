@@ -7,7 +7,11 @@
  *                   placeSnippetFromFileFlow, openSnippetFileFlow, placeSnippetBytes (drop / paste)
  *   other formats   handleOtherFormat (File > Open of MachSim XML, KiCad, EDIF, snippet pictures,
  *                   .bak copies, and closed formats of other programs, which get an explanation)
- *   exchange        exportXmlFlow, importSchematicFlow
+ *   exchange        exportXmlFlow, importSchematicFlow (KiCad 6+ projects with sub-sheets, and KiCad 5
+ *                   .sch with its .lib files: the learner is asked for the files that are missing;
+ *                   `.kicad_sym` symbol libraries go to src/ui/parts/kicadSymbolFlows.tsx)
+ *   clipboard       fragmentPicture / placeSnippetData are shared with systemClipboard.ts (the circuit on
+ *                   the operating-system clipboard)
  *   templates       exportTemplateFileFlow (.msimtpl), newFromTemplateFileFlow
  *   dialogs         openFileInfoDialog (File > File information), openFileOptionsDialog
  *                   (Options > File options: autosave interval, .bak copies, recovery)
@@ -28,6 +32,7 @@ import type { SchematicImportNote, SchematicImportResult } from '../../model/imp
 import { encodePng } from '../../util/png';
 import { formatEng } from '../../util/units';
 import { ft } from '../../i18n/filesText';
+import { kt } from '../../i18n/kicadText';
 import { sanitizeReport } from '../../i18n/sanitize';
 import { familyName, groupName, partName } from '../../i18n/library';
 import { loadAllGroups } from '../../library';
@@ -60,7 +65,7 @@ import './files.css';
 // ---------------------------------------------------------------------------
 
 /** The PNG picture of a fragment (canvas rendering; a blank picture where no canvas exists). */
-async function fragmentPicture(design: Design, fragment: SnippetData['fragment']): Promise<{ png: Uint8Array; blank: boolean }> {
+export async function fragmentPicture(design: Design, fragment: SnippetData['fragment']): Promise<{ png: Uint8Array; blank: boolean }> {
   const sheet: Sheet = { id: '__snippet__', name: design.title, parts: fragment.parts, wires: fragment.wires, labels: fragment.labels, probes: fragment.probes, notes: fragment.notes, ...(fragment.shapes ? { shapes: fragment.shapes } : {}) };
   const temp: Design = { ...design, sheets: [sheet], children: fragment.children ?? design.children };
   try {
@@ -114,7 +119,7 @@ export async function saveSnippetFlow(): Promise<void> {
   if (blank) actions.addSimMessage('warning', ft('snippetNoCanvas'), 'snippet');
 }
 
-function snippetErrorText(err: unknown, name: string): string {
+export function snippetErrorText(err: unknown, name: string): string {
   if (err instanceof SnippetError) {
     switch (err.code) {
       case 'no-data':
@@ -151,6 +156,11 @@ export async function placeSnippetBytes(bytes: Uint8Array, name: string, at?: Po
     await alertDialog({ title: ft('snippetTitle'), message: snippetErrorText(err, name) });
     return false;
   }
+  return placeSnippetData(data, at);
+}
+
+/** Place the circuit of a decoded snippet (from a picture or from the system clipboard) on the active sheet. */
+export async function placeSnippetData(data: SnippetData, at?: Point): Promise<boolean> {
   // parts of catalogue packs not loaded yet load first (pins are needed to join the wires)
   await ensureDesignParts({ sheets: [{ id: '', name: '', parts: data.fragment.parts, wires: [], labels: [], probes: [], notes: [] }], children: data.fragment.children, customParts: data.customParts });
   const before = new Set(data.fragment.parts.map((p) => p.refdes));
@@ -246,6 +256,10 @@ function noteText(n: SchematicImportNote): string {
       return ft('importUnannotated', { count: n.count });
     case 'label':
       return ft('importLabel', { net: n.net });
+    case 'buses':
+      return kt('importBuses', { buses: n.buses, entries: n.entries });
+    case 'blocks':
+      return kt('importBlocks', { names: n.names.join(', ') });
     case 'warning':
       return ft('importWarning', { what: n.what });
     case 'unsupported':
@@ -280,12 +294,78 @@ async function openImported(r: SchematicImportResult, name: string): Promise<boo
   return true;
 }
 
+const lowerBase = (name: string): string => (name.split(/[\\/]/).pop() ?? name).toLowerCase();
+
+/**
+ * Ask the learner for files the import needs (sub-sheets, symbol libraries): say which ones, then
+ * open a file picker that takes several at once. Returns what was chosen, keyed by lower-case base name.
+ */
+async function askForFiles(message: string, accept: string): Promise<Map<string, string>> {
+  const { pickTextFiles } = await import('../parts/fileIo');
+  const ok = await choiceDialog({
+    title: ft('importReport'),
+    message: <p>{message}</p>,
+    choices: [
+      { id: 'cancel', label: t('common.cancel') },
+      { id: 'pick', label: kt('choose'), primary: true },
+    ],
+  });
+  const out = new Map<string, string>();
+  if (ok !== 'pick') return out;
+  for (const f of await pickTextFiles(accept)) out.set(lowerBase(f.name), f.text);
+  return out;
+}
+
+/** The sub-sheets of a KiCad project (and the libraries of a KiCad 5 one) are fetched from the learner's files. */
+async function importKicadFiles(f: { name: string; text: string; path?: string }, sheetName: string): Promise<SchematicImportResult> {
+  const { importKicadProject, librarySymbols } = await import('../../model/kicadProject');
+  const { isLegacySchematic, legacyLibraryNicknames } = await import('../../model/kicadLegacy');
+  const legacy = isLegacySchematic(f.text);
+  const known = new Map<string, string>();
+  const libraries = [] as import('../../model/kicadSymbols').KSymbol[];
+  if (legacy) {
+    // the libraries the schematic names: next to the file on the desktop, else chosen by the learner
+    const bridge = getDesktopBridge();
+    const project = lowerBase(f.name).replace(/\.sch$/, '');
+    const wanted = [...legacyLibraryNicknames(f.text), `${project}-cache`];
+    const bag = new Map<string, string>();
+    if (bridge?.readIncludeFile && f.path) {
+      for (const nick of wanted) {
+        const got = await bridge.readIncludeFile(f.path, `${nick}.lib`).catch(() => null);
+        if (got) bag.set(`${nick}.lib`.toLowerCase(), got.content);
+      }
+    }
+    if (bag.size === 0) for (const [k, v] of await askForFiles(kt('libsNeed'), '.lib')) bag.set(k, v);
+    for (const text of bag.values()) {
+      try {
+        libraries.push(...librarySymbols(text));
+      } catch {
+        // a file that is not a symbol library is simply not used
+      }
+    }
+  }
+  let result = await importKicadProject(f.text, { fileName: f.name, sheetName, libraries, read: (file) => known.get(lowerBase(file)) ?? null });
+  for (let round = 0; round < 4 && result.missing.length > 0; round++) {
+    const more = await askForFiles(kt('sheetsNeed', { files: result.missing.join(', ') }), legacy ? '.sch' : '.kicad_sch');
+    let added = 0;
+    for (const [k, v] of more) if (!known.has(k)) {
+      known.set(k, v);
+      added++;
+    }
+    if (!added) break;
+    result = await importKicadProject(f.text, { fileName: f.name, sheetName, libraries, read: (file) => known.get(lowerBase(file)) ?? null });
+  }
+  if (result.missing.length) result.notes.push({ kind: 'warning', what: kt('missingSheets', { files: result.missing.join(', ') }) });
+  if (result.missingSymbols.length) result.notes.push({ kind: 'warning', what: kt('missingSymbols', { names: result.missingSymbols.join(', ') }) });
+  return result;
+}
+
 /** Read a KiCad / EDIF text into a design (importers load with this chunk only when needed). */
-async function importText(text: string, name: string): Promise<SchematicImportResult> {
+async function importText(text: string, name: string, path?: string): Promise<SchematicImportResult> {
   const sheetName = ft('snippetSheet');
   // imported parts are matched against the whole catalogue
   await loadAllGroups();
-  if (/\.kicad_sch$/i.test(name)) return (await import('../../model/kicadImport')).importKicad(text, { fileName: name, sheetName });
+  if (/\.(kicad_sch|sch)$/i.test(name)) return importKicadFiles({ name, text, path }, sheetName);
   return (await import('../../model/edifImport')).importEdif(text, { fileName: name, sheetName });
 }
 
@@ -302,9 +382,18 @@ export async function handleOtherFormat(f: OpenedFile): Promise<boolean | null> 
       return false;
     }
   }
+  if (/\.kicad_sym$/i.test(name)) {
+    await (await import('../parts/kicadSymbolFlows')).importKicadSymbolFiles([{ name, text: f.text }]);
+    return true;
+  }
   if (/\.sch$/i.test(name) && /^EESchema Schematic/.test(f.text)) {
-    await explainClosedFormat(name, null);
-    return false;
+    // KiCad 5: converted to the KiCad 6 form, with the symbols of its .lib files
+    try {
+      return await openImported(await importText(f.text, name, f.target?.kind === 'desktop' ? f.target.path : undefined), name);
+    } catch (err) {
+      await alertDialog({ title: ft('importFailed', { name }), message: err instanceof Error ? err.message : String(err) });
+      return false;
+    }
   }
   if (/\.xml$/i.test(name)) {
     if (!isDesignXml(f.text)) {
@@ -326,7 +415,7 @@ export async function handleOtherFormat(f: OpenedFile): Promise<boolean | null> 
   }
   if (EXCHANGE_RE.test(name)) {
     try {
-      return await openImported(await importText(f.text, name), name);
+      return await openImported(await importText(f.text, name, f.target?.kind === 'desktop' ? f.target.path : undefined), name);
     } catch (err) {
       await alertDialog({ title: ft('importFailed', { name }), message: err instanceof Error ? err.message : String(err) });
       return false;

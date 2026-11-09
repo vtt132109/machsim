@@ -12,7 +12,7 @@
 import type { AnalysisSpec, AnalysisType, Netlist, SimOptions } from '../sim/netlist';
 import type { BreadboardLayout } from '../breadboard/types';
 import type { CustomPartData } from '../library/custom/types';
-import type { LadderRung } from '../ladder/types';
+import type { LadderBlock, LadderRung } from '../ladder/types';
 import type { ErcSettings } from './ercMatrix';
 
 export type { ErcSettings };
@@ -623,6 +623,12 @@ export interface Design {
    * "A_U" (src/model/refdesRules.ts). Absent = the library prefixes (R, C, U ...).
    */
   refdesRules?: RefdesRules;
+  /**
+   * User function blocks of the ladder program (src/ladder/blocks.ts): named pieces of ladder with
+   * their own inputs, outputs and rungs that a `call` coil runs. Shared by every ladder sheet of the
+   * design (and of its blocks). Absent = none.
+   */
+  ladderBlocks?: LadderBlock[];
 }
 
 /**

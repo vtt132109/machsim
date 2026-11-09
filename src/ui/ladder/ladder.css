@@ -1,5 +1,25 @@
 /* Ladder-diagram editor: rails, rungs, the inspector strip and the live read-out strip. */
 
+/*
+ * The editor was written against `--ms-*` colour names that the application theme (src/ui/theme.css)
+ * never defined, so the diagram came out black on the dark theme. They are aliases of the real
+ * tokens here, so the colours follow the light / dark theme (and the print palette is untouched).
+ */
+.ms-l-view {
+  --ms-bg: var(--canvas);
+  --ms-fg: var(--text);
+  --ms-fg-dim: var(--text-dim);
+  --ms-panel: var(--panel);
+  --ms-border: var(--border);
+  --ms-ok: var(--ok);
+  --ms-error: var(--danger);
+  --ms-sel: var(--accent);
+  --ms-sel-bg: var(--accent-weak);
+  --ms-warn-bg: var(--warn);
+  --ms-warn-fg: #ffffff;
+  --ms-warn-fg-text: var(--warn);
+}
+
 .ms-l-view {
   display: flex;
   flex-direction: column;
@@ -228,4 +248,159 @@
 
 .ms-l-unit {
   margin-left: 2px;
+}
+
+/* word instructions and function-block calls are drawn as boxes */
+.ms-l-box {
+  fill: transparent;
+  stroke: var(--ms-fg);
+  stroke-width: 2;
+}
+
+.ms-l-el.is-live .ms-l-box {
+  stroke: var(--ms-ok, #35b14a);
+  stroke-width: 2.6;
+}
+
+.ms-l-boxcode,
+.ms-l-boxtext {
+  fill: var(--ms-fg);
+  font-size: 10px;
+  text-anchor: middle;
+  user-select: none;
+}
+
+.ms-l-boxcode {
+  font-weight: 600;
+}
+
+/* a run of selected rungs */
+.ms-l-rung.is-range .ms-l-rungbox {
+  fill: var(--ms-sel-bg, rgba(80, 150, 255, 0.14));
+}
+
+.ms-l-view:focus {
+  outline: none;
+}
+
+.ms-l-editing {
+  font-weight: 600;
+  color: var(--ms-sel, #4f9bff);
+  padding: 0 4px;
+}
+
+.ms-l-note {
+  margin-left: 6px;
+  font-size: 12px;
+  color: var(--ms-fg-dim);
+}
+
+.ms-btn.is-active {
+  outline: 2px solid var(--ms-sel, #4f9bff);
+  outline-offset: -2px;
+}
+
+.ms-l-wide {
+  flex-basis: 100%;
+}
+
+.ms-l-argtitle {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: var(--ms-fg-dim);
+}
+
+/* block and cross-reference panels */
+.ms-l-panel {
+  max-height: 38%;
+  overflow: auto;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--ms-border);
+  background: var(--ms-panel);
+}
+
+.ms-l-blocklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0;
+}
+
+.ms-l-blockform {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 14px;
+  margin-top: 6px;
+}
+
+.ms-l-blockform label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--ms-fg-dim);
+}
+
+.ms-l-blockform input {
+  min-width: 120px;
+  font-size: 12px;
+  color: var(--ms-fg);
+  background: var(--ms-bg);
+  border: 1px solid var(--ms-border);
+  border-radius: 3px;
+  padding: 2px 4px;
+}
+
+.ms-l-problem-text {
+  color: var(--ms-error, #e5392f);
+  font-size: 12px;
+}
+
+.ms-l-xrefbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ms-l-xrefbar input {
+  font-size: 12px;
+  color: var(--ms-fg);
+  background: var(--ms-bg);
+  border: 1px solid var(--ms-border);
+  border-radius: 3px;
+  padding: 2px 4px;
+}
+
+.ms-l-xref {
+  border-collapse: collapse;
+  font-size: 12px;
+  width: 100%;
+}
+
+.ms-l-xref th,
+.ms-l-xref td {
+  text-align: left;
+  padding: 2px 8px;
+  border-bottom: 1px solid var(--ms-border);
+  vertical-align: top;
+}
+
+.ms-l-xref tr.is-warn td:first-child {
+  color: var(--ms-warn-fg-text, #c77700);
+}
+
+.ms-l-jump {
+  margin: 0 4px 0 0;
+  padding: 0 6px;
+  font-size: 11px;
+  color: var(--ms-fg);
+  background: transparent;
+  border: 1px solid var(--ms-border);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.ms-l-jump:hover {
+  background: var(--ms-sel-bg, rgba(80, 150, 255, 0.18));
 }

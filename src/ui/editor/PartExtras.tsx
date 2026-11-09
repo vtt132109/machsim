@@ -63,7 +63,7 @@ export function ValuePicker({ def, inst }: { def: ParamDef; inst: PartInstance }
 // data file
 
 /** Ask for a text file (browser input element; works in the desktop app as well). */
-function pickText(accept: string): Promise<{ name: string; text: string } | null> {
+function pickText(accept: string): Promise<{ name: string; text: string; bytes?: Uint8Array } | null> {
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -71,6 +71,14 @@ function pickText(accept: string): Promise<{ name: string; text: string } | null
     input.onchange = () => {
       const f = input.files?.[0];
       if (!f) return resolve(null);
+      // a binary TDMS file is handed over as bytes, every other file as text
+      if (/\.tdms$/i.test(f.name)) {
+        void f.arrayBuffer().then(
+          (buf) => resolve({ name: f.name, text: '', bytes: new Uint8Array(buf) }),
+          () => resolve(null),
+        );
+        return;
+      }
       void f.text().then(
         (text) => resolve({ name: f.name, text }),
         () => resolve(null),
@@ -108,6 +116,13 @@ export function DataFileField({ def, inst, label, trailing }: { def: ParamDef; i
             try {
               const f = await pickText(def.fileImport ?? '');
               if (!f) return;
+              if (f.bytes) {
+                const { tdmsFileToCsv } = await import('../integration/tdmsText');
+                const r = tdmsFileToCsv(f.bytes, f.name);
+                if (r.text) actions.setPartParam(inst.id, def.key, r.text);
+                setNote(r.note);
+                return;
+              }
               actions.setPartParam(inst.id, def.key, f.text.replace(/\r\n/g, '\n').trim());
               setNote(t('catalog.file.loaded', { name: f.name, lines: f.text.split(/\r?\n/).filter((l) => l.trim()).length }));
             } catch (e) {
