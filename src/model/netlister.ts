@@ -815,6 +815,15 @@ function emitLevel(a: LevelAnalysis, scope: VariableScope, shared: Shared, set: 
     partNets[p.inst.refdes] = m;
   }
 
+  // linked electromechanical parts (coils, overload relays and the contacts that follow them, by
+  // refdes, on any sheet of this level): the drivers that exist, by lower-case refdes
+  const linkTargets = new Map<string, { refdes: string; partId: string; driver: boolean }>();
+  for (const p of a.placed) {
+    if (!p.def || p.inst.excludeFromSim) continue;
+    const key = p.inst.refdes.trim().toLowerCase();
+    if (!linkTargets.has(key)) linkTargets.set(key, { refdes: p.inst.refdes, partId: p.def.id, driver: asLibraryPart(p.def).contactLink?.role === 'driver' });
+  }
+
   for (const part of a.placed) {
     const def = part.def;
     if (!def || part.inst.excludeFromSim) continue;
@@ -913,6 +922,11 @@ function emitLevel(a: LevelAnalysis, scope: VariableScope, shared: Shared, set: 
         return id !== undefined && !a.floating.has(id) && !a.groundedOpen.has(id);
       },
       resolveNet: (name) => (isGroundNode(name) ? '0' : (a.byName.get(name.trim().toLowerCase()) ?? a.spiceNames.get(name.trim().toLowerCase()) ?? shared.globalNames?.get(name.trim().toLowerCase()))),
+      linkTarget: (name) => {
+        const hit = linkTargets.get(name.trim().toLowerCase());
+        return hit ? { ...hit, node: internalNodeName(hit.refdes, 'st') } : undefined;
+      },
+      warn: (id, wparams) => push({ severity: 'warning', code: 'other', message: `${prefix}${refdes}: ${id}`, detail: { id, params: { refdes, ...wparams } }, ...loc }),
       ...(shared.design.digital ? { digital: shared.design.digital } : {}),
       hiddenPower: hiddenPowerMode(shared.design.erc, shared.design.digital),
       ...(group ? { packagePins: (pin: string) => pinNodes.get(pin) ?? packageNodes.get(group)?.get(pin) } : {}),

@@ -101,6 +101,8 @@ export const BEGINNER_COMMANDS: readonly string[] = [
   'simulate.analysisSettings',
   'simulate.grapher',
   'simulate.clearMessages',
+  // the Audio window: master volume, mute and the "slower than real time" notice of a speaker circuit
+  'simulate.audio',
   // tools
   'tools.erc',
   'tools.clearErc',

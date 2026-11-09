@@ -1,0 +1,363 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Start-stop contactor with holding contact and overload",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Điều khiển",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 80,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "24"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/push-button",
+          "refdes": "S2",
+          "x": 220,
+          "y": 120,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "contact": "nc",
+            "key": "X"
+          }
+        },
+        {
+          "id": "p7",
+          "partId": "basic/push-button",
+          "refdes": "S1",
+          "x": 380,
+          "y": 120,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "contact": "no",
+            "key": "G"
+          }
+        },
+        {
+          "id": "p10",
+          "partId": "electromechanical/contactor-aux-no",
+          "refdes": "KC1",
+          "x": 380,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "coil": "KM1"
+          }
+        },
+        {
+          "id": "p13",
+          "partId": "electromechanical/overload-contact-nc",
+          "refdes": "KC2",
+          "x": 540,
+          "y": 120,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "coil": "FR1"
+          }
+        },
+        {
+          "id": "p16",
+          "partId": "electromechanical/contactor-coil-24vdc",
+          "refdes": "KM1",
+          "x": 700,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p19",
+          "partId": "indicators/lamp",
+          "refdes": "X1",
+          "x": 840,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "vrated": "24",
+            "prated": "2"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 80,
+          "y": 220,
+          "name": "P24",
+          "rotation": 0
+        },
+        {
+          "id": "l3",
+          "x": 80,
+          "y": 280,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l5",
+          "x": 190,
+          "y": 120,
+          "name": "P24",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 250,
+          "y": 120,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 350,
+          "y": 120,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 410,
+          "y": 120,
+          "name": "B",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 350,
+          "y": 220,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 410,
+          "y": 220,
+          "name": "B",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 510,
+          "y": 120,
+          "name": "B",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 570,
+          "y": 120,
+          "name": "C",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 670,
+          "y": 160,
+          "name": "C",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 730,
+          "y": 160,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 810,
+          "y": 160,
+          "name": "C",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 870,
+          "y": 160,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 60,
+          "y": 340,
+          "text": "Điều khiển 24 V: Dừng (S2, thường đóng, phím X) → Mở (S1, phím G) song song tiếp điểm tự giữ KC1 (cuộn KM1) → tiếp điểm rơ-le nhiệt 95-96 → cuộn KM1.",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet1",
+          "x": 60,
+          "y": 360,
+          "text": "Đèn X1 sáng khi cuộn KM1 có điện. Rơ-le nhiệt FR1 nằm ở trang “Mạch lực”.",
+          "size": 11
+        }
+      ]
+    },
+    {
+      "id": "sheet2",
+      "name": "Mạch lực",
+      "parts": [
+        {
+          "id": "p22",
+          "partId": "sources/dc-voltage",
+          "refdes": "V2",
+          "x": 80,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "12"
+          }
+        },
+        {
+          "id": "p25",
+          "partId": "electromechanical/contactor-contact-3p",
+          "refdes": "KC3",
+          "x": 260,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "coil": "KM1"
+          }
+        },
+        {
+          "id": "p28",
+          "partId": "electromechanical/overload-relay-1p",
+          "refdes": "FR1",
+          "x": 440,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "ir": "1",
+            "class": "10A"
+          }
+        },
+        {
+          "id": "p31",
+          "partId": "basic/resistor",
+          "refdes": "RM",
+          "x": 620,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "1.99"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l23",
+          "x": 80,
+          "y": 220,
+          "name": "PWR",
+          "rotation": 0
+        },
+        {
+          "id": "l24",
+          "x": 80,
+          "y": 280,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l26",
+          "x": 230,
+          "y": 120,
+          "name": "PWR",
+          "rotation": 0
+        },
+        {
+          "id": "l27",
+          "x": 290,
+          "y": 120,
+          "name": "M1",
+          "rotation": 0
+        },
+        {
+          "id": "l29",
+          "x": 410,
+          "y": 160,
+          "name": "M1",
+          "rotation": 0
+        },
+        {
+          "id": "l30",
+          "x": 470,
+          "y": 160,
+          "name": "M2",
+          "rotation": 0
+        },
+        {
+          "id": "l32",
+          "x": 590,
+          "y": 160,
+          "name": "M2",
+          "rotation": 0
+        },
+        {
+          "id": "l33",
+          "x": 650,
+          "y": 160,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "note1_sheet2",
+          "x": 60,
+          "y": 340,
+          "text": "Mạch lực: tiếp điểm chính KC3 (theo cuộn KM1 ở trang Điều khiển) → rơ-le nhiệt FR1 (1 A, cấp 10A) → tải RM 2 Ω = động cơ bị kẹt (6 A).",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet2",
+          "x": 60,
+          "y": 360,
+          "text": "Cùng một tên “KM1” nối cuộn với tiếp điểm dù chúng ở hai trang khác nhau. Nhấn R (Reset) để đặt lại rơ-le nhiệt.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.001,
+        "tstop": 0.5
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Mạch mở – dừng kinh điển: cuộn KM1 ở trang “Điều khiển”, tiếp điểm chính của nó ở trang “Mạch lực” (ghi KM1 vào ô Cuộn hút). Nhấn phím G để mở, phím X để dừng; tiếp điểm phụ KC1 tự giữ cuộn. Tải bị kẹt kéo 6 A qua rơ-le nhiệt đặt 1 A: sau vài giây rơ-le nhiệt tác động, tiếp điểm 95-96 mở và cuộn nhả. The classic start-stop circuit: coil KM1 on the “Control” sheet, its main contact on the “Power” sheet (type KM1 in the Coil field). Press G to start, X to stop; the auxiliary contact KC1 holds the coil in. A jammed load draws 6 A through an overload relay set to 1 A: after a few seconds the relay trips, the 95-96 contact opens and the coil drops out."
+}

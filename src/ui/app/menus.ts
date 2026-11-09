@@ -320,6 +320,7 @@ export function buildMenus(ctx: MenuContext): TopMenu[] {
     item('simulate.grapher'),
     item('simulate.postprocessor'),
     item('simulate.importMeasurement'),
+    item('simulate.audio'),
     SEP,
     item('simulate.mcuEditor'),
     SEP,

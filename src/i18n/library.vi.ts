@@ -10,6 +10,7 @@ import { SIGNAL_BLOCK_TEXT_VI } from './signalBlocks.vi';
 import { BASIC_EXTRA_TEXT_VI } from './basicExtras.vi';
 import { MCU_TEXT_VI } from './mcu.vi';
 import { LADDER_TEXT_VI } from './ladder.vi';
+import { ELECTRO_TEXT_VI } from './electro.vi';
 
 /** Parameter labels, help texts, option labels, family names and interactive labels. */
 export const LIB_TEXT_VI: Record<string, string> = {
@@ -18,6 +19,7 @@ export const LIB_TEXT_VI: Record<string, string> = {
   ...BASIC_EXTRA_TEXT_VI,
   ...MCU_TEXT_VI,
   ...LADDER_TEXT_VI,
+  ...ELECTRO_TEXT_VI,
   // family of generated block symbols (subcircuits / hierarchical blocks, src/model/hierarchy.ts)
   Hierarchy: 'Phân cấp',
   'Instance parameter of the block (number or {expression}); the default comes from the child design.': 'Tham số của khối này (số hoặc {biểu thức}); giá trị mặc định lấy từ thiết kế con.',

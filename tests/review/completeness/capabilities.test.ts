@@ -49,8 +49,8 @@ describe('component library', () => {
   const groups = [...new Set(simulatable.map((p) => p.group))];
 
   it('counts the simulatable parts of the catalogue', () => {
-    expect(simulatable.length).toBe(4534);
-    expect(listParts()).toHaveLength(4738);
+    expect(simulatable.length).toBe(4614);
+    expect(listParts()).toHaveLength(4818);
   });
 
   // the biggest group (RF: hundreds of transmission-line and mixer parts) takes about 45 s on its

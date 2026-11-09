@@ -1,0 +1,259 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "On-delay and off-delay timer relays",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/pwl-voltage",
+          "refdes": "V1",
+          "x": 80,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "points": "0 0, 1 0, 1.001 24, 6 24, 6.001 0, 10 0"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "electromechanical/timer-coil-on-delay",
+          "refdes": "KT1",
+          "x": 260,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "delay": "3"
+          }
+        },
+        {
+          "id": "p7",
+          "partId": "electromechanical/timer-coil-off-delay",
+          "refdes": "KT2",
+          "x": 260,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "delay": "3"
+          }
+        },
+        {
+          "id": "p10",
+          "partId": "sources/dc-voltage",
+          "refdes": "V2",
+          "x": 80,
+          "y": 460,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "24"
+          }
+        },
+        {
+          "id": "p13",
+          "partId": "electromechanical/timer-contact-no",
+          "refdes": "KC1",
+          "x": 520,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "coil": "KT1"
+          }
+        },
+        {
+          "id": "p16",
+          "partId": "electromechanical/timer-contact-no",
+          "refdes": "KC2",
+          "x": 520,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "coil": "KT2"
+          }
+        },
+        {
+          "id": "p19",
+          "partId": "indicators/lamp",
+          "refdes": "X1",
+          "x": 700,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "vrated": "24",
+            "prated": "2"
+          }
+        },
+        {
+          "id": "p22",
+          "partId": "indicators/lamp",
+          "refdes": "X2",
+          "x": 700,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "vrated": "24",
+            "prated": "2"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 80,
+          "y": 220,
+          "name": "COIL",
+          "rotation": 0
+        },
+        {
+          "id": "l3",
+          "x": 80,
+          "y": 280,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l5",
+          "x": 230,
+          "y": 150,
+          "name": "COIL",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 290,
+          "y": 150,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 230,
+          "y": 300,
+          "name": "COIL",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 290,
+          "y": 300,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 80,
+          "y": 430,
+          "name": "SUP",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 80,
+          "y": 490,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 490,
+          "y": 150,
+          "name": "SUP",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 550,
+          "y": 150,
+          "name": "L1",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 490,
+          "y": 300,
+          "name": "SUP",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 550,
+          "y": 300,
+          "name": "L2",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 670,
+          "y": 150,
+          "name": "L1",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 730,
+          "y": 150,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l23",
+          "x": 670,
+          "y": 300,
+          "name": "L2",
+          "rotation": 0
+        },
+        {
+          "id": "l24",
+          "x": 730,
+          "y": 300,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 60,
+          "y": 540,
+          "text": "KT1 (trễ đóng) → tiếp điểm KC1 → đèn X1: sáng 3 s SAU khi cuộn có điện. KT2 (trễ mở) → tiếp điểm KC2 → đèn X2: tắt 3 s SAU khi cuộn mất điện.",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet1",
+          "x": 60,
+          "y": 560,
+          "text": "Đổi “Thời gian trễ” của KT1 / KT2 trong Thuộc tính rồi chạy lại; vẽ V(L1) và V(L2) trong Grapher.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.005,
+        "tstop": 10
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Hai rơ-le thời gian cùng nhận một xung 24 V từ 1 s đến 6 s: KT1 trễ đóng 3 s nên đèn X1 chỉ sáng từ giây thứ 4; KT2 trễ mở 3 s nên đèn X2 sáng ngay từ giây thứ 1 và tắt ở giây thứ 9. Xem cả hai đèn trong Grapher sau khi chạy phân tích quá độ. Two timer relays get the same 24 V pulse from 1 s to 6 s: KT1 is an on-delay of 3 s so lamp X1 lights only from second 4; KT2 is an off-delay of 3 s so lamp X2 lights at once from second 1 and goes out at second 9. Look at both lamps in the Grapher after running the transient analysis."
+}

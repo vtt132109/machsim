@@ -215,3 +215,9 @@
 .ms-data-field { display: flex; flex-direction: column; gap: 4px; }
 .ms-fault-row { display: grid; grid-template-columns: 70px minmax(0, 1fr) 64px 72px; gap: 4px; align-items: center; margin-bottom: 3px; }
 .ms-fault-row .ms-input { min-width: 0; height: 24px; padding: 0 4px; }
+
+/* time-current curve of a protective part (TripCurve.tsx) */
+.ms-trip { margin: 8px 0 0; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); }
+.ms-trip figcaption { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 2px; }
+.ms-trip svg { display: block; }
+.ms-wav-field .ms-hint { margin: 2px 0 6px; }

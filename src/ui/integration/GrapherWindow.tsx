@@ -29,6 +29,7 @@ import { pendingGrapherPages } from './grapherPersist';
 import { registerPrintContribution } from '../print/printSources';
 import { renderGraphPages } from '../results/printPage';
 import { ft } from '../../i18n/filesText';
+import { aut } from '../../i18n/audioText';
 import { t } from '../../i18n';
 
 /** The session's Grapher workspace (shared by every Grapher window). */
@@ -91,6 +92,12 @@ export async function importMeasurementFlow(ctrl: SimulationIntegration): Promis
   }
 }
 
+/** Grapher > Export WAV…: a trace of the page being shown becomes a sound file (WavExportDialog.tsx). */
+async function exportWavFlow(): Promise<void> {
+  const { openWavExport } = await import('./WavExportDialog');
+  await openWavExport(currentDoc());
+}
+
 /** "Keep in file" on: Design.grapher = the current pages (one undo step); off: removed. */
 function setKeepPages(on: boolean): void {
   const doc = currentDoc();
@@ -110,6 +117,9 @@ function PageBarExtra({ ctrl }: { ctrl: SimulationIntegration }) {
     <>
       <button type="button" className="msr-btn" title={ft('measureFilter')} onClick={() => void importMeasurementFlow(ctrl)}>
         {t('grapher.importMeasurement')}
+      </button>
+      <button type="button" className="msr-btn" title={aut('exportMenuTip')} onClick={() => void exportWavFlow()}>
+        {aut('exportMenu')}
       </button>
       <label className="msr-inline" title={ft('keepPagesTip')}>
         <input type="checkbox" checked={keep} onChange={(e) => setKeepPages(e.target.checked)} /> {t('grapher.keepPages')}

@@ -203,6 +203,7 @@ export const BUILTIN_COMMANDS = [
   'tools.wizard.pcb',
   'tools.pldWizard',
   'simulate.mcuEditor',
+  'simulate.audio',
   'reports.partList',
   'reports.netList',
   'options.autosave',

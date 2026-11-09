@@ -244,7 +244,8 @@ const KNOWN_INSTANCE_PARAMS: Partial<Record<ElementType, ReadonlySet<string>>> =
   C: new Set(['ic', 'm', ...PARASITICS.C!]),
   L: new Set(['ic', 'm', ...PARASITICS.L!]),
   K: new Set(),
-  V: new Set(PARASITICS.V),
+  // pcmfs: sample rate of a streamed PCM source (the microphone part, src/sim/devices/linear/sources.ts)
+  V: new Set([...PARASITICS.V!, 'pcmfs']),
   I: new Set(),
   E: new Set(),
   F: new Set(),

@@ -33,10 +33,16 @@ import { DISPLAY_CATALOG } from './displayParts';
 import { MCU_CATALOG } from './mcu';
 import { PLC_CATALOG } from './plc';
 import { MECHA_CATALOG } from './mecha';
+import { AUDIO_CATALOG } from './audio';
+import { RELAY_CATALOG } from './relays';
+import { MAGNETICS_CATALOG } from './lineMagnetics';
+import { BATTERY_CATALOG } from './batteries';
+import { MEASUREMENT_CATALOG } from './measurementSource';
+import { PROTECTION_CATALOG } from './protection';
 
 /** Core catalogue parts for a library whose hand-written part ids are `existing`. */
 export function catalogParts(existing: ReadonlySet<string>): LibraryPartDef[] {
-  return dedupe([...SOURCE_CATALOG, ...SIGNAL_BLOCK_CATALOG, ...PASSIVE_CATALOG, ...BASIC_EXTRA_CATALOG, ...ANALOG_CATALOG, ...ANALOG_EXTRA_CATALOG, ...POWER_CATALOG, ...FUSE_CATALOG, ...ELECTROMECH_CATALOG, ...SENSOR_CATALOG, ...DIGITAL_MISC_CATALOG, ...MCU_CATALOG, ...PLC_CATALOG, ...MECHA_CATALOG, ...MIXED_SIGNAL_CATALOG, ...DISPLAY_CATALOG], existing);
+  return dedupe([...SOURCE_CATALOG, ...SIGNAL_BLOCK_CATALOG, ...PASSIVE_CATALOG, ...BASIC_EXTRA_CATALOG, ...ANALOG_CATALOG, ...ANALOG_EXTRA_CATALOG, ...POWER_CATALOG, ...FUSE_CATALOG, ...ELECTROMECH_CATALOG, ...SENSOR_CATALOG, ...DIGITAL_MISC_CATALOG, ...MCU_CATALOG, ...PLC_CATALOG, ...MECHA_CATALOG, ...MIXED_SIGNAL_CATALOG, ...DISPLAY_CATALOG, ...AUDIO_CATALOG, ...RELAY_CATALOG, ...MAGNETICS_CATALOG, ...BATTERY_CATALOG, ...MEASUREMENT_CATALOG, ...PROTECTION_CATALOG], existing);
 }
 
 /**

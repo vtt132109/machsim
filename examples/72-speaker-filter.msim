@@ -1,0 +1,217 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Listen to a filter: two tones through an RC low-pass",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 80,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "2",
+            "freq": "440"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/ac-voltage",
+          "refdes": "V2",
+          "x": 80,
+          "y": 400,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "1",
+            "freq": "3k"
+          }
+        },
+        {
+          "id": "p7",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 260,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p10",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 380,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "100n"
+          }
+        },
+        {
+          "id": "p13",
+          "partId": "analog/opamp-ideal-3",
+          "refdes": "U1",
+          "x": 540,
+          "y": 180,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p17",
+          "partId": "indicators/speaker",
+          "refdes": "LS1",
+          "x": 720,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 80,
+          "y": 220,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l3",
+          "x": 80,
+          "y": 280,
+          "name": "M",
+          "rotation": 0
+        },
+        {
+          "id": "l5",
+          "x": 80,
+          "y": 370,
+          "name": "M",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 80,
+          "y": 430,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 230,
+          "y": 160,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 290,
+          "y": 160,
+          "name": "F",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 350,
+          "y": 250,
+          "name": "F",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 410,
+          "y": 250,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 500,
+          "y": 190,
+          "name": "F",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 500,
+          "y": 170,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 580,
+          "y": 180,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 690,
+          "y": 200,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 750,
+          "y": 200,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 60,
+          "y": 480,
+          "text": "Loa LS1 phát điện áp ở ngõ ra mạch đệm. V1 (440 Hz) đi qua gần như nguyên vẹn; V2 (3 kHz) bị giảm còn khoảng 47 %.",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet1",
+          "x": 60,
+          "y": 500,
+          "text": "Mở Mô phỏng › Âm thanh để chỉnh âm lượng chung, tắt tiếng và xem vạch mức. Nếu mạch chạy chậm hơn thời gian thực, cửa sổ sẽ báo âm thanh bị kéo giãn.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.00001,
+        "tstop": 0.02
+      },
+      "ac": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 20,
+        "fstart": 10,
+        "fstop": 100000
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Hai âm 440 Hz (2 V) và 3 kHz (1 V) cộng lại, đi qua bộ lọc thông thấp R1–C1 (fc ≈ 1,6 kHz) và mạch đệm op-amp rồi tới loa LS1. Mở Mô phỏng › Âm thanh rồi nhấn Chạy: bạn nghe âm trầm rõ, âm cao nhỏ đi. Đổi C1 để dời tần số cắt. Two tones, 440 Hz (2 V) and 3 kHz (1 V), are added, pass the R1–C1 low-pass (fc ≈ 1.6 kHz) and an op-amp buffer and reach speaker LS1. Open Simulate › Audio and press Run: the low tone is clear and the high one is weaker. Change C1 to move the cut-off."
+}

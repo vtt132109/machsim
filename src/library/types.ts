@@ -92,6 +92,11 @@ export interface ParamDef {
   picker?: ESeriesName;
   /** text params: the properties panel offers "Open file…" to load the text (accepted extensions, e.g. ".csv,.txt") */
   fileImport?: string;
+  /**
+   * text params holding a binary file as base64 text: the properties panel offers "Open WAV file…"
+   * (decoded, mixed to mono 16-bit at up to 16 kHz by src/audio/wavParam.ts) instead of the text box
+   */
+  binaryImport?: 'wav';
   /** text params holding a memory image (src/sim/devices/digital/memimage.ts): the properties panel offers the hex content editor for a memory of this size */
   memory?: { words: number; bits: number };
 }
@@ -215,7 +220,7 @@ export interface PartDef {
   provenance?: string;
   /** visual indicator behaviour (LED glow, lamp, 7-seg, bar graph, probe light) driven by sim values */
   indicator?: {
-    kind: 'led' | 'lamp' | 'probe' | 'seven-seg' | 'bargraph' | 'buzzer' | 'motor' | 'voltmeter' | 'ammeter' | 'lcd' | 'matrix' | 'alnum' | 'mecha';
+    kind: 'led' | 'lamp' | 'probe' | 'seven-seg' | 'bargraph' | 'buzzer' | 'speaker' | 'motor' | 'voltmeter' | 'ammeter' | 'lcd' | 'matrix' | 'alnum' | 'mecha';
     signal?: string;
     /** lit colour (CSS) of probes, displays and bar graphs; bar graphs may give one colour per segment */
     color?: string;

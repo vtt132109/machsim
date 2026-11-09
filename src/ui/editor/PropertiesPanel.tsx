@@ -32,6 +32,12 @@ import { t, tDynamic } from '../../i18n';
 import { familyName, groupName, interactiveLabel, optionLabel, paramHelp, paramLabel, partDescription, partName } from '../../i18n/library';
 import { openHelp, topicForPart } from '../help/open';
 import { DataFileField, PartFaultTab, PartModelTools, PartSpecList, ValuePicker } from './PartExtras';
+import { lazyComponent } from '../common/lazy';
+import { asLibraryPart } from '../../library/partkit';
+
+/** The WAV file field and the time-current curve load on demand (they bring the audio texts and codecs). */
+const WavField = lazyComponent(() => import('./WavField').then((m) => m.WavField));
+const TripCurve = lazyComponent(() => import('./TripCurve').then((m) => m.TripCurve));
 import { isFaultable } from '../../model/faults';
 import { formatEng, parseUserNumber } from '../../util/units';
 
@@ -113,6 +119,7 @@ function ParamField({ def, inst }: { def: ParamDef; inst: PartInstance }) {
         />
       );
     case 'text':
+      if (def.binaryImport === 'wav') return <WavField def={def} inst={inst} label={label} trailing={reset} />;
       if (def.fileImport) return <DataFileField def={def} inst={inst} label={label} trailing={reset} />;
       return <CommitField label={label} value={value} unit={def.unit} onCommit={commit} hint={paramHelp(def)} trailing={reset} />;
   }
@@ -333,6 +340,7 @@ export function PartProperties({ partId }: { partId: string }) {
               <ParamField key={p.key} def={p} inst={inst} />
             ))}
             {def && current.params.some((p) => p.key === def.interactive?.param) ? <InteractiveSlider inst={inst} def={def} /> : null}
+            {def && active === 'value' && asLibraryPart(def).tripCurve ? <TripCurve def={def} inst={inst} /> : null}
           </div>
         ) : null}
       </div>

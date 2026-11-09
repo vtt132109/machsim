@@ -33,6 +33,8 @@ function useLive(ctrl: SimulationIntegration) {
 export const GrapherWindow = lazyComponent(() => import('./GrapherWindow').then((m) => m.GrapherWindow));
 /** MCU code editor: the 8051 core, the assembler and the debugger views load with it. */
 export const McuPanel = lazyComponent(() => import('../mcu/McuPanel').then((m) => m.McuPanel));
+/** The Audio window (Simulate › Audio) loads on first use. */
+export const AudioPanel = lazyComponent(() => import('./AudioPanel').then((m) => m.AudioPanel));
 
 // ---------------------------------------------------------------------------
 // Simulation tab

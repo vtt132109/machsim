@@ -27,6 +27,7 @@ import { BLOCK_PREFIX, findSheet, updateChild } from '../../model/hierarchy';
 import { instancePins, samePoint, snap } from '../../model/geometry';
 import { packageKey, packageOf } from '../../model/sections';
 import { fragmentNetNames, neededVariables, sanitizeIncoming, type IncomingExtras, type SanitizeNote } from '../../model/sanitize';
+import { relinkPastedContacts } from '../../model/relink';
 import { netSettings } from '../../model/netSettings';
 import { effectivePrefix } from '../../model/refdesRules';
 import { isCustomPartId } from '../../library/custom/types';
@@ -752,6 +753,9 @@ export function pasteItems(
     };
     return next;
   });
+  // contacts pasted together with their coil follow the pasted coil, not the original
+  const linked = relinkPastedContacts(parts, clip.parts, lookup);
+  parts.splice(0, parts.length, ...linked);
   const wires: Wire[] = clip.wires.map((w) => ({ ...w, id: newId('w'), points: w.points.map(t) }));
   const labels: NetLabel[] = clip.labels.map((l) => ({ ...l, id: newId('l'), ...t(l) }));
   let probeDesign = design;

@@ -7,10 +7,12 @@ import { L } from './core';
 import type { HelpEntry } from './help';
 import { BASIC_EXTRA_FAMILY_HELP } from './basicExtrasHelp';
 import { LADDER_FAMILY_HELP } from './ladderHelp';
+import { ELECTRO_FAMILY_HELP } from './electroHelp';
 
 export const CATALOG_FAMILY_HELP: Record<string, HelpEntry> = {
   ...BASIC_EXTRA_FAMILY_HELP,
   ...LADDER_FAMILY_HELP,
+  ...ELECTRO_FAMILY_HELP,
   Microcontroller: {
     what: L(
       'Vi điều khiển tương thích 8051 (MCS-51): một máy tính nhỏ trong một chip, có bộ xử lý 8 bit, 256 byte RAM, hai bộ định thời, cổng nối tiếp và bốn cổng vào / ra P0…P3. MachSim mô phỏng nó CÙNG với mạch: chương trình bạn viết thật sự điều khiển các chân, và các chân thật sự đọc điện áp trên sơ đồ.',

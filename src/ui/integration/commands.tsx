@@ -135,6 +135,10 @@ export function registerIntegrationCommands(ctrl: SimulationIntegration): () => 
       // the code editor loads the 8051 core and the assembler on first use
       openFloatingWindow('mcu', {});
     }),
+    registerCommand('simulate.audio', () => {
+      // the Audio window (master volume, level, microphone state) loads on first use
+      openFloatingWindow('audio', {});
+    }),
     registerCommand('tools.pldWizard', async () => {
       const { PldWizard } = await import('../mcu/PldWizard');
       openCustomDialog((close) => <PldWizard close={close} />);
