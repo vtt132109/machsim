@@ -22,6 +22,7 @@ import type { GroupDef, PartDef } from '../../library/types';
 import { familyNameVi, partNameVi, searchSynonymsVi, searchText } from '../../i18n/library';
 import { getLang } from '../../i18n/core';
 import { SPEC_DEFS, isSpecKey, partSpecs } from '../../library/specs';
+import { setPartSearcher } from '../../library';
 import { isPlainUserNumber, parseUserNumber, parseUserNumberParts } from '../../util/units';
 
 /** Lower-case text without Vietnamese diacritics (đ → d) for accent-insensitive search. */
@@ -326,6 +327,9 @@ interface PreparedQuery {
   required: string[];
   /** folded value tokens: each must occur in the haystack unless the part has values to match */
   valueTexts: string[];
+  /** the text tokens alone as a phrase ("điện trở" of "điện trở 10k"), when the query also has value tokens */
+  textPhrase: string;
+  textPhraseF: string;
 }
 
 function prepareQuery(query: string): PreparedQuery | null {
@@ -334,7 +338,20 @@ function prepareQuery(query: string): PreparedQuery | null {
   const tokens = raw.map((r) => r.toLowerCase());
   const folded = tokens.map(foldDiacritics);
   const values = raw.map(valueToken);
-  return { tokens, folded, values, phrase: tokens.join(' '), phraseF: folded.join(' '), required: folded.filter((_f, k) => !values[k]), valueTexts: folded.filter((_f, k) => !!values[k]) };
+  const hasValue = values.some((v) => v !== null);
+  const textTokens = tokens.filter((_t, k) => !values[k]);
+  const textFolded = folded.filter((_f, k) => !values[k]);
+  return {
+    tokens,
+    folded,
+    values,
+    phrase: tokens.join(' '),
+    phraseF: folded.join(' '),
+    required: folded.filter((_f, k) => !values[k]),
+    valueTexts: folded.filter((_f, k) => !!values[k]),
+    textPhrase: hasValue ? textTokens.join(' ') : '',
+    textPhraseF: hasValue ? textFolded.join(' ') : '',
+  };
 }
 
 /** Score of one part for a prepared query (lower is better), or null when it does not match. */
@@ -350,6 +367,24 @@ function scorePart(ix: SearchIndex, q: PreparedQuery): number | null {
     if (v !== null && (whole === null || v < whole)) whole = v;
   }
   if (whole !== null) return whole;
+  // "điện trở 10k": the words name the part's family (resistors), so a part of that family with the
+  // value comes before a resistor network that only mentions the words in a longer name
+  if (q.textPhrase) {
+    const w = phraseRank(ix, q.textPhrase, q.textPhraseF);
+    if (w !== null) {
+      const named = ix.name === q.textPhrase || ix.viName === q.textPhrase || ix.family === q.textPhrase || isEntry(ix.viFamilyList, q.textPhrase) || isEntry(ix.viFamilyListF, q.textPhraseF);
+      let sum = TOKEN_BASE + (named ? 0 : 1);
+      let all = true;
+      for (let k = 0; k < q.tokens.length && all; k++) {
+        const vt = q.values[k];
+        if (!vt) continue;
+        const r = valueRank(ix, vt);
+        if (r === null) all = false;
+        else sum += r;
+      }
+      if (all) return sum;
+    }
+  }
   let score = TOKEN_BASE;
   for (let k = 0; k < q.tokens.length; k++) {
     const r = tokenRank(ix, q.tokens[k], q.folded[k], q.values[k]);
@@ -849,3 +884,6 @@ export function treeKeyModel(rows: RowModel, activeKey: string | null, key: stri
       return null;
   }
 }
+
+// the scripting API (MachSim.searchParts) finds parts the way the part browser does
+setPartSearcher(searchCatalogue);

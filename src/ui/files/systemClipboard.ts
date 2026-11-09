@@ -83,7 +83,7 @@ export async function copyToSystemClipboard(): Promise<boolean> {
       actions.addSimMessage(hasPrivate ? 'info' : 'warning', hasPrivate ? ft('clipboardCopied', counts) : ft('clipboardCopiedNoPrivate', counts), 'clipboard');
       return true;
     } catch (err) {
-      await alertDialog({ title: ft('clipboardTitle'), message: ft('clipboardReadFailed', { reason: err instanceof Error ? err.message : String(err) }) });
+      await alertDialog({ title: ft('clipboardTitle'), message: writeFailure(err) });
       return false;
     }
   }
@@ -108,10 +108,17 @@ export async function copyToSystemClipboard(): Promise<boolean> {
       await alertDialog({ title: ft('clipboardTitle'), message: ft('clipboardNoCustom') });
       return true;
     } catch (err) {
-      await alertDialog({ title: ft('clipboardTitle'), message: ft('clipboardReadFailed', { reason: err instanceof Error ? err.message : String(err) }) });
+      await alertDialog({ title: ft('clipboardTitle'), message: writeFailure(err) });
       return false;
     }
   }
+}
+
+/** Why a clipboard WRITE failed, in words a learner can act on (a refused permission is the common case). */
+export function writeFailure(err: unknown): string {
+  const name = err instanceof Error ? err.name : '';
+  if (name === 'NotAllowedError' || name === 'SecurityError') return ft('clipboardWriteDenied');
+  return ft('clipboardWriteFailed', { reason: err instanceof Error ? err.message : String(err) });
 }
 
 const fromBase64 = (v: string | undefined): Uint8Array | undefined => (v ? base64ToBytes(v) : undefined);

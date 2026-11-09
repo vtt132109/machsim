@@ -25,6 +25,7 @@ export default {
   'tip.catalog.details': ['Mở hộp chọn linh kiện với đầy đủ thông tin: chức năng, mô hình, vỏ, liên kết, báo cáo chi tiết', 'Open the component dialog with every detail: function, model, package, link, detail report'],
   'variant.statusBar': ['Phương án: {name}', 'Variant: {name}'],
   'variant.toggleFitted': ['Lắp trong phương án “{variant}”', 'Fitted in variant “{variant}”'],
+  'variant.ownParam': ['Phương án “{variant}” đang dùng giá trị riêng {value} cho ô này (giá trị đã lưu: {saved}); mạch dùng giá trị riêng. Sửa ở đây chỉ đổi giá trị riêng của phương án này; nút đặt lại trả về giá trị đã lưu.', 'Variant “{variant}” gives this field its own value {value} (saved value: {saved}); the circuit uses the own value. Editing here only changes this variant’s own value; the reset button goes back to the saved value.'],
   'variant.ownValues': ['Giá trị riêng trong “{variant}”: {values} (sửa ở Công cụ › Quản lý phương án)', 'Own values in “{variant}”: {values} (edit in Tools › Variant manager)'],
   'variant.activated': ['Đang dùng phương án “{name}”: mô phỏng, BOM và báo cáo theo phương án này.', 'Variant “{name}” is active: simulation, BOM and reports follow it.'],
   'update.openNotice': ['{n} loại linh kiện trong thiết kế khác với thư viện hiện tại. Xem Công cụ > Cập nhật linh kiện từ thư viện.', '{n} kinds of parts in this design differ from the current library. See Tools > Update components from library.'],

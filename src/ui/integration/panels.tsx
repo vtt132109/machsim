@@ -109,7 +109,7 @@ export function SimulationTab({ ctrl }: { ctrl: SimulationIntegration }) {
         </label>
         <dl className="msx-facts">
           <dt>{t('common.mode')}</dt>
-          <dd>{live.mode === 'interactive' ? t('integration.panels.interactiveSession', { session: live.session }) : live.mode === 'analysis' ? t('integration.panels.analysisRunning') : t('integration.panels.idle')}</dd>
+          <dd>{live.mode === 'interactive' ? t(live.session === 'paused' ? 'integration.panels.interactivePaused' : 'integration.panels.interactiveRunning') : live.mode === 'analysis' ? t('integration.panels.analysisRunning') : t('integration.panels.idle')}</dd>
           <dt>{t('integration.panels.simulatedTime')}</dt>
           <dd>{formatEng(live.simTime, 's', 5)}</dd>
           <dt>{t('integration.panels.achievedRate')}</dt>
@@ -150,7 +150,7 @@ export function SimulationTab({ ctrl }: { ctrl: SimulationIntegration }) {
                       {r.refdes}
                     </button>
                   </td>
-                  <td className="msx-dim">{r.kind}</td>
+                  <td className="msx-dim">{readingKindName(r)}</td>
                   <td className="msx-mono">{r.text}</td>
                 </tr>
               ))}
@@ -169,7 +169,7 @@ export function SimulationTab({ ctrl }: { ctrl: SimulationIntegration }) {
                 {live.results.map((r, i) => (
                   <tr key={i} className={r.error ? 'ms-msg-error' : undefined}>
                     <td>{localizeResultTitle(r.title, r.type)}</td>
-                    <td className="ms-wrap">{r.error ?? (r.scale ? t('integration.panels.vectorsPoints', { n: r.vectors.length, points: r.scale.re.length }) : t('integration.panels.vectors', { n: r.vectors.length }))}</td>
+                    <td className="ms-wrap">{r.error ?? (r.runs?.length ? t('integration.panels.runsCount', { n: r.runs.length, v: r.runs[0].result.vectors.length }) : r.scale ? t('integration.panels.vectorsPoints', { n: r.vectors.length, points: r.scale.re.length }) : t('integration.panels.vectors', { n: r.vectors.length }))}</td>
                     <td className="msx-dim">{r.elapsedMs !== undefined ? `${Math.round(r.elapsedMs)} ms` : ''}</td>
                   </tr>
                 ))}
@@ -185,6 +185,12 @@ export function SimulationTab({ ctrl }: { ctrl: SimulationIntegration }) {
       </section>
     </div>
   );
+}
+
+/** Name of what a live reading belongs to ("Ampe kế"), in the UI language. */
+function readingKindName(r: { kind: string; partId?: string }): string {
+  const def = r.partId ? partLookup(r.partId) : undefined;
+  return def ? partName(def) : r.kind;
 }
 
 function partKind(partId: string): InstrumentKind | undefined {
@@ -377,9 +383,9 @@ export function BomTab() {
                 <td className="ms-wrap">{r.refdes.join(', ')}</td>
                 <td>{maskValue(design, r.value)}</td>
                 <td>{r.tolerance}</td>
-                <td>{partName({ id: r.partId, name: r.name })}</td>
+                <td>{partName(partLookup(r.partId) ?? { id: r.partId, name: r.name })}</td>
                 <td>{r.footprint}</td>
-                <td className="ms-wrap">{partDescription({ id: r.partId, description: r.description })}</td>
+                <td className="ms-wrap">{partDescription(partLookup(r.partId) ?? { id: r.partId, description: r.description })}</td>
               </tr>
             ))}
           </tbody>

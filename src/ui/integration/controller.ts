@@ -31,6 +31,7 @@ import { defaultParams } from '../../library';
 import { buildNetlist, type NetlistBuildEx } from '../../model/netlister';
 import { designPartsReady } from '../../model/libraryLoad';
 import { activeViewPath } from '../store/editorStore';
+import { showStatusNotice } from '../store/cursor';
 import { elementValueChanges } from '../../model/interactive';
 import { applySteps } from '../../model/steps';
 import { stepMessage } from '../../i18n/steps';
@@ -486,7 +487,11 @@ export class SimulationIntegration {
     await this.stop();
     await this.idle();
     // one simulation runs at a time: say why this one ended, and how to go on when the learner comes back
-    if (wasRunning) this.msg('info', t('docs.simStoppedBySwitch'), t('sim.source.documents'));
+    if (wasRunning) {
+      this.msg('info', t('docs.simStoppedBySwitch'), t('sim.source.documents'));
+      // also on screen: the message log is a table in another tab
+      showStatusNotice(t('docs.simStoppedBySwitch'));
+    }
   }
 
   /**

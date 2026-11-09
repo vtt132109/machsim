@@ -111,7 +111,7 @@ export function SampleBrowser({ ctrl, close }: { ctrl: SimulationIntegration; cl
           <button type="button" className="ms-btn" title={t('help.whatIsThis')} onClick={() => void openHelp({ kind: 'guide', page: 'samples' })}>
             ?
           </button>
-          <span className="ms-hint msx-samples-hint">{tr(SAMPLE_UI.hint)}</span>
+          <span className="ms-hint msx-samples-hint">{current?.kind === 'spice' ? tr(SAMPLE_UI.hintSpice) : tr(SAMPLE_UI.hint)}</span>
           <button type="button" className="ms-btn" onClick={close}>
             {t('common.close')}
           </button>

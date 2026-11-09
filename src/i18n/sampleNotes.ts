@@ -16,7 +16,7 @@ export type NotePair = readonly [vi: string, en: string];
 
 export const SAMPLE_NOTES: Record<string, readonly NotePair[]> = {
   '01_voltage_divider': [
-    ['Vout = 12 V × 4.7k / (10k + 4.7k) ≈ 3.84 V — đo bằng XMM1 (DC volts).', 'Vout = 12 V × 4.7k / (10k + 4.7k) ≈ 3.84 V — measured with XMM1 (DC volts).'],
+    ['Vout = 12 V × 4.7k / (10k + 4.7k) ≈ 3.84 V — đo bằng XMM1 (điện áp một chiều).', 'Vout = 12 V × 4.7k / (10k + 4.7k) ≈ 3.84 V — measured with XMM1 (DC volts).'],
   ],
   '02_rc_lowpass': [
     ['fc = 1/(2π·R1·C1) ≈ 1.59 kHz: tại fc biên độ ra giảm còn 0.707 (−3 dB), pha −45°.', 'fc = 1/(2π·R1·C1) ≈ 1.59 kHz: at fc the output amplitude falls to 0.707 (−3 dB) and the phase is −45°.'],
@@ -254,4 +254,12 @@ export const SAMPLE_NOTES: Record<string, readonly NotePair[]> = {
     ['V(SENS) đi qua đúng các mẫu của tệp (tại 2 ms là 1,8 V); giữa hai mẫu nó nội suy tuyến tính. “Tỉ lệ thời gian” 2 làm tệp chạy chậm gấp đôi, “Tỉ lệ điện áp” nhân các giá trị.', 'V(SENS) passes exactly through the samples of the file (1.8 V at 2 ms); between two samples it interpolates linearly. A “Time scale” of 2 plays the file twice as slowly, the “Voltage scale” multiplies the values.'],
     ['Bộ lọc RC có τ = R·C = 1 ms nên V(OUT) bám theo V(SENS) với độ trễ cỡ 1 ms và bỏ bớt dao động nhỏ. Đổi C1 để làm mượt nhiều hơn.', 'The RC filter has τ = R·C = 1 ms, so V(OUT) follows V(SENS) with a delay of about 1 ms and removes the small wobble. Change C1 to smooth more.'],
   ],
+};
+
+/** Named sheets of the shipped samples (samples 70 and 90), in English for the English UI. */
+export const SAMPLE_SHEET_EN: Readonly<Record<string, string>> = {
+  'Điều khiển': 'Control',
+  'Mạch lực': 'Power circuit',
+  'Lọc thông thấp': 'Low-pass filter',
+  'Bài tập': 'Exercise',
 };

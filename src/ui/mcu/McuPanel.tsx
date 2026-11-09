@@ -125,6 +125,7 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
   /** 1-based line the caret is on in the program box (Run to cursor) */
   const [caretLine, setCaretLine] = useState(1);
   const sourceRef = useRef<HTMLTextAreaElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const standalone = useRef<StandaloneRun | null>(null);
   const decoder = useRef(new TerminalDecoder());
 
@@ -349,6 +350,8 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
 
   const startDebug = useCallback(() => {
     setMode('live');
+    // the start button disappears with the session: keep the keyboard (F4 / F5 / F10 / F11) in this panel
+    rootRef.current?.focus({ preventScroll: true });
     void ctrl.startDebugging();
   }, [ctrl]);
 
@@ -432,7 +435,7 @@ export function McuPanel({ ctrl, refdes }: { ctrl: SimulationIntegration; refdes
     : '';
 
   return (
-    <div className="ms-mcu" onKeyDown={onKeyDown}>
+    <div className="ms-mcu" ref={rootRef} tabIndex={-1} style={{ outline: 'none' }} onKeyDown={onKeyDown}>
       <div className="ms-mcu-head">
         <label className="ms-mcu-cell-label" htmlFor="ms-mcu-part">
           {mt('part')}

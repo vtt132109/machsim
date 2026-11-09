@@ -15,7 +15,7 @@
  */
 import { t } from '../../i18n';
 import { pt, type PrintTextKey } from '../../i18n/printText';
-import { beginnerMenus } from '../app/beginner';
+import { beginnerCommand, beginnerMenus } from '../app/beginner';
 import { buildMenus, type MenuContext, type TopMenu } from '../app/menus';
 import { SHORTCUT_HELP } from '../app/shortcuts';
 import type { MenuEntry } from '../common/Menu';
@@ -76,16 +76,26 @@ export function menuSummary(items: readonly MenuEntry[], limit = QUICK_MENU_ITEM
   return all.length > limit ? `${shown.join(' · ')} · …` : shown.join(' · ');
 }
 
-export function shortcutTable(): TableContent {
+/** Shortcut rows that stand for one command: in beginner mode the command is hidden, so the row is not listed. */
+const SHORTCUT_COMMAND: Readonly<Record<string, string>> = { 'keys.place.bus': 'place.bus', 'keys.edit.findReplace': 'edit.findReplace' };
+
+export function shortcutTable(beginner = false): TableContent {
   const rows: string[][] = [];
-  for (const sec of SHORTCUT_HELP) for (const r of sec.rows) rows.push([t(sec.section), r.keys, t(r.action)]);
+  for (const sec of SHORTCUT_HELP) {
+    for (const r of sec.rows) {
+      const cmd = SHORTCUT_COMMAND[r.action];
+      if (beginner && cmd && !beginnerCommand(cmd)) continue;
+      rows.push([t(sec.section), r.keys, t(r.action)]);
+    }
+  }
   return { kind: 'table', id: 'quickref:keys', label: pt('qrKeysLabel'), table: { title: pt('qrKeysTitle'), header: [pt('qrColGroup'), pt('qrColKeys'), pt('qrColDoes')], rows, weights: [2, 4, 7] } };
 }
 
 export function menuTable(beginner: boolean): TableContent {
   const rows: string[][] = [];
   for (const m of liveMenus(beginner)) {
-    const purpose = QUICK_MENU_PURPOSE.find(([id]) => id === m.id)?.[1];
+    const base = QUICK_MENU_PURPOSE.find(([id]) => id === m.id)?.[1];
+    const purpose = beginner && base === 'qrMenuEdit' ? 'qrMenuEditBeginner' : base;
     rows.push([m.label, purpose ? pt(purpose) : '', menuSummary(m.items)]);
   }
   return { kind: 'table', id: 'quickref:menus', label: pt('qrMenusLabel'), table: { title: pt('qrMenusTitle'), subtitle: beginner ? pt('qrMenusBeginner') : undefined, header: [pt('qrColMenu'), pt('qrColFor'), pt('qrColMain')], rows, weights: [2, 4, 9] } };
@@ -109,5 +119,5 @@ export function firstCircuitDoc(): DocContent {
 
 /** The pages of the card, for the current language and (when asked) the beginner interface. */
 export function quickReferenceContents(opts: { beginner: boolean }): PrintContent[] {
-  return [firstCircuitDoc(), shortcutTable(), menuTable(opts.beginner)];
+  return [firstCircuitDoc(), shortcutTable(opts.beginner), menuTable(opts.beginner)];
 }

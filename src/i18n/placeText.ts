@@ -158,6 +158,7 @@ export const PLACE_TEXT = {
   varStart: L('Tạo phương án đầu tiên', 'Create the first variant'),
   varFirstName: L('Đầy đủ', 'Full'),
   varNewName: L('Phương án {n}', 'Variant {n}'),
+  varNameRefused: L('Tên “{name}” để trống hoặc đã có phương án khác dùng, nên giữ tên cũ “{old}”. Mỗi phương án cần một tên riêng.', 'The name “{name}” is empty or already used by another variant, so the old name “{old}” stays. Every variant needs its own name.'),
   varAdd: L('Thêm phương án', 'Add variant'),
   tipVarAdd: L('Thêm một phương án mới, bắt đầu giống phương án đang dùng', 'Add a new variant that starts as a copy of the active one'),
   varRename: L('Đổi tên', 'Rename'),

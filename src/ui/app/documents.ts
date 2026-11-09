@@ -188,8 +188,8 @@ export function createDocumentManager(options: DocumentManagerOptions) {
         if (i >= 0) extensions.splice(i, 1);
       };
     },
-    /** true when one more document can be opened (or the current one would be replaced) */
-    canOpen(replace = true): boolean {
+    /** true when one more document can be opened (with `replace`, also when an untouched current one would be replaced) */
+    canOpen(replace = false): boolean {
       return entries.length < max || (replace && isPristine());
     },
     /**

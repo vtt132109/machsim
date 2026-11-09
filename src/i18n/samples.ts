@@ -118,6 +118,7 @@ export const SAMPLE_UI = {
   previewing: L('Đang vẽ hình xem trước…', 'Drawing the preview…'),
   noPreview: L('Netlist SPICE không có sơ đồ: kết quả hiện trong Grapher khi chạy.', 'A SPICE netlist has no drawing: its results appear in the Grapher when it runs.'),
   hint: L('Mạch mẫu mở thành thiết kế mới (chưa lưu): sửa thoải mái rồi nhấn Chạy (F5).', 'A sample opens as a new, unsaved design: change it freely, then press Run (F5).'),
+  hintSpice: L('Netlist SPICE không mở thành thiết kế: nhấn “Chạy netlist” để chạy ngay, kết quả hiện trong Grapher.', 'A SPICE netlist does not open as a design: press “Run the netlist” to run it at once; the results appear in the Grapher.'),
   count: L('{n} mạch mẫu', '{n} samples'),
   kindDesign: L('Sơ đồ', 'Schematic'),
   kindSpice: L('Netlist SPICE', 'SPICE netlist'),

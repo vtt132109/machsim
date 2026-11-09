@@ -38,6 +38,7 @@ import { TAB_IDS, registerIntegrationCommands, runSpiceText } from './commands';
 import { installGrapherPersistence } from './grapherPersist';
 import { SimulationIntegration, type DocumentLive } from './controller';
 import { InstrumentWindow } from './InstrumentWindow';
+import { instrumentWindowsExtension } from './instrumentWindowDoc';
 import { AudioPanel, BomTab, ErcTab, GrapherWindow, McuPanel, NetlistTab, ScriptPanel, SimulationTab } from './panels';
 import { t } from '../../i18n';
 
@@ -217,6 +218,9 @@ export function installIntegration(): () => void {
       restore: (d) => ctrl.restoreDocumentState(d as DocumentLive | undefined),
       beforeLeave: () => ctrl.stopForDocumentSwitch(),
     }),
+    // the instrument windows belong to their design: another tab does not show them (they would say
+    // the meter "is no longer in the design") and they come back with their own tab
+    documents.registerExtension(instrumentWindowsExtension((kind) => kind in PANEL_HEIGHTS)),
     // Grapher pages kept in a design file come back when it is opened
     installGrapherPersistence(ctrl),
     // a shipped sample opened from a file gets its title and sheet names in the UI language

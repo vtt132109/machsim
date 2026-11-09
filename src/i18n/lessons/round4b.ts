@@ -192,7 +192,7 @@ A **constant-current** load makes the SoC fall in a straight line. A **resistor*
     steps: {
       battery: {
         task: L('Đặt một “Pin không lý tưởng” với dung lượng 5 mAh (0,005 Ah), hoá học Li-ion, đầy điện.', 'Place a “Non-ideal battery” with a capacity of 5 mAh (0.005 Ah), Li-ion chemistry, fully charged.'),
-        hint: L('Thư viện: nhóm Nguồn → họ Pin. Sửa “Dung lượng” thành 0.005 và “Hoá học” thành Li-ion.', 'Library: the Sources group → Batteries family. Set “Capacity” to 0.005 and “Chemistry” to Li-ion.'),
+        hint: L('Thư viện: nhóm Nguồn → họ Pin và ắc quy. Sửa “Dung lượng” thành 0.005 và “Hoá học” thành Li-ion.', 'Library: the Sources group → Batteries family. Set “Capacity” to 0.005 and “Chemistry” to Li-ion.'),
       },
       load: {
         task: L('Nối một nguồn dòng DC qua hai cực của pin, theo chiều làm pin phóng điện (kéo dòng ra khỏi cực +).', 'Wire a DC current source across the battery, in the direction that discharges it (pulling current out of the + terminal).'),
@@ -338,7 +338,7 @@ export const ROUND4B_NOTES: Record<string, LocalizedText> = {
   audioHighStays: n('Âm 3 kHz còn {ratio} lần ở loa, chưa giảm đủ (≤ 0,55). Hạ tần số cắt (tăng R hoặc C).', 'The 3 kHz tone is still {ratio} of the input at the speaker, not cut enough (≤ 0.55). Lower the corner frequency (raise R or C).'),
   audioOk: n('Tại loa: 440 Hz còn {low} lần, 3 kHz còn {high} lần. Mở Mô phỏng › Âm thanh để nghe.', 'At the speaker: 440 Hz keeps {low} of the input, 3 kHz keeps {high}. Open Simulate › Audio to listen.'),
   // battery runtime
-  needBattery: n('Chưa có pin. Thư viện: nhóm Nguồn → họ Pin → “Pin không lý tưởng”.', 'There is no battery yet. Library: Sources → Batteries family → “Non-ideal battery”.'),
+  needBattery: n('Chưa có pin. Thư viện: nhóm Nguồn → họ Pin và ắc quy → “Pin không lý tưởng”.', 'There is no battery yet. Library: Sources → Batteries family → “Non-ideal battery”.'),
   capacityWrong: n('Dung lượng đang là {ah}; bài này dùng 5 mAh (0,005 Ah).', 'The capacity is {ah}; this lesson uses 5 mAh (0.005 Ah).'),
   needLoadSource: n('Chưa có nguồn dòng làm tải. Thư viện: nhóm Nguồn → “Nguồn dòng DC”.', 'There is no current source as a load yet. Library: Sources → “DC current source”.'),
   chargeDirection: n('Nguồn dòng đang đẩy dòng VÀO cực + của pin (đang sạc). Đổi chiều: chân + của nguồn dòng nối cực − của pin.', 'The current source pushes current INTO the + terminal (charging). Reverse it: the + pin of the source goes to the battery’s − terminal.'),

@@ -48,6 +48,8 @@ export interface AnalysisSetupDialogProps {
   availableSources: readonly string[];
   /** sweepable / toleranced components and models */
   availableElements: readonly (string | AnalysisElementInfo)[];
+  /** global parameters (design variables, `.param`s) a Parameter sweep may step */
+  availableVariables?: readonly string[];
   onChange: (specs: Partial<Record<AnalysisType, AnalysisSpec>>, active: AnalysisType, options: Partial<SimOptions>) => void;
   onRun: (spec: AnalysisSpec) => void;
   onClose: () => void;
@@ -218,8 +220,8 @@ export function OutputSelector({ available, selected, onChange }: { available: r
 // ---------------------------------------------------------------------------
 
 export function AnalysisSetupDialog(props: AnalysisSetupDialogProps) {
-  const { availableOutputs, availableSources, availableElements, onChange, onRun, onClose, saves, onSavesChange } = props;
-  const baseCtx = useMemo(() => ({ outputs: availableOutputs, sources: availableSources, elements: availableElements }), [availableOutputs, availableSources, availableElements]);
+  const { availableOutputs, availableSources, availableElements, availableVariables, onChange, onRun, onClose, saves, onSavesChange } = props;
+  const baseCtx = useMemo(() => ({ outputs: availableOutputs, sources: availableSources, elements: availableElements, variables: availableVariables ?? [] }), [availableOutputs, availableSources, availableElements, availableVariables]);
   const [draft, setDraft] = useState<SpecMap>(() => initialDraft(props.specs, props.active, baseCtx));
   const [sel, setSel] = useState<AnalysisType>(props.active);
   const [opts, setOpts] = useState<Partial<SimOptions>>(() => ({ ...props.options }));

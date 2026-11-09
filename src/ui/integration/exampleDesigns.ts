@@ -64,7 +64,7 @@ export function voltageDividerExample(): Design {
   b.wire(p(250, 200), b.pin(xmm, '+'));
   b.wire(b.pin(xmm, '-'), p(410, 330), p(250, 330));
   b.label('OUT', 250, 200);
-  note(b, 60, 400, 'Vout = 12 V × 4.7k / (10k + 4.7k) ≈ 3.84 V — đo bằng XMM1 (DC volts).');
+  note(b, 60, 400, 'Vout = 12 V × 4.7k / (10k + 4.7k) ≈ 3.84 V — đo bằng XMM1 (điện áp một chiều).');
   setAnalyses(d, 'tran', [
     { type: 'op' },
     { type: 'tran', tstep: 1e-4, tstop: 0.01 },

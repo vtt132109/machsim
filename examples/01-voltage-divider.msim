@@ -173,7 +173,7 @@
           "id": "n1",
           "x": 60,
           "y": 400,
-          "text": "Vout = 12 V × 4.7k / (10k + 4.7k) ≈ 3.84 V — đo bằng XMM1 (DC volts).",
+          "text": "Vout = 12 V × 4.7k / (10k + 4.7k) ≈ 3.84 V — đo bằng XMM1 (điện áp một chiều).",
           "size": 11
         }
       ]

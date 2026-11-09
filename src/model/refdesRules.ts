@@ -127,11 +127,22 @@ export function validateRules(rules: RefdesRules | undefined, usedPrefixes: read
   return out;
 }
 
-/** Library prefixes of the parts a design uses (upper-case, without duplicates). */
+/**
+ * Prefixes of the parts a design uses (upper-case, without duplicates): the library prefix of each
+ * part, plus the letters its designator already carries when those differ (a block copy named
+ * "X1" has the library prefix "HB"). Renaming splits the current designator, so a row for the
+ * carried letters is what actually renames those parts.
+ */
 export function usedLibraryPrefixes(design: Design, lookup: (partId: string) => { prefix: string } | undefined, rules: RefdesRules | undefined = design.refdesRules): string[] {
   const out = new Set<string>();
   const visit = (sheets: Sheet[]) => {
-    for (const s of sheets) for (const p of s.parts) out.add((lookup(p.partId)?.prefix || libraryPrefixOf(p.refdes, rules).prefix || 'U').toUpperCase());
+    for (const s of sheets) {
+      for (const p of s.parts) {
+        const split = libraryPrefixOf(p.refdes, rules);
+        out.add((lookup(p.partId)?.prefix || split.prefix || 'U').toUpperCase());
+        if (split.num !== null && /^[A-Za-z][A-Za-z0-9_]*$/.test(split.prefix)) out.add(split.prefix.toUpperCase());
+      }
+    }
   };
   visit(design.sheets);
   for (const c of design.children ?? []) visit(c.sheets);

@@ -4,7 +4,7 @@
  */
 import { useSyncExternalStore } from 'react';
 import { formatEng } from '../../util/units';
-import { cursorStore, isDirty, useEditor } from '../store';
+import { cursorStore, isDirty, statusNotice, useEditor } from '../store';
 import { DEFAULT_VIEW } from '../store/viewport';
 import { actions } from '../store';
 import { hasMessage, t, tDynamic } from '../../i18n';
@@ -24,6 +24,7 @@ const stateText = (state: 'idle' | 'running' | 'paused' | 'error'): string => t(
 
 export function StatusBar() {
   const cursor = useSyncExternalStore(cursorStore.subscribe, cursorStore.getState, cursorStore.getState);
+  const notice = useSyncExternalStore(statusNotice.subscribe, statusNotice.getState, statusNotice.getState).text;
   const sim = useEditor((s) => s.sim);
   const selection = useEditor((s) => s.selection);
   const zoom = useEditor((s) => (s.views[s.activeSheetId] ?? DEFAULT_VIEW).zoom);
@@ -33,7 +34,7 @@ export function StatusBar() {
   const restricted = useEditor((s) => !!s.design.restrictions);
   const variant = useEditor((s) => activeVariant(s.design)?.name);
   const beginner = useEditor((s) => s.ui.beginner === true);
-  const middle = cursor.hover || selectionSummary(selection);
+  const middle = notice || cursor.hover || selectionSummary(selection);
   return (
     <footer className="ms-statusbar" aria-label={t('app.statusBar.statusBar')}>
       <span className={`ms-sb-sim is-${sim.state}`} role="status" aria-live="polite">
@@ -42,7 +43,9 @@ export function StatusBar() {
         {sim.message && sim.message !== stateText(sim.state) ? <span className="ms-sb-msg">{sim.message}</span> : sim.state === 'idle' ? <span className="ms-sb-msg">{t('sim.ready')}</span> : null}
         {sim.simTime > 0 ? <span className="ms-sb-time">t = {formatEng(sim.simTime, 's')}</span> : null}
       </span>
-      <span className="ms-sb-middle">{middle}</span>
+      <span className="ms-sb-middle" role={notice ? 'alert' : undefined}>
+        {middle}
+      </span>
       <span className="ms-sb-cell" title={t('app.statusBar.cursorPositionSchematicUnits')}>
         {cursor.pos ? `X ${cursor.pos.x}  Y ${cursor.pos.y}` : 'X —  Y —'}
       </span>

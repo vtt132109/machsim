@@ -12,7 +12,7 @@ import type { LadderError } from '../ladder/program';
 
 const errRung = L('Bậc {n}: {text}', 'Rung {n}: {text}');
 const err: Record<string, LocalizedText> = {
-  badAddress: L('địa chỉ “{text}” không đọc được', 'the address “{text}” cannot be read'),
+  badAddress: L('địa chỉ “{text}” không hợp lệ hoặc nằm ngoài phạm vi (ví dụ I0.0–I0.7, Q0.0–Q0.7, M0.0, MW0)', 'the address “{text}” is not valid or is out of range (for example I0.0–I0.7, Q0.0–Q0.7, M0.0, MW0)'),
   notBit: L('“{text}” không phải địa chỉ bit', '“{text}” is not a bit address'),
   notNumber: L('“{text}” không phải một số hay một địa chỉ số', '“{text}” is neither a number nor a number address'),
   writeInput: L('không ghi được vào ngõ vào “{text}” — ngõ vào do mạch quyết định', 'an input “{text}” cannot be written — the circuit decides it'),

@@ -11,6 +11,7 @@
 import type { ParamDef } from '../../library/types';
 import { formatEng, parseUserNumber, userNumberLeftover } from '../../util/units';
 import { lazyRecord, t } from '../../i18n';
+import { optionLabel } from '../../i18n/library';
 
 export type ParamGroup = NonNullable<ParamDef['group']>;
 
@@ -84,6 +85,22 @@ export function paramPreview(def: ParamDef, text: string): string {
   const v = parseUserNumber(text);
   if (!Number.isFinite(v) || userNumberLeftover(text)) return '';
   return formatEng(v, def.unit ?? '');
+}
+
+/**
+ * A parameter value as the learner reads it (reports, printouts): the name of the chosen option for
+ * a list ("sườn lên", not "rising"), yes / no for a switch, "159 nF" for a number, else the text
+ * with its unit.
+ */
+export function paramDisplay(def: ParamDef, text: string): string {
+  if (def.kind === 'select') {
+    const o = def.options?.find((x) => x.value === text);
+    return o ? optionLabel(o.label) : text;
+  }
+  if (def.kind === 'bool') return text === 'true' ? t('common.yes') : text === 'false' ? t('common.no') : text;
+  const preview = paramPreview(def, text);
+  if (preview) return preview;
+  return def.unit && text !== '' ? `${text} ${def.unit}` : text;
 }
 
 /** Effective text of a parameter on an instance (instance value or library default). */

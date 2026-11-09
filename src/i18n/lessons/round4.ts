@@ -240,7 +240,7 @@ IC thật như LM358, TL072, NE5532 có **hai op-amp trong một vỏ** và ch�
 ## Chân nguồn dùng chung
 Hai phần cùng dùng chân V+ và V−. Chỉ cần nối nguồn ở **một** phần; nối ở hai phần vào hai net khác nhau là lỗi. Nhờ vậy sơ đồ không bị chật vì dây nguồn lặp lại.
 
-## Mạch trong lesson
+## Mạch trong bài
 Phần A là mạch đệm (đầu ra nối thẳng IN−) nên $V_{BUF} = V_{IN}$. Phần B là khuếch đại không đảo:
 
 $$A_v = 1 + \\frac{R_2}{R_1}$$
@@ -265,8 +265,8 @@ With $R_1 = R_2 = 10\\,k\\Omega$, $A_v = 2$: 0.5 V in gives 1 V out.
     ),
     steps: {
       sections: {
-        task: L('Đặt “LM358 (kép) phần A” và “phần B” — hai linh kiện phải cùng tên U1.', 'Place “LM358 (dual) section A” and “section B” — the two parts must share the name U1.'),
-        hint: L('Tìm LM358 trong họ Op-amp: chọn các mục có đuôi A và B. MachSim tự ghép phần thứ hai vào cùng vi mạch nếu còn chỗ.', 'Find the LM358 in the Op-amp family: pick the entries ending in A and B. MachSim joins the second section to the same chip when it is free.'),
+        task: L('Đặt hai phần của LM358: “LM358A” và “LM358B” — hai linh kiện phải cùng tên U1.', 'Place two sections of the LM358: “LM358A” and “LM358B” — the two parts must share the name U1.'),
+        hint: L('Gõ LM358 vào ô tìm linh kiện rồi chọn mục “LM358A” (phần A) và “LM358B” (phần B), không chọn mục “LM358 (kép)” là cả vi mạch. MachSim tự ghép phần thứ hai vào cùng vi mạch nếu còn chỗ.', 'Type LM358 in the part search box and pick “LM358A” (section A) and “LM358B” (section B), not “LM358 (dual)”, which is the whole chip. MachSim joins the second section to the same chip when it is free.'),
       },
       supply: {
         task: L('Nối nguồn 12 V vào V+ và V− xuống đất — chỉ cần ở một phần.', 'Wire a 12 V supply to V+ and V− to ground — on one section only.'),
@@ -339,7 +339,7 @@ Press “Start debugging”: the simulation runs and stops right before the firs
     steps: {
       program: {
         task: L('Đặt vi điều khiển 8051 (loại P1) và gõ chương trình hợp ngữ đổi P1.0 trong vòng lặp vô hạn, có chương trình con DELAY.', 'Place an 8051 microcontroller (the P1 kind) and type an assembly program that toggles P1.0 in an endless loop, with a DELAY subroutine.'),
-        hint: L('Nhấp đúp vào 8051 để mở Trình soạn mã. Dùng CPL P1.0 để đảo chân; xem mẫu 93 (Tệp › Mạch mẫu) nếu cần gợi ý.', 'Double-click the 8051 to open the code editor. Use CPL P1.0 to toggle the pin; sample 93 (File › Samples) is there if you need a hint.'),
+        hint: L('Nhấp đúp vào 8051 để mở Trình soạn mã. Dùng CPL P1.0 để đảo chân; xem mẫu 93 (Tệp › Mở mạch mẫu…) nếu cần gợi ý.', 'Double-click the 8051 to open the code editor. Use CPL P1.0 to toggle the pin; sample 93 (File › Open samples…) is there if you need a hint.'),
       },
       cycles: {
         task: L('Chỉnh vòng trễ để P1.0 đổi trạng thái cách nhau đúng 1000 chu kỳ máy.', 'Adjust the delay loop so P1.0 changes state exactly 1000 machine cycles apart.'),
@@ -406,7 +406,7 @@ export const ROUND4_NOTES: Record<string, LocalizedText> = {
   stepCornerOk: n('Tần số cắt từng giá trị đều đúng: {list}.', 'Every value has the right corner frequency: {list}.'),
   stepCornerWrong: n('Với R = {rx} đo được fc = {value}, nhưng 1/(2πRC) = {want}. Kiểm tra điện trở có dùng {Rx} và tụ nối xuống đất.', 'With R = {rx} the corner is {value}, but 1/(2πRC) = {want}. Check the resistor uses {Rx} and the capacitor goes to ground.'),
   // dual op-amp
-  needSections: n('Chưa có hai phần của cùng một op-amp kép. Đặt “LM358 (kép) phần A” và “phần B” và cho cùng tên U1.', 'There are no two sections of one dual op-amp yet. Place “LM358 (dual) section A” and “section B” and give them the same name U1.'),
+  needSections: n('Chưa có hai phần của cùng một op-amp kép. Đặt “LM358A” và “LM358B” (hai phần, không phải “LM358 (kép)” là cả vi mạch) và cho cùng tên U1.', 'There are no two sections of one dual op-amp yet. Place “LM358A” and “LM358B” (two sections, not “LM358 (dual)”, which is the whole chip) and give them the same name U1.'),
   sectionsOk: n('{n} phần của {ref} nằm trong một vi mạch.', '{n} sections of {ref} sit in one chip.'),
   needSupply: n('Chưa nối nguồn cho vi mạch: nối V+ vào dương nguồn, V− xuống đất (ở một phần là đủ).', 'The chip has no supply yet: wire V+ to the positive rail and V− to ground (one section is enough).'),
   needInput: n('Điện áp ở IN gần bằng 0 nên không đo được độ lợi: cấp khoảng 0,5 V vào IN.', 'The voltage at IN is about 0, so the gain cannot be measured: feed about 0.5 V into IN.'),

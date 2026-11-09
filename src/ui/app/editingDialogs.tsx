@@ -24,6 +24,11 @@ import { t } from '../../i18n';
 
 const SOURCE = () => t('sim.source.editing');
 
+/** "Pasted with names kept": `count` parts were pasted, `renamed` of them got a new name (so `count - renamed` kept theirs). */
+export function pasteKeepMessage(count: number, renamed = 0): string {
+  return renamed ? dt('pasteKeepDone', { n: count - renamed, renamed }) : dt('pasteKeepAll', { n: count });
+}
+
 // ---------------------------------------------------------------------------
 // layer settings
 // ---------------------------------------------------------------------------
@@ -143,7 +148,7 @@ export async function pasteSpecialFlow(mode: 'keepNames' | 'values' | 'block'): 
   const r = actions.pasteSpecial(mode);
   if (r.ok) {
     if (mode === 'values') say(dt('pasteValuesDone', { n: r.count }));
-    else say(r.renamed ? dt('pasteKeepDone', { n: r.count, renamed: r.renamed }) : dt('pasteKeepAll', { n: r.count }));
+    else say(pasteKeepMessage(r.count, r.renamed));
     return;
   }
   if (r.reason === 'noTarget') say(dt('pasteValuesNoTarget'), 'warning');

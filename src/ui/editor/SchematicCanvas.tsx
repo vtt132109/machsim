@@ -12,7 +12,7 @@ import { memo, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncEx
 import { defaultParams, libraryVersion, subscribeLibrary } from '../../library';
 import type { PartInstance, Point } from '../../model/types';
 import { GRID } from '../../model/types';
-import { findSheet, scopedLive } from '../../model/hierarchy';
+import { findSheet, scopedLive, sheetAsCopy } from '../../model/hierarchy';
 import { sheetColorVars } from '../../model/paper';
 import { actions, getState, partLookup, setCursor, useEditor } from '../store';
 import { computeConnectivity } from '../store/connectivity';
@@ -173,6 +173,8 @@ export function SchematicCanvas() {
   viewRef.current = view;
 
   const sheet = useMemo(() => getSheet(design, sheetId) ?? design.sheets[0], [design, sheetId]);
+  // inside a placed copy of a block the parts show that copy's own settings (a meter set to "A" in X2)
+  const shownSheet = useMemo(() => (viewKey ? sheetAsCopy(design, viewKey.split('/'), sheet) : sheet), [design, viewKey, sheet]);
   const selected = useMemo(() => new Set(selection.map((it) => selKey(it.kind, it.id))), [selection]);
   const pins = useMemo(() => sheetPins(sheet, partLookup).map((p) => ({ x: p.x, y: p.y })), [sheet, libVersion]);
   const deferredDesign = useDeferredValue(design);
@@ -371,7 +373,7 @@ export function SchematicCanvas() {
           <SheetScene
             key={libVersion}
             design={design}
-            sheet={sheet}
+            sheet={shownSheet}
             lookup={partLookup}
             selected={selected}
             indicatorLevels={indicatorLevels}

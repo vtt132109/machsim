@@ -98,8 +98,8 @@ export const GETTING_STARTED: GuideStep[] = [
   {
     title: L('8. Học tiếp', '8. Keep learning'),
     body: L(
-      'Mở Tệp > Mạch mẫu để xem các mạch đã làm sẵn (lọc RC, chỉnh lưu, khuếch đại transistor, 555 …). Chọn một linh kiện hoặc thiết bị rồi nhấn F1 để đọc giải thích “Đây là gì?”. Menu Mô phỏng > Thiết lập phân tích cho phép chạy các phép phân tích như quét AC hay quá độ và xem đồ thị trong Grapher.',
-      'Open File > Examples for ready-made circuits (RC filter, rectifiers, transistor amplifier, 555 …). Select a part or instrument and press F1 for its “What is this?” page. Simulate > Analysis settings runs analyses such as AC sweep or transient and plots them in the Grapher.',
+      'Mở Tệp › Mở mạch mẫu… để xem các mạch đã làm sẵn (lọc RC, chỉnh lưu, khuếch đại transistor, 555 …). Chọn một linh kiện hoặc thiết bị rồi nhấn F1 để đọc giải thích “Đây là gì?”. Menu Mô phỏng > Thiết lập phân tích cho phép chạy các phép phân tích như quét AC hay quá độ và xem đồ thị trong Grapher.',
+      'Open File › Open samples… for ready-made circuits (RC filter, rectifiers, transistor amplifier, 555 …). Select a part or instrument and press F1 for its “What is this?” page. Simulate > Analysis settings runs analyses such as AC sweep or transient and plots them in the Grapher.',
     ),
   },
   {
@@ -123,7 +123,7 @@ export const GETTING_STARTED: GuideStep[] = [
       'Nhóm TTL và CMOS có từng họ riêng: 74LS (họ hay dùng trong phòng thí nghiệm), 74HC, 74HCT, 74F, 4000 … Mỗi IC có chân nguồn ẩn: đặt ký hiệu VCC (hoặc VDD cho họ 4000) để IC lấy nguồn thật. Mô phỏng > Cài đặt mô phỏng số chọn chế độ Lý tưởng (không cần chân nguồn, dễ học) hoặc Thực tế (bắt buộc có nguồn, thấy được tải và sụt áp), và trễ lan truyền điển hình / lớn nhất / bằng 0. Nhóm Số khác có RAM, ROM (bấm “Sửa nội dung…” để nhập dữ liệu hex) và khối PLD viết bằng phương trình Boole; nhóm Hiển thị có LCD ký tự, LED ma trận, LED 14 / 16 đoạn.',
       'The TTL and CMOS groups have one family per technology: 74LS (the usual lab family), 74HC, 74HCT, 74F, 4000 … Every IC has hidden power pins: place a VCC symbol (VDD for the 4000 series) so it uses a real supply. Simulate > Digital simulation settings chooses Ideal mode (no power pins needed, easy to learn) or Real mode (supply required, loading and droop show up), and typical / maximum / zero propagation delays. The Misc Digital group has RAMs, ROMs (click “Edit contents…” to enter hex data) and a PLD block programmed with Boolean equations; the Indicators group has character LCDs, LED dot matrices and 14 / 16-segment displays.',
     ),
-    action: L('Thử: Tệp > Mạch mẫu > “LCD ký tự: hiện dòng chữ”, nhấn F5 và xem chữ hiện trên màn hình LCD.', 'Try it: File > Examples > “Character LCD: hello text”, press F5 and watch the text appear on the LCD.'),
+    action: L('Thử: Tệp › Mở mạch mẫu… > “LCD ký tự: hiện dòng chữ”, nhấn F5 và xem chữ hiện trên màn hình LCD.', 'Try it: File › Open samples… > “Character LCD: hello text”, press F5 and watch the text appear on the LCD.'),
   },
   {
     title: L('12. Tự tạo linh kiện và mô hình', '12. Make your own components and models'),
@@ -171,7 +171,7 @@ export const GETTING_STARTED: GuideStep[] = [
       'Mạch có vi điều khiển 8051 có thể gỡ lỗi từng bước: nhấp đúp vào vi điều khiển, bấm “Bắt đầu gỡ lỗi”, đặt điểm dừng rồi đi từng lệnh (F11), từng dòng (F10) hoặc từng chu kỳ máy (Shift+F11); đồng hồ của mạch dừng đúng thời điểm đó. Mạch có loa nghe được qua Mô phỏng > Âm thanh. Khi cần dựng hay quét hàng loạt mạch, Công cụ > Tập lệnh (JavaScript) cho bạn viết một chương trình ngắn (chế độ người mới ẩn mục này; bài học “Dựng mạch bằng tập lệnh JavaScript” hướng dẫn từng bước và có nút bật giao diện đầy đủ).',
       'A circuit with an 8051 microcontroller can be debugged step by step: double-click the microcontroller, press “Start debugging”, set a breakpoint and step by instruction (F11), by line (F10) or by machine cycle (Shift+F11); the circuit clock stops at exactly that instant. A circuit with a speaker can be heard through Simulate > Audio. When you need to build or sweep many circuits, Tools > Scripts (JavaScript) lets you write a short program (beginner mode hides this entry; the lesson “Build a circuit with a JavaScript script” walks you through it and has a button for the full interface).',
     ),
-    action: L('Thử: Tệp > Mạch mẫu > “8051 trễ đúng 1000 chu kỳ máy”, mở Trình soạn mã và bấm “Bắt đầu gỡ lỗi”.', 'Try it: File > Examples > “8051 delay loop of exactly 1000 machine cycles”, open the code editor and press “Start debugging”.'),
+    action: L('Thử: Tệp › Mở mạch mẫu… > “8051 trễ đúng 1000 chu kỳ máy”, mở Trình soạn mã và bấm “Bắt đầu gỡ lỗi”.', 'Try it: File › Open samples… > “8051 delay loop of exactly 1000 machine cycles”, open the code editor and press “Start debugging”.'),
   },
 ];
 

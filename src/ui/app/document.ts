@@ -242,16 +242,17 @@ export function unsavedChangesMessage(fileName: string, action: string = t('app.
  * only reason to say no is the limit of open documents, which the learner is told about. The
  * name and the `action` text are kept so existing callers stay as they are.
  */
-export async function confirmDiscardChanges(_action?: string): Promise<boolean> {
+export async function confirmDiscardChanges(_action?: string, opts: { replace?: boolean } = {}): Promise<boolean> {
   void _action;
-  if (documents.canOpen()) return true;
+  if (documents.canOpen(opts.replace !== false)) return true;
   await alertDialog({ title: t('docs.tooMany.title'), message: t('docs.tooMany.message', { n: documents.maxDocuments }) });
   return false;
 }
 
 /** File > New: an empty design in a new tab. */
 export async function newDocument(): Promise<void> {
-  if (!(await confirmDiscardChanges())) return;
+  // New always adds a tab (never replaces an untouched one), so the limit check must say the same
+  if (!(await confirmDiscardChanges(undefined, { replace: false }))) return;
   const id = await documents.open(newLocalizedDesign(), 'Untitled.msim', { replace: false });
   if (!id) return;
   target = null;

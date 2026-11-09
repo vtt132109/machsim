@@ -74,7 +74,7 @@ export const AUDIO_TEXT = {
   exportIntro: L('Lưu một đường của đồ thị thành tệp âm thanh .wav để nghe bằng chương trình khác. Đường được lấy mẫu lại đều.', 'Save one trace of the graph as a .wav sound file to listen to in another program. The trace is resampled evenly.'),
   exportTrace: L('Đường cần xuất', 'Trace to export'),
   exportRate: L('Tần số lấy mẫu', 'Sample rate'),
-  exportSeconds: L('Độ dài thật của tín hiệu: {t} s (sẽ thành {n} mẫu).', 'Real length of the signal: {t} s (becomes {n} samples).'),
+  exportSeconds: L('Độ dài thật của tín hiệu: {t} (sẽ thành {n} mẫu).', 'Real length of the signal: {t} (becomes {n} samples).'),
   exportStretch: L('Kéo giãn thời gian ×', 'Time stretch ×'),
   exportStretchTip: L('Kéo giãn thời gian của tín hiệu khi lưu: 1000 biến tín hiệu 5 ms thành 5 giây nghe được', 'Stretch the signal’s time when saving: 1000 turns a 5 ms signal into 5 audible seconds'),
   exportNormalize: L('Chuẩn hoá mức (đỉnh 0.98)', 'Normalise the level (peak 0.98)'),

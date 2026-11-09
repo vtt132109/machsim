@@ -91,7 +91,7 @@ export const DOCS_TEXT = {
   prefixApply: L('Áp dụng', 'Apply'),
   prefixCancel: L('Huỷ', 'Cancel'),
   prefixReset: L('Bỏ quy tắc', 'Remove the rules'),
-  prefixBadText: L('“{text}” không hợp lệ: chỉ dùng chữ, số và “_”, bắt đầu bằng chữ hoặc “_”.', '“{text}” is not valid: use letters, digits and “_” only, starting with a letter or “_”.'),
+  prefixBadText: L('“{text}” không hợp lệ: chỉ dùng chữ cái không dấu (A–Z), chữ số và “_”, bắt đầu bằng chữ cái hoặc “_”.', '“{text}” is not valid: use unaccented letters (A–Z), digits and “_” only, starting with a letter or “_”.'),
   prefixTooLong: L('“{text}” quá dài (tối đa {max} ký tự).', '“{text}” is too long (at most {max} characters).'),
   prefixEndsInDigit: L('Tiền tố “{text}” kết thúc bằng chữ số nên “{text}3” lẫn với “{text}” + 3. Hãy thêm “_” ở cuối.', 'The prefix “{text}” ends in a digit, so “{text}3” cannot be told from “{text}” + 3. Add a “_” at the end.'),
   prefixClash: L('Hai loại “{at}” và “{text}” sẽ có cùng tiền tố.', 'The kinds “{at}” and “{text}” would get the same prefix.'),

@@ -52,6 +52,8 @@ export function variantId(base: Pick<LibraryPartDef, 'id'>, name: string): strin
 export function repackage(base: LibraryPartDef, v: VariantSpec): LibraryPartDef {
   const pins = v.renumber ? base.symbol.pins.map((p) => (v.renumber![p.name] !== undefined ? { ...p, number: v.renumber![p.name] } : p)) : base.symbol.pins;
   const baseVi = base.textVi?.description;
+  // the Vietnamese text names the base chip in Vietnamese ("LM393 (kép)"), not with the English "(dual)"
+  const baseNameVi = (base.textVi?.name ?? base.name).replace('(dual)', '(kép)').replace('(quad)', '(bốn)');
   const out: LibraryPartDef = {
     ...base,
     id: v.id,
@@ -64,7 +66,7 @@ export function repackage(base: LibraryPartDef, v: VariantSpec): LibraryPartDef 
     variantOf: base.id,
     textVi: {
       name: v.name,
-      description: `${v.name}: ${v.vi}. Cùng mạch với ${base.name}.${baseVi ? ` ${baseVi}` : ''}`,
+      description: `${v.name}: ${v.vi}. Cùng mạch với ${baseNameVi}.${baseVi ? ` ${baseVi}` : ''}`,
     },
   };
   if (base.specs) out.specs = { ...base.specs, package: v.pkg };

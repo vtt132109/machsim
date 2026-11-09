@@ -16,7 +16,7 @@ import type { MergePolicy } from '../../library/custom/database';
 import { buildProfile, mergeProfile, parseProfile, serializeProfile, PROFILE_EXTENSION, type LibraryProfile } from '../../library/custom/profile';
 import { partValue } from '../../model/bom';
 import { SAVED_BY } from '../../model/appInfo';
-import { activeVariant, addVariant, clearVariantValues, isFitted, notFittedCount, removeVariant, renameVariant, setActiveVariant, setFitted, setVariantDescription, setVariantField, setVariantParam, setVariantVariable, variantChanges } from '../../model/variants';
+import { activeVariant, addVariant, clearVariantValues, isFitted, notFittedCount, removeVariant, renameVariant, variantNameTaken, setActiveVariant, setFitted, setVariantDescription, setVariantField, setVariantParam, setVariantVariable, variantChanges } from '../../model/variants';
 import type { Design, PartFields, PartInstance } from '../../model/types';
 import type { ParamDef, PartDef } from '../../library/types';
 import { defaultParams } from '../../library';
@@ -229,6 +229,23 @@ function VariantDialog({ close }: { close: () => void }) {
   const q = filter.trim().toLowerCase();
   const shown = q ? rows.filter((r) => r.path.toLowerCase().includes(q) || r.name.toLowerCase().includes(q) || r.value.toLowerCase().includes(q)) : rows;
   const apply = (fn: (d: Design) => Design) => actions.applyDesign(fn);
+  const [nameNote, setNameNote] = useState('');
+  /** a refused rename (empty or taken) puts the old name back in the box and says why */
+  const rename = (id: string, input: HTMLInputElement) => {
+    const old = design.variants?.list.find((x) => x.id === id)?.name ?? '';
+    const wanted = input.value.trim();
+    if (wanted === old) {
+      input.value = old;
+      return;
+    }
+    if (!wanted || variantNameTaken(design, wanted, id)) {
+      input.value = old;
+      setNameNote(pt('varNameRefused', { name: wanted, old }));
+      return;
+    }
+    setNameNote('');
+    apply((d) => renameVariant(d, id, wanted));
+  };
   const addNew = () => {
     const name = variants.length ? pt('varNewName', { n: variants.length + 1 }) : pt('varFirstName');
     apply((d) => addVariant(d, name, activeVariant(d)?.id).design);
@@ -252,6 +269,11 @@ function VariantDialog({ close }: { close: () => void }) {
       }
     >
       <p className="ms-hint">{pt('varIntro')}</p>
+      {nameNote ? (
+        <p className="ms-hint" role="alert">
+          {nameNote}
+        </p>
+      ) : null}
       {variants.length === 0 ? (
         <div className="ms-variant-top">
           <span>{pt('varNone')}</span>
@@ -279,7 +301,7 @@ function VariantDialog({ close }: { close: () => void }) {
                     <input type="radio" name="ms-active-variant" checked={active?.id === v.id} title={pt('tipVarActive')} aria-label={pt('varActive')} onChange={() => apply((d) => setActiveVariant(d, v.id))} />
                   </td>
                   <td>
-                    <input className="ms-input" defaultValue={v.name} aria-label={pt('varName')} onBlur={(e) => apply((d) => renameVariant(d, v.id, e.target.value))} />
+                    <input className="ms-input" defaultValue={v.name} aria-label={pt('varName')} onBlur={(e) => rename(v.id, e.target)} />
                   </td>
                   <td>
                     <input className="ms-input" defaultValue={v.description ?? ''} aria-label={pt('varDescription')} onBlur={(e) => apply((d) => ((d.variants?.list.find((x) => x.id === v.id)?.description ?? '') === e.target.value.trim() ? d : setVariantDescription(d, v.id, e.target.value)))} />

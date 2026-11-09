@@ -97,8 +97,8 @@ describe('indicator levels', () => {
   it('describes readings in words', () => {
     const r = indicatorReadings([led, seg], { 'I(V_LED1_i)': 0.0125, 'V(U3.code)': SEGMENT_FONTS.ttl7447[1] });
     expect(r).toEqual([
-      { refdes: 'LED1', kind: 'led', text: '12.5 mA' },
-      { refdes: 'U3', kind: 'seven-seg', text: 'sáng: b c' },
+      { refdes: 'LED1', kind: 'led', partId: 'diodes/led-red', text: '12.5 mA' },
+      { refdes: 'U3', kind: 'seven-seg', partId: 'indicators/seven-seg-ca', text: 'sáng: b c' },
     ]);
     setLang('en');
     try {

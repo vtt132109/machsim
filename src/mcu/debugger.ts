@@ -45,6 +45,10 @@ export const DEBUG_REASON = {
   watch: 5,
   /** held by a "start debugging" request: the program has not run yet (or a manual break) */
   start: 6,
+  /** held by "Dừng ngay" while the program was running */
+  manual: 7,
+  /** a whole line stepped over (a call ran until it returned) */
+  stepOver: 8,
 } as const;
 
 export type DebugReason = (typeof DEBUG_REASON)[keyof typeof DEBUG_REASON];
@@ -250,7 +254,8 @@ export class CoreDebugger {
 
   /** Hold the simulation right now (start of a debugging session, a manual break). */
   breakNow(): void {
-    this.hold(DEBUG_REASON.start);
+    // before the first instruction it is the start of a session; after that a stop the learner asked for
+    this.hold(this.cpu.cycles > 0 ? DEBUG_REASON.manual : DEBUG_REASON.start);
   }
 
   /** Forget a hold and every pending command (the core was reset). */
@@ -347,7 +352,7 @@ export class CoreDebugger {
     while (cpu.halted === 'none') {
       // arrive: the core is about to execute a stop address and the circuit has reached that time
       if (cpu.cycles <= target && this.stopsAt(cpu.pc)) {
-        this.hold(this.breakpoints.has(cpu.pc) ? DEBUG_REASON.breakpoint : DEBUG_REASON.runTo);
+        this.hold(this.breakpoints.has(cpu.pc) ? DEBUG_REASON.breakpoint : this.runToSp >= 0 ? DEBUG_REASON.stepOver : DEBUG_REASON.runTo);
         return;
       }
       if (cpu.cycles >= target) return;
@@ -355,6 +360,12 @@ export class CoreDebugger {
       // its END, so the run stops at exactly the time the watched value changed
       if (this.watchBreak !== 0 && cpu.cycles + this.nextInstructionCycles() > target) return;
       hooks.before();
+      // the circuit may just have changed an input the program watches (a port pin): stop right there,
+      // not one instruction later
+      if (this.watchBreak !== 0 && this.watchChanged()) {
+        this.hold(DEBUG_REASON.watch);
+        return;
+      }
       cpu.step();
       this.skipPc = -1;
       hooks.after();

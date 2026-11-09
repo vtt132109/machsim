@@ -203,7 +203,7 @@ export default {
   'welcome.intro': ['MachSim giúp bạn vẽ sơ đồ mạch điện tử, chạy mô phỏng và đo bằng thiết bị ảo — hoàn toàn trên máy tính, không cần mạng.', 'MachSim lets you draw electronic circuits, simulate them and measure with virtual instruments — entirely offline.'],
   'welcome.language': ['Ngôn ngữ / Language', 'Language / Ngôn ngữ'],
   'welcome.tutorial': ['Học từng bước', 'Step-by-step tutorial'],
-  'welcome.tutorialHint': ['8 bước ngắn: đặt linh kiện, nối dây, chạy và đọc số đo.', '8 short steps: place parts, wire, run and read a meter.'],
+  'welcome.tutorialHint': ['Hướng dẫn từng bước ngắn: đặt linh kiện, nối dây, chạy và đọc số đo.', 'Short step-by-step guide: place parts, wire, run and read a meter.'],
   'welcome.examples': ['Mở mạch mẫu', 'Open an example'],
   'welcome.examplesHint': ['Mạch làm sẵn có giải thích: lọc RC, chỉnh lưu, khuếch đại, 555 …', 'Ready-made, explained circuits: RC filter, rectifiers, amplifiers, 555 …'],
   'welcome.blank': ['Bắt đầu với sơ đồ trống', 'Start with an empty sheet'],

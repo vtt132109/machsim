@@ -144,7 +144,7 @@ export const LADDER_TEXT = {
   blockOutputs: L('Đầu ra (cách nhau dấu phẩy)', 'Outputs (comma separated)'),
   backToProgram: L('Quay lại chương trình', 'Back to the program'),
   blockUsedBy: L('{n} lời gọi', '{n} call(s)'),
-  blockNameTaken: L('Tên khối “{name}” đã có hoặc không hợp lệ.', 'The block name “{name}” is taken or not valid.'),
+  blockNameTaken: L('Tên khối “{name}” đã có hoặc không hợp lệ (chỉ dùng chữ cái không dấu A–Z, chữ số và “_”, không có khoảng trắng).', 'The block name “{name}” is taken or not valid (use unaccented letters A–Z, digits and “_”, no spaces).'),
 
   // ---- copy / cut / paste
   copy: L('Sao chép', 'Copy'),

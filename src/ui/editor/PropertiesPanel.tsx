@@ -16,10 +16,10 @@ import { partValuesHidden } from '../../model/restrictions';
 import { useDeferredValue, useMemo, useState } from 'react';
 import type { ParamDef, PartDef } from '../../library/types';
 import type { NetLabel, PartFields, PartInstance, Probe, ProbeKind, ProbeReading, Rotation, Shape, TextNote, Wire } from '../../model/types';
-import { isBlockPartId } from '../../model/hierarchy';
+import { copyStateOf, isBlockPartId } from '../../model/hierarchy';
 import { BlockSection, BusProperties, LabelItemProperties, LockedField, NoteStyleFields, SelectionTools, ShapeProperties } from './SchematicProperties';
 import { actions, activeSheet, partLookup, useEditor } from '../store';
-import { levelSheetsOf } from '../store/editorStore';
+import { activeViewPath, levelSheetsOf } from '../store/editorStore';
 import { computeConnectivity } from '../store/connectivity';
 import { findItem, transformItems } from '../store/designOps';
 import type { SelItem } from '../store/types';
@@ -28,7 +28,7 @@ import { Tabs } from '../common/Tabs';
 import { Icon } from '../common/icons';
 import { groupParams, isParamModified, paramPreview, paramValue, validateNetName, validateParamText } from './paramFields';
 import './editor.css';
-import { t, tDynamic } from '../../i18n';
+import { hasMessage, t, tDynamic } from '../../i18n';
 import { familyName, groupName, interactiveLabel, optionLabel, paramHelp, paramLabel, partDescription, partName } from '../../i18n/library';
 import { openHelp, topicForPart } from '../help/open';
 import { DataFileField, PartFaultTab, PartModelTools, PartSpecList, ValuePicker } from './PartExtras';
@@ -92,12 +92,54 @@ function CoilPicker({ inst, def }: { inst: PartInstance; def: ParamDef }) {
   );
 }
 
-function ParamField({ def, inst }: { def: ParamDef; inst: PartInstance }) {
+/**
+ * The placed copy of a block being viewed (EditorState.viewPath): settings that live per copy
+ * (instruments, switches and whatever the copy already overrides) are read from and written to that
+ * copy (PartInstance.inner), so Properties agrees with the canvas and the instrument window.
+ */
+interface CopyScope {
+  path: string[];
+  state?: Record<string, string>;
+  /** every parameter of the part is per copy (an instrument or an interactive part) */
+  all: boolean;
+}
+
+/** The active design variant gives this parameter its own value: that is what the circuit uses. */
+interface VariantOwn {
+  id: string;
+  name: string;
+  value: string;
+  saved: string;
+}
+
+function ParamField({ def, inst, copy }: { def: ParamDef; inst: PartInstance; copy?: CopyScope }) {
+  const variant = useEditor((s) => activeVariant(s.design));
+  const ownValue = variant ? variantValuesOf(inst, variant.id)?.params?.[def.key] : undefined;
+  if (variant && ownValue !== undefined) {
+    // show the value the simulation uses, say so, and keep edits in the variant (they would be hidden by it otherwise)
+    const own: VariantOwn = { id: variant.id, name: variant.name, value: ownValue, saved: paramValue(def, inst.params) };
+    return (
+      <>
+        <ParamFieldBody def={def} inst={{ ...inst, params: { ...inst.params, [def.key]: ownValue } }} copy={copy} own={own} />
+        <div className="ms-hint">{t('variant.ownParam', { variant: variant.name, value: ownValue, saved: own.saved })}</div>
+      </>
+    );
+  }
+  return <ParamFieldBody def={def} inst={inst} copy={copy} />;
+}
+
+function ParamFieldBody({ def, inst, copy, own }: { def: ParamDef; inst: PartInstance; copy?: CopyScope; own?: VariantOwn }) {
   const value = paramValue(def, inst.params);
-  const modified = isParamModified(def, inst.params);
-  const commit = (v: string) => actions.setPartParam(inst.id, def.key, v.trim());
+  const modified = own ? true : isParamModified(def, inst.params);
+  const perCopy = !!copy && (copy.all || (copy.state !== undefined && def.key in copy.state));
+  const set = (v: string | null) => {
+    if (own) actions.applyDesign((d) => setVariantParam(d, inst.id, own.id, def.key, v === null ? undefined : v));
+    else if (copy && perCopy) actions.setInteractiveParam(inst.refdes, def.key, v === null ? def.default : v, copy.path);
+    else actions.setPartParam(inst.id, def.key, v);
+  };
+  const commit = (v: string) => set(v.trim());
   const reset = modified ? (
-    <button type="button" className="ms-icon-btn ms-reset-btn" title={t('editor.properties.resetToDefaultDefault', { default: def.default })} aria-label={t('editor.properties.resetLabelToDefault', { label: paramLabel(def) })} onClick={() => actions.setPartParam(inst.id, def.key, null)}>
+    <button type="button" className="ms-icon-btn ms-reset-btn" title={t('editor.properties.resetToDefaultDefault', { default: def.default })} aria-label={t('editor.properties.resetLabelToDefault', { label: paramLabel(def) })} onClick={() => set(null)}>
       <Icon name="undo" size={12} />
     </button>
   ) : null;
@@ -113,13 +155,13 @@ function ParamField({ def, inst }: { def: ParamDef; inst: PartInstance }) {
         <div className="ms-cfield ms-cfield-row">
           <span className="ms-cfield-label">{label}</span>
           <div className="ms-cfield-control">
-            <CheckField label={value === 'true' ? t('common.yes') : t('common.no')} checked={value === 'true'} onChange={(v) => actions.setPartParam(inst.id, def.key, v ? 'true' : 'false')} />
+            <CheckField label={value === 'true' ? t('common.yes') : t('common.no')} checked={value === 'true'} onChange={(v) => set(v ? 'true' : 'false')} />
             {reset}
           </div>
         </div>
       );
     case 'select':
-      return <SelectField label={label} value={value} options={(def.options ?? []).map((o) => ({ value: o.value, label: optionLabel(o.label) }))} onChange={(v) => actions.setPartParam(inst.id, def.key, v)} trailing={reset} />;
+      return <SelectField label={label} value={value} options={(def.options ?? []).map((o) => ({ value: o.value, label: optionLabel(o.label) }))} onChange={(v) => set(v)} trailing={reset} />;
     case 'number':
       return (
         <CommitField
@@ -350,11 +392,16 @@ export function PartProperties({ partId }: { partId: string }) {
     return f ? (f.item as PartInstance) : null;
   });
   const def = inst ? partLookup(inst.partId) : undefined;
+  // inside a placed copy of a block the part shows (and edits) that copy's own settings
+  const viewKey = useEditor((s) => activeViewPath(s).join('/'));
+  const copyState = useEditor((s) => (inst && viewKey ? copyStateOf(s.design, viewKey.split('/'), inst.refdes) : undefined));
   // the instructor may hide component values (instruments keep their settings)
   const hidden = useEditor((s) => partValuesHidden(s.design, def));
   const tabs = useMemo(() => (hidden ? [] : groupParams(def?.params ?? [])), [def, hidden]);
   const [tab, setTab] = useState<string>('value');
   if (!inst) return <p className="ms-empty">{t('editor.properties.thePartNoLongerExists')}</p>;
+  const copy: CopyScope | undefined = viewKey ? { path: viewKey.split('/'), ...(copyState ? { state: copyState } : {}), all: !!def && (!!def.instrument || !!def.interactive) } : undefined;
+  const shown: PartInstance = copyState ? { ...inst, params: { ...inst.params, ...copyState } } : inst;
   const items = [
     { id: 'label', title: t('editor.properties.label') },
     ...tabs.map((t) => ({ id: t.group, title: t.label })),
@@ -382,8 +429,9 @@ export function PartProperties({ partId }: { partId: string }) {
         {active === 'package' && def ? <PackagePanel def={def} inst={inst} /> : null}
         {current ? (
           <div className="ms-prop-section">
+            {copy ? <p className="ms-hint">{t(copy.all ? 'editor.properties.copyOnly' : 'editor.properties.copyShared', { path: copy.path.join(' › ') })}</p> : null}
             {current.params.map((p) => (
-              <ParamField key={p.key} def={p} inst={inst} />
+              <ParamField key={p.key} def={p} inst={shown} copy={copy} />
             ))}
             {def && current.params.some((p) => p.key === def.interactive?.param) ? <InteractiveSlider inst={inst} def={def} /> : null}
             {def && active === 'value' && asLibraryPart(def).tripCurve ? <TripCurve def={def} inst={inst} /> : null}
@@ -589,7 +637,7 @@ export function ItemProperties({ item }: { item: SelItem }) {
 // ---------------------------------------------------------------------------
 
 import { parseVariablesText, variablesToText } from './variablesText';
-import { isFitted, setFitted, variantValuesOf } from '../../model/variants';
+import { activeVariant, isFitted, setFitted, setVariantParam, variantValuesOf } from '../../model/variants';
 export { parseVariablesText, variablesToText };
 
 export function SheetAndDesignProperties() {
@@ -639,7 +687,10 @@ export function PropertiesPanel() {
         <div className="ms-prop-head">
           <strong>{t('editor.properties.lengthItemsSelected', { length: selection.length })}</strong>
         </div>
-        <p className="ms-hint">{Array.from(counts.entries()).map(([k, n]) => `${n} ${k}${n > 1 ? 's' : ''}`).join(', ')}</p>
+        <p className="ms-hint">{Array.from(counts.entries())
+            .map(([k, n]) => (hasMessage(`status.kind.${k}`) ? tDynamic(`status.kind.${k}`, { n }) : `${n} ${k}`))
+            .join(', ')}
+        </p>
         <div className="ms-btn-row">
           <button type="button" className="ms-btn ms-btn-small" onClick={() => actions.rotateSelection('cw')}>
             {t('editor.properties.rotate')}

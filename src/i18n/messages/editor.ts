@@ -31,6 +31,8 @@ export default {
   'editor.properties.globalParameters': ['Tham số toàn cục', 'Global parameters'],
   'editor.properties.info': ['Thông tin', 'Info'],
   'editor.properties.interactive': ['Tương tác', 'Interactive'],
+  'editor.properties.copyOnly': ['Đang xem bản {path}: giá trị hiện ở đây là của riêng bản này, và việc đổi chúng chỉ áp dụng cho bản {path}.', 'Viewing copy {path}: the values shown here are this copy’s own, and changing them applies to copy {path} only.'],
+  'editor.properties.copyShared': ['Đang xem bản {path} của một khối: các giá trị khác của linh kiện này thuộc thiết kế chung của khối, nên đổi chúng sẽ đổi MỌI bản.', 'Viewing copy {path} of a block: the other values of this part belong to the block’s shared design, so changing them changes EVERY copy.'],
   'editor.properties.sliderTip': ['Kéo để đổi giá trị; khi đang mô phỏng tương tác, mạch thay đổi ngay (phím tắt của linh kiện cũng làm được việc này).', 'Drag to change the value; during an interactive simulation the circuit follows at once (the part’s key does the same).'],
   'editor.properties.sliderAria': ['Thanh trượt {label}', '{label} slider'],
   'editor.properties.kind': ['Loại', 'Kind'],

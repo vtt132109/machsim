@@ -129,6 +129,8 @@ export const MCU_TEXT = {
   dbgReason4: L('đã tới dòng con trỏ', 'reached the cursor line'),
   dbgReason5: L('giá trị theo dõi đã đổi', 'a watched value changed'),
   dbgReason6: L('trước lệnh đầu tiên', 'before the first instruction'),
+  dbgReason7: L('đã dừng theo yêu cầu', 'stopped on request'),
+  dbgReason8: L('sau một dòng', 'after one line'),
   dbgStatus: L(
     'Đã dừng ({reason}) · PC = {pc}{line} · đã chạy {cycles} chu kỳ máy = {time} · đồng hồ mạch {sim}',
     'Stopped ({reason}) · PC = {pc}{line} · {cycles} machine cycles run = {time} · circuit clock {sim}',

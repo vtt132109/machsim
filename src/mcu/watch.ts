@@ -70,6 +70,8 @@ export const WATCH_REGISTERS: readonly string[] = ['A', 'ACC', 'B', 'SP', 'PC', 
 const sfrByName = new Map(SFR_NAMES.map((s) => [s.name.toUpperCase(), s.addr] as const));
 const bitByName = new Map(BIT_NAMES.map((b) => [b.name.toUpperCase(), b.addr] as const));
 const isRegister = (name: string): boolean => WATCH_REGISTERS.includes(name);
+/** Direct (SFR) address of each port: the register read-out shows the latch, the hardware watch looks at this cell. */
+const PORT_SFR: Readonly<Record<string, number>> = { P0: 0x80, P1: 0x90, P2: 0xa0, P3: 0xb0 };
 
 type Fn = (ctx: WatchContext) => number | undefined;
 
@@ -318,6 +320,16 @@ class Parser {
       this.expect(']');
       return this.cell(spaces[name], addr);
     }
+    // Pn.k: the port pin as a bit cell, so "stop when it changes" watches this pin only
+    const portBase = PORT_SFR[name];
+    const dotTok = this.toks[this.pos];
+    const bitTok = this.toks[this.pos + 1];
+    if (portBase !== undefined && dotTok?.kind === 'op' && dotTok.text === '.' && bitTok?.kind === 'num' && (bitTok.value ?? 99) <= 7) {
+      this.pos += 2;
+      const k = bitTok.value ?? 0;
+      const bitCell = this.cell(WATCH_SPACE.bit, { fn: () => portBase + k, constant: portBase + k });
+      return { fn: (ctx) => { const v = ctx.reg(name); return v === undefined ? bitCell.fn(ctx) : (v >> k) & 1; } };
+    }
     const base = this.named(t);
     // NAME.n : bit n of a register or SFR
     if (this.peek()?.kind === 'op' && this.peek()?.text === '.') {
@@ -335,6 +347,12 @@ class Parser {
   /** A register, SFR or bit name. */
   private named(t: Tok): Node {
     const name = t.text;
+    const port = PORT_SFR[name];
+    if (port !== undefined) {
+      // the latch read-out is shown; the direct cell lets the hardware watch stop when the port changes
+      const cell = this.cell(WATCH_SPACE.direct, { fn: () => port, constant: port });
+      return { fn: (ctx) => ctx.reg(name) ?? cell.fn(ctx) };
+    }
     if (isRegister(name)) return { fn: (ctx) => ctx.reg(name) };
     const sfr = sfrByName.get(name);
     if (sfr !== undefined) {

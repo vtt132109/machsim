@@ -446,6 +446,32 @@ export function resolveLiveName(design: Pick<Design, 'sheets' | 'children'>, nam
   return resolveLivePart(design, segs.slice(0, -1), segs[segs.length - 1]);
 }
 
+/**
+ * The state the top-level block `path[0]` holds for part `local` of the design level reached by
+ * `path` (PartInstance.inner), or undefined: what makes one placed copy differ from the block design.
+ */
+export function copyStateOf(design: Pick<Design, 'sheets'>, path: readonly string[], local: string): Record<string, string> | undefined {
+  if (!path.length) return undefined;
+  for (const s of design.sheets) {
+    const root = s.parts.find((p) => sameRef(p.refdes, path[0]) && childIdOfPart(p.partId) !== undefined);
+    if (root) return root.inner?.[innerKey(path, local)];
+  }
+  return undefined;
+}
+
+/** The sheet of the block design as the placed copy `path` sees it: the copy's own part settings on top. */
+export function sheetAsCopy(design: Pick<Design, 'sheets'>, path: readonly string[], sheet: Sheet): Sheet {
+  if (!path.length) return sheet;
+  let touched = false;
+  const parts = sheet.parts.map((p) => {
+    const own = copyStateOf(design, path, p.refdes);
+    if (!own) return p;
+    touched = true;
+    return { ...p, params: { ...p.params, ...own } };
+  });
+  return touched ? { ...sheet, parts } : sheet;
+}
+
 /** Saved parameters of a live part with the copy's overrides on top (PartInstance.inner). */
 export function liveParams(ref: LiveRef): Record<string, string> {
   const own = ref.rootBlock?.inner?.[innerKey(ref.path, ref.local)];

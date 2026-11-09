@@ -14,7 +14,8 @@
  * new document). Coordinates are schematic units on a 10-unit grid; a part's pins are where its
  * symbol puts them (`pin('R1.1')` tells), and wires run orthogonally between two points.
  */
-import { getPart, defaultParams, ensurePartsLoaded, loadAllGroups, searchParts } from '../library';
+import { getPart, defaultParams, ensurePartsLoaded, loadAllGroups, searchParts, substringParts } from '../library';
+import '../ui/editor/browserModel'; // installs the part browser's search for MachSim.searchParts
 import type { PartDef } from '../library/types';
 import { localToSheet } from '../model/geometry';
 import { resolvePart } from '../model/hierarchy';
@@ -35,6 +36,8 @@ import { newId } from '../ui/store/ids';
 import { isInternalVector } from '../ui/results/titles';
 import { parseSpiceNumber } from '../util/units';
 import { sx } from '../i18n/scriptText';
+import { explainErc } from '../i18n/erc';
+import { t } from '../i18n';
 import { SCRIPT_LIMITS, type ScriptPlot, type ScriptPointRef, type ScriptResult, type ScriptVector } from './protocol';
 import { plotToSvg } from './plotSvg';
 import type { ScriptHost } from './runner';
@@ -113,8 +116,14 @@ export function applyScriptOptions(spec: AnalysisSpec, opts: Record<string, unkn
 
 const ROTATIONS: readonly number[] = [0, 90, 180, 270];
 
+/** An empty design whose first sheet is named in the UI language ("Trang 1"), like File > New. */
+function scriptDesign(title: string): Design {
+  const d = newDesign(title);
+  return { ...d, sheets: d.sheets.map((s, i) => ({ ...s, name: t('sheet.default', { n: i + 1 }) })) };
+}
+
 export class ScriptSession implements ScriptHost {
-  design: Design = newDesign('Script');
+  design: Design = scriptDesign('Script');
   fileName = 'script.msim';
   /** the plots the script made, in order */
   readonly plots: { plot: ScriptPlot; svg: string }[] = [];
@@ -173,7 +182,7 @@ export class ScriptSession implements ScriptHost {
       if (d) return d;
     }
     await loadAllGroups();
-    const hits = searchParts(id);
+    const hits = substringParts(id);
     const key = id.toLowerCase();
     const exact = hits.filter((h) => h.id.toLowerCase().endsWith(`/${key}`) || h.name.toLowerCase() === key);
     if (exact.length === 1) return exact[0];
@@ -226,7 +235,7 @@ export class ScriptSession implements ScriptHost {
   private readonly methods = {
     // ---- designs -------------------------------------------------------------------------------
     newDesign: async (title?: string) => {
-      this.design = newDesign(typeof title === 'string' && title ? title : 'Script');
+      this.design = scriptDesign(typeof title === 'string' && title ? title : 'Script');
       this.fileName = `${this.design.title.replace(/[^\w.-]+/g, '_') || 'script'}.msim`;
       return { title: this.design.title };
     },
@@ -459,7 +468,7 @@ export class ScriptSession implements ScriptHost {
       const o = isRecord(opts) ? opts : {};
       const build = await this.buildWithChecks();
       const errors = build.erc.filter((m) => m.severity === 'error');
-      if (errors.length) throw new Error(sx('ercErrors', { list: errors.map((m) => m.message).join('; ') }));
+      if (errors.length) throw new Error(sx('ercErrors', { list: errors.map((m) => explainErc(m).title).join('; ') }));
       const t = (typeof type === 'string' && type ? type : this.design.analysis.active) as AnalysisType;
       const base = this.design.analysis.specs[t] ?? defaultSpec(t, specContext(build));
       const spec = applyScriptOptions(base, o);

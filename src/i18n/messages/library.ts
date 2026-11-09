@@ -9,7 +9,7 @@ export default {
   'group.analog': ['Tương tự (op-amp, so sánh)', 'Analog'],
   'group.ttl': ['TTL (74xx)', 'TTL'],
   'group.cmos': ['CMOS (4000)', 'CMOS'],
-  'group.misc-digital': ['Số lý tưởng', 'Misc Digital'],
+  'group.misc-digital': ['Số linh tinh', 'Misc Digital'],
   'group.mixed': ['Hỗn hợp (ADC/DAC)', 'Mixed'],
   'group.indicators': ['Hiển thị và báo', 'Indicators'],
   'group.power': ['Nguồn cấp và ổn áp', 'Power'],

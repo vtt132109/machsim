@@ -8,7 +8,6 @@ import type { WavEncoding } from '../../audio/wav';
 import { aut } from '../../i18n/audioText';
 import { useLang } from '../../i18n/react';
 import type { AnalysisResult } from '../../sim/results';
-import { formatEng } from '../../util/units';
 import { actions } from '../store';
 import { Dialog } from '../common/Dialog';
 import { alertDialog, openCustomDialog } from '../common/dialogs';
@@ -104,7 +103,7 @@ function ExportBody({ result, close }: { result: AnalysisResult; close: () => vo
           <span>{aut('exportStretch')}</span>
           <input type="number" min={0.001} step="any" value={stretch} onChange={(e) => setStretch(Number(e.target.value))} />
         </label>
-        <p className="ms-hint">{aut('exportSeconds', { t: formatEng(duration, 's', 3), n: Number.isFinite(samples) ? samples : 0 })}</p>
+        <p className="ms-hint">{aut('exportSeconds', { t: `${Number.isFinite(duration) ? Number(duration.toPrecision(3)) : 0} s`, n: Number.isFinite(samples) ? samples : 0 })}</p>
         {tooLong ? (
           <p className="ms-hint" role="alert" style={{ color: 'var(--ms-error, #c0392b)' }}>
             {aut('exportTooLong', { max: WAV_EXPORT_MAX_SECONDS })}

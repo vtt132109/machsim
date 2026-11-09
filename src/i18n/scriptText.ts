@@ -203,7 +203,7 @@ await MachSim.ground('R2.2');
 
 const op = await MachSim.run('op');
 print('V(mid) =', op.get('mid')[0], 'V   (lý thuyết: 10·3k/(1k+3k) = 7.5 V)');
-print('Dòng qua R1 =', MachSim.eng(op.get('I(V1)')[0]) + 'A');
+print('Dòng qua R1 =', MachSim.eng(Math.abs(op.get('I(V1)')[0])) + 'A', '  (I(V1) âm vì nguồn đẩy dòng ra, nên lấy độ lớn)');
 `;
 
 const DIV_EN = `// Build a 10 V divider with 1k / 3k and read the middle voltage.
@@ -267,7 +267,7 @@ await MachSim.ground('C1.2');
 
 const candidates = MachSim.logspace(500, 5000, 10);
 const fcs = await MachSim.sweep('R1', candidates, async (r) => {
-  const res = await MachSim.run('ac', { fstart: '100', fstop: '10k', points: 40 });
+  const res = await MachSim.run('ac', { fstart: '10', fstop: '10k', points: 40 });
   return res.bandwidth('V(out)');
 });
 let best = 0;
@@ -288,7 +288,7 @@ await MachSim.ground('C1.2');
 
 const candidates = MachSim.logspace(500, 5000, 10);
 const fcs = await MachSim.sweep('R1', candidates, async (r) => {
-  const res = await MachSim.run('ac', { fstart: '100', fstop: '10k', points: 40 });
+  const res = await MachSim.run('ac', { fstart: '10', fstop: '10k', points: 40 });
   return res.bandwidth('V(out)');
 });
 let best = 0;

@@ -55,8 +55,8 @@ export const DOCS_GUIDE_PAGES: Record<'documents' | 'printing' | 'editingTools',
       {
         heading: L('Xem trước rồi mới in', 'Look first, then print'),
         body: L(
-          'Tệp › In (Ctrl+P) mở hộp Xem trước khi in: bên phải là từng trang đúng như sẽ in, bên trái là các lựa chọn. Chọn nội dung: các trang sơ đồ và trang bậc thang (tất cả, trang đang mở hoặc chỉ vùng đang chọn), bảng cài đặt thiết bị đo, đồ thị trong Grapher, một báo cáo (BOM, thống kê…) hay tài liệu của một bài học. Chọn trang giấy: khổ, hướng, lề, tỉ lệ, màu hay đen trắng, khung tên, chân trang, các trang cần in.',
-          'File › Print (Ctrl+P) opens the Print preview: on the right every page exactly as it will print, on the left the options. Choose the contents: schematic and ladder sheets (all, the current one, or just the selection), the instrument settings list, Grapher graphs, a report (BOM, statistics…) or the hand-out of a lesson. Choose the page: paper, orientation, margins, scale, colour or black and white, title block, footer, which pages.',
+          'Tệp › In và xem trước… (Ctrl+P) mở hộp Xem trước khi in: bên phải là từng trang đúng như sẽ in, bên trái là các lựa chọn. Chọn nội dung: các trang sơ đồ và trang bậc thang (tất cả, trang đang mở hoặc chỉ vùng đang chọn), bảng cài đặt thiết bị đo, đồ thị trong Grapher, một báo cáo (BOM, thống kê…) hay tài liệu của một bài học. Chọn trang giấy: khổ, hướng, lề, tỉ lệ, màu hay đen trắng, khung tên, chân trang, các trang cần in.',
+          'File › Print and preview… (Ctrl+P) opens the Print preview: on the right every page exactly as it will print, on the left the options. Choose the contents: schematic and ladder sheets (all, the current one, or just the selection), the instrument settings list, Grapher graphs, a report (BOM, statistics…) or the hand-out of a lesson. Choose the page: paper, orientation, margins, scale, colour or black and white, title block, footer, which pages.',
         ),
       },
       {

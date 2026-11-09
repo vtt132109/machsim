@@ -12,6 +12,20 @@ import { rt, type ReportKey } from '../../i18n/reportUi';
 import { familyName, groupName, paramLabel, partDescription, partName } from '../../i18n/library';
 import type { Lang } from '../../i18n';
 import type { PartGroup } from '../../library/types';
+import { getPart } from '../../library';
+import { paramDisplay } from '../editor/paramFields';
+import { normalizePinType } from '../../model/ercMatrix';
+import { t as tNow, tIn } from '../../i18n';
+
+/** The pin type as a learner reads it ("Thụ động"), in the report language. */
+function pinTypeName(type: string, lang?: Lang): string {
+  const key = `pinType.${normalizePinType(type as Parameters<typeof normalizePinType>[0])}`;
+  try {
+    return lang ? tIn(lang, key as Parameters<typeof tNow>[0]) : tNow(key as Parameters<typeof tNow>[0]);
+  } catch {
+    return type;
+  }
+}
 
 export const REPORT_IDS = ['bom', 'componentDetail', 'modelData', 'spareGates', 'crossReference', 'statistics'] as const;
 export type ReportId = (typeof REPORT_IDS)[number];
@@ -29,12 +43,12 @@ function bomTables(design: Design, lang?: Lang): ReportTableData[] {
     r.refdes.join(', '),
     hidden ? HIDDEN_VALUE : r.value,
     r.tolerance,
-    partName({ id: r.partId, name: r.name }),
+    partName(getPart(r.partId) ?? { id: r.partId, name: r.name }),
     r.manufacturer ?? '',
     r.partNumber ?? '',
     r.supplier ?? '',
     r.footprint,
-    partDescription({ id: r.partId, description: r.description }),
+    partDescription(getPart(r.partId) ?? { id: r.partId, description: r.description }),
   ]);
   return [{ title: '', columns: ['item', 'qty', 'reference', 'value', 'tolerance', 'part', 'manufacturer', 'partNumber', 'supplier', 'footprint', 'description'].map((k) => col(k, lang)), rows }];
 }
@@ -51,8 +65,8 @@ function detailTables(design: Design, lang?: Lang): ReportTableData[] {
       [rt('detail.supplier', undefined, lang), d.fields.supplier],
       [rt('detail.models', undefined, lang), d.models.join(', ')],
     ];
-    for (const p of d.params) rows.push([rt('detail.param', { name: paramLabel(p.def) }, lang), p.def.unit && p.value !== HIDDEN_VALUE && p.value !== '' ? `${p.value} ${p.def.unit}` : p.value]);
-    for (const pin of d.pins) rows.push([rt('detail.pin', { name: pin.name, number: pin.number || '—', type: pin.type }, lang), pin.net || rt('detail.unconnected', undefined, lang)]);
+    for (const p of d.params) rows.push([rt('detail.param', { name: paramLabel(p.def) }, lang), p.value !== HIDDEN_VALUE ? paramDisplay(p.def, p.value) : p.value]);
+    for (const pin of d.pins) rows.push([rt('detail.pin', { name: pin.name, number: pin.number || '—', type: pinTypeName(pin.type, lang) }, lang), pin.net || rt('detail.unconnected', undefined, lang)]);
     const excluded = [d.excludeFromSim ? rt('detail.excludedSim', undefined, lang) : '', d.excludeFromBom ? rt('detail.excludedBom', undefined, lang) : ''].filter(Boolean);
     if (excluded.length) rows.push([rt('detail.excluded', undefined, lang), excluded.join(', ')]);
     rows.push([rt('detail.provenance', undefined, lang), d.provenance]);

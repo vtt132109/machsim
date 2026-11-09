@@ -60,6 +60,7 @@ export function AnalysisSettings({ ctrl, close }: { ctrl: SimulationIntegration;
       availableOutputs={ctx.outputs ?? []}
       availableSources={ctx.sources ?? []}
       availableElements={ctx.elements ?? []}
+      availableVariables={ctx.variables ?? []}
       saves={design.analysis.saves ?? []}
       onSavesChange={(s) => (pending.saves = s)}
       expressions={design.analysis.expressions ?? []}

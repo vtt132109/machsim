@@ -280,7 +280,8 @@ describe('start debugging', () => {
     s.advance(s.time + 2e-6);
     s.setParam('A1', 'break', 1);
     runUntilHeld(s);
-    expect(read(s, 'Mdbg')).toBe(DEBUG_REASON.start);
+    // after the program ran it is a stop the learner asked for, not "before the first instruction"
+    expect(read(s, 'Mdbg')).toBe(DEBUG_REASON.manual);
   });
 });
 

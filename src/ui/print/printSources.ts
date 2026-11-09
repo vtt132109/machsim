@@ -17,6 +17,7 @@ import type { Design } from '../../model/types';
 import { allSheets } from '../../model/hierarchy';
 import { instrumentSummary, printSheetIds } from '../app/printPlan';
 import { paramLabel, partName } from '../../i18n/library';
+import { paramDisplay } from '../editor/paramFields';
 import { partLookup } from '../store';
 import { itemsBounds } from '../store/designOps';
 import type { SelItem } from '../store/types';
@@ -132,7 +133,7 @@ async function sheetImages(ctx: PrintContext, choices: PrintChoices): Promise<Im
 function instrumentTable(ctx: PrintContext): TableContent {
   const rows: string[][] = [];
   for (const it of instrumentSummary(ctx.design, partLookup)) {
-    it.values.forEach((v, i) => rows.push([i === 0 ? `${it.refdes} — ${partName(it.def)}` : '', paramLabel(v.def), `${v.value}${v.def.unit ? ` ${v.def.unit}` : ''}`]));
+    it.values.forEach((v, i) => rows.push([i === 0 ? `${it.refdes} — ${partName(it.def)}` : '', paramLabel(v.def), paramDisplay(v.def, v.value)]));
   }
   if (!rows.length) rows.push([pt('noInstruments'), '', '']);
   return {

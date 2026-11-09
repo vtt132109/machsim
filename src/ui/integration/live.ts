@@ -389,6 +389,8 @@ function mechaReading(b: IndicatorBinding, values: Map<string, number>): string 
 export interface IndicatorReading {
   refdes: string;
   kind: IndicatorBinding['kind'];
+  /** library id of the part, for its name in the UI language */
+  partId?: string;
   text: string;
 }
 
@@ -421,7 +423,7 @@ export function indicatorReadings(indicators: readonly IndicatorBinding[], value
     } else if (b.kind === 'motor') text = `ω = ${formatEng(s, 'rad/s', 4)}${i !== undefined ? `, I = ${formatEng(i, 'A', 3)}` : ''}`;
     else if (b.signal.kind === 'current') text = formatReading(s, 'A', 4);
     else text = formatReading(s, 'V', 4) + (i !== undefined ? `, ${formatReading(i, 'A', 3)}` : '');
-    out.push({ refdes: b.refdes, kind: b.kind, text });
+    out.push({ refdes: b.refdes, kind: b.kind, partId: b.partId, text });
   }
   return out;
 }

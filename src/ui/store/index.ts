@@ -57,5 +57,5 @@ export * from './viewport';
 export * from './shapes';
 export { collectRefdes, nextRefdes, refdesPrefix, validateRefdes } from './refdes';
 export { newId } from './ids';
-export { cursorStore, setCursor, type CursorInfo } from './cursor';
+export { cursorStore, setCursor, showStatusNotice, statusNotice, type CursorInfo } from './cursor';
 export { createStore, type Store } from './createStore';

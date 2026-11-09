@@ -474,7 +474,7 @@ export function buckVariants(base: LibraryPartDef): LibraryPartDef[] {
 const isSection = (p: LibraryPartDef): boolean => p.pkg !== undefined;
 const isOneSection = (p: LibraryPartDef): boolean => /one section of the (dual|quad)/.test(p.description);
 const IDEAL = new Set(['analog/opamp', 'analog/opamp-ideal-3', 'analog/opamp-ideal-5', 'analog/comparator']);
-const isChip = (p: LibraryPartDef): boolean => p.family === 'Op-amp' && / \((dual|quad)\)$/.test(p.name) && !isSection(p);
+const isChip = (p: LibraryPartDef): boolean => (p.family === 'Op-amp' || p.family === 'Comparator') &&/ \((dual|quad)\)$/.test(p.name) && !isSection(p);
 
 /** Every variant of the analog and power parts (core catalogue and the new bases). */
 export function analogVariants(): LibraryPartDef[] {
@@ -486,7 +486,7 @@ export function analogVariants(): LibraryPartDef[] {
       if (p.family === 'Op-amp') {
         if (isChip(p)) out.push(...packageChipVariants(p));
         else if (!isOneSection(p) && p.symbol.pins.some((x) => x.name === 'IN+')) out.push(...amplifierVariants(p));
-      } else if (p.family === 'Comparator') out.push(...amplifierVariants(p));
+      } else if (p.family === 'Comparator') out.push(...(isChip(p) ? packageChipVariants(p) : amplifierVariants(p)));
     } else if (p.group === 'power') {
       out.push(...fixedRegulatorVariants(p), ...ldo1117Variants(p), ...adjustableVariants(p), ...buckVariants(p));
     }

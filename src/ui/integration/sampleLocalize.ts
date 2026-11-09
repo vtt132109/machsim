@@ -23,7 +23,7 @@
  */
 import type { Design } from '../../model/types';
 import { getLang, t, tr } from '../../i18n';
-import type { NotePair } from '../../i18n/sampleNotes';
+import { SAMPLE_SHEET_EN, type NotePair } from '../../i18n/sampleNotes';
 
 /** How the shipped samples are named: a two-digit number, a slug and .msim. */
 const SAMPLE_NAME_RE = /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*\.msim$/i;
@@ -46,6 +46,7 @@ export function sampleTextKey(fileName: string): string {
 
 /** Default sheet name in the UI language ("Sheet 3" -> "Trang 3", "Ladder 1" -> "Bậc thang 1"). */
 export function localizeSheetName(name: string): string {
+  if (getLang() === 'en' && SAMPLE_SHEET_EN[name]) return SAMPLE_SHEET_EN[name];
   const m = /^Sheet (\d+)$/.exec(name);
   if (m) return t('sheet.default', { n: Number(m[1]) });
   const l = /^Ladder (\d+)$/.exec(name);

@@ -21,6 +21,7 @@
 import type { GroupDef, PartDef, PartGroup } from './types';
 import { ALL_PARTS } from './parts';
 import { CATALOGUE_PACKS } from './catalog';
+import { setPartTextResolver } from '../i18n/library';
 
 export const GROUPS: GroupDef[] = [
   { id: 'sources', name: 'Sources', order: 0 },
@@ -268,6 +269,9 @@ export function getPart(id: string): PartDef | undefined {
   return byId.get(id) ?? runtimeById.get(id);
 }
 
+// Vietnamese names and descriptions of a part found by id (see src/i18n/library.ts)
+setPartTextResolver(getPart);
+
 /** True for the parts shipped with MachSim (the read-only master database). */
 export function isBuiltinPart(id: string): boolean {
   return byId.has(id);
@@ -277,7 +281,26 @@ export function partsInGroup(group: PartGroup): PartDef[] {
   return listed.filter((p) => p.group === group);
 }
 
+/** Ranked search over the loaded parts (the part browser's), installed by src/ui/editor/browserModel.ts. */
+type PartSearcher = (parts: readonly PartDef[], query: string) => PartDef[];
+let partSearcher: PartSearcher | null = null;
+
+export function setPartSearcher(fn: PartSearcher | null): void {
+  partSearcher = fn;
+}
+
+/**
+ * Parts matching a query, best first. Uses the part browser's search when the UI layer installed it
+ * (Vietnamese words with or without accents, values such as "10k", ranking), else {@link substringParts}.
+ */
 export function searchParts(query: string): PartDef[] {
+  const q = query.trim();
+  if (!q) return listed;
+  return partSearcher ? partSearcher(listed, q) : substringParts(q);
+}
+
+/** Parts whose id, name, family, description or keywords contain the text (unranked, English only). */
+export function substringParts(query: string): PartDef[] {
   const q = query.trim().toLowerCase();
   if (!q) return listed;
   return listed.filter((p) =>

@@ -54,9 +54,10 @@ describe('component library', () => {
     // round 4 library breadth adds 6445 parts in five lazy packs (src/library/catalog/more): 6445 simulatable,
     // 0 drawn-only (every one has a model that solves in the bench below)
     // round 4 fix adds 38 comparator section parts to the core catalogue (LM393, LM339 … as chips with sections)
-    // and 12 package variants of those chips to the analog-more pack
-    expect(simulatable.length).toBe(4867 + 38 + 6445 + 12);
-    expect(listParts()).toHaveLength(5072 + 38 + 6445 + 12);
+    // and 11 package variants of those chips to the analog-more pack (round 4 qa fix: the chips are named
+    // LM393D / LM393PW through packageChipVariants, so one fewer than the 12 glued "LM393 (dual)D" names)
+    expect(simulatable.length).toBe(4867 + 38 + 6445 + 11);
+    expect(listParts()).toHaveLength(5072 + 38 + 6445 + 11);
   });
 
   // the biggest group (RF: hundreds of transmission-line and mixer parts) takes about 45 s on its

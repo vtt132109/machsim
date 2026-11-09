@@ -18,7 +18,7 @@
  * Integration code extends it through src/ui/app/extensions.ts.
  */
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { actions, getState, partLookup, subscribe, useEditor } from '../store';
+import { actions, getState, partLookup, showStatusNotice, subscribe, useEditor } from '../store';
 import { newLocalizedDesign } from '../store/editorStore';
 import { ContextMenuHost } from '../common/Menu';
 import { DialogHost, isDialogOpen } from '../common/dialogs';
@@ -215,7 +215,10 @@ function onKeyDown(e: KeyboardEvent): void {
 function beginnerShortcutAllowed(id: string): boolean {
   if (getState().ui.beginner !== true || beginnerCommand(id)) return true;
   const keys = shortcutLabel(id);
-  actions.addSimMessage('info', t('beginner.hiddenCommand', { command: tDynamic(`cmd.${id}`, undefined, id), keys: keys ?? '' }), t('sim.source.beginner'));
+  const text = t('beginner.hiddenCommand', { command: tDynamic(`cmd.${id}`, undefined, id), keys: keys ?? '' });
+  actions.addSimMessage('info', text, t('sim.source.beginner'));
+  // also on screen: the message log is a table in another tab
+  showStatusNotice(text);
   return false;
 }
 

@@ -98,7 +98,7 @@ export const CATALOGUE_PACKS: CataloguePack[] = [
   },
   {
     id: 'analog-more',
-    counts: { analog: 1096, power: 450 },
+    counts: { analog: 1095, power: 450 },
     load: async () => (await import('./more/analogMore')).ANALOG_MORE_CATALOG,
   },
   {

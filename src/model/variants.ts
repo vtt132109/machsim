@@ -185,7 +185,10 @@ function newVariantId(design: Pick<Design, 'variants'>): string {
 /** Add a variant (fitted parts = those of `copyFrom`, else every part); returns its id. */
 export function addVariant(design: Design, name: string, copyFrom?: string): { design: Design; id: string } {
   const id = newVariantId(design);
-  const list = [...(design.variants?.list ?? []), { id, name: name.trim() || id }];
+  // two variants never share a name (the menu, the column headers and pasting between designs go by name)
+  let label = name.trim() || id;
+  for (let k = 2; variantNameTaken(design, label); k++) label = `${name.trim() || id} ${k}`;
+  const list = [...(design.variants?.list ?? []), { id, name: label }];
   const source = copyFrom ? design.variants?.list.find((x) => x.id === copyFrom) : undefined;
   if (source?.variables && Object.keys(source.variables).length) list[list.length - 1] = { ...list[list.length - 1], variables: { ...source.variables } };
   let next = withVariants(design, { ...(design.variants ?? { list: [] }), list, active: design.variants?.active ?? list[0].id });
@@ -208,10 +211,16 @@ function cloneValues(v: VariantValues): VariantValues {
   return out;
 }
 
+/** true when another variant (not `exceptId`) already has this name (ignoring case and spaces at the ends) */
+export function variantNameTaken(design: Pick<Design, 'variants'>, name: string, exceptId?: string): boolean {
+  const n = name.trim().toLowerCase();
+  return (design.variants?.list ?? []).some((x) => x.id !== exceptId && x.name.trim().toLowerCase() === n);
+}
+
 export function renameVariant(design: Design, id: string, name: string): Design {
   const v = design.variants;
   const n = name.trim();
-  if (!v || !n || !v.list.some((x) => x.id === id && x.name !== n)) return design;
+  if (!v || !n || variantNameTaken(design, n, id) || !v.list.some((x) => x.id === id && x.name !== n)) return design;
   return withVariants(design, { ...v, list: v.list.map((x) => (x.id === id ? { ...x, name: n } : x)) });
 }
 

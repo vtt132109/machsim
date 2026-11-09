@@ -17,8 +17,21 @@ import { PART_DESC_VI } from './partDescriptions.vi';
 const isVi = (): boolean => getLang() === 'vi';
 
 /** Vietnamese text a generated catalogue part carries itself (LibraryPartDef.textVi). */
-function ownVi(part: object): { name?: string; description?: string } | undefined {
-  return (part as { textVi?: { name?: string; description?: string } }).textVi;
+type ViText = { name?: string; description?: string };
+
+/** Looks a part up by id (installed by src/library/index.ts), for callers that only hold {id, name}. */
+let resolvePartText: ((id: string) => object | undefined) | null = null;
+export function setPartTextResolver(fn: ((id: string) => object | undefined) | null): void {
+  resolvePartText = fn;
+}
+
+function ownVi(part: object): ViText | undefined {
+  const own = (part as { textVi?: ViText }).textVi;
+  if (own) return own;
+  // a plain {id, name} (a BOM row) carries no Vietnamese text: take it from the library part
+  const id = (part as { id?: unknown }).id;
+  const def = resolvePartText && typeof id === 'string' ? resolvePartText(id) : undefined;
+  return (def as { textVi?: ViText } | undefined)?.textVi;
 }
 
 /** Vietnamese name of a part, if it has one (table or the part's own text). */

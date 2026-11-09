@@ -21,3 +21,13 @@ export function setCursor(pos: Point | null, hover = ''): void {
   const same = cur.hover === hover && (cur.pos === pos || (!!cur.pos && !!pos && cur.pos.x === pos.x && cur.pos.y === pos.y));
   if (!same) cursorStore.setState({ pos, hover });
 }
+
+/** A short explanation shown in the middle of the status bar for a few seconds (a shortcut that did nothing and why). */
+export const statusNotice = createStore<{ text: string }>({ text: '' });
+let noticeTimer: ReturnType<typeof setTimeout> | undefined;
+
+export function showStatusNotice(text: string, ms = 9000): void {
+  statusNotice.setState({ text });
+  if (noticeTimer !== undefined) clearTimeout(noticeTimer);
+  noticeTimer = text ? setTimeout(() => statusNotice.setState({ text: '' }), ms) : undefined;
+}
