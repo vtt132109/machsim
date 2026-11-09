@@ -7,6 +7,7 @@
  * who opens such a file should still read "Cầu phân áp" and "Trang 1", so:
  *
  *   localizeSample(design, title)                    // title + sheet names in the UI language
+ *   localizeNotes(design, pairs)                     // sheet notes in English (the files keep Vietnamese)
  *   await localizeOpenedSample(design, 'x.msim')     // the same, for a file of examples/
  *
  * `localizeOpenedSample` is registered with `registerOpenTransform` (src/ui/integration), so every
@@ -21,7 +22,8 @@
  * eagerly loaded module would put them all in the start-up bundle.
  */
 import type { Design } from '../../model/types';
-import { t, tr } from '../../i18n';
+import { getLang, t, tr } from '../../i18n';
+import type { NotePair } from '../../i18n/sampleNotes';
 
 /** How the shipped samples are named: a two-digit number, a slug and .msim. */
 const SAMPLE_NAME_RE = /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*\.msim$/i;
@@ -64,6 +66,37 @@ export function localizeSample(design: Design, title: string): Design {
 }
 
 /**
+ * The design with the sheet notes that appear in `pairs` replaced by their English text (the sample
+ * files keep Vietnamese notes). A note is replaced only when it still has exactly the stored
+ * Vietnamese text, so a note the learner wrote or edited is never touched. Returns the same object
+ * when nothing changes.
+ */
+export function localizeNotes(design: Design, pairs: readonly NotePair[] | undefined): Design {
+  if (!pairs || pairs.length === 0) return design;
+  const english = new Map(pairs.map(([vi, en]) => [vi, en] as const));
+  let changed = false;
+  const sheets = (list: Design['sheets']): Design['sheets'] =>
+    list.map((s) => {
+      if (!s.notes.some((n) => english.has(n.text))) return s;
+      changed = true;
+      return { ...s, notes: s.notes.map((n) => (english.has(n.text) ? { ...n, text: english.get(n.text) as string } : n)) };
+    });
+  const root = sheets(design.sheets);
+  const children = design.children?.map((c) => ({ ...c, sheets: sheets(c.sheets) }));
+  return changed ? { ...design, sheets: root, ...(children ? { children } : {}) } : design;
+}
+
+/**
+ * The notes of a shipped sample in both languages, but only when the interface is English (the
+ * files already hold the Vietnamese text): the table is a lazy chunk nobody loads in Vietnamese.
+ */
+export async function sampleNotePairs(fileName: string): Promise<readonly NotePair[] | undefined> {
+  if (getLang() !== 'en' || !looksLikeSample(fileName)) return undefined;
+  const { SAMPLE_NOTES } = await import('../../i18n/sampleNotes');
+  return SAMPLE_NOTES[sampleTextKey(fileName)];
+}
+
+/**
  * The title of the shipped sample a file name belongs to, in both languages; undefined when the
  * name is not a shipped sample. Loads the text table on demand.
  */
@@ -84,6 +117,7 @@ export async function localizeOpenedSample(design: Design, fileName: string): Pr
   const titles = await sampleTitles(fileName);
   if (!titles) return design;
   const want = tr({ vi: titles.vi, en: titles.en });
-  if (design.title === want && design.sheets.every((s) => s.name === localizeSheetName(s.name))) return design;
-  return localizeSample(design, want);
+  const notes = await sampleNotePairs(fileName);
+  if (design.title === want && design.sheets.every((s) => s.name === localizeSheetName(s.name))) return localizeNotes(design, notes);
+  return localizeNotes(localizeSample(design, want), notes);
 }

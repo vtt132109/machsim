@@ -8,7 +8,8 @@
  *  - **instruments**: the settings of every instrument placed in the design;
  *  - **grapher**: pages registered by the Grapher window through {@link registerPrintContribution};
  *  - **report**: a report table of Reports (bill of materials, statistics ...);
- *  - **lesson**: the hand-out of a guided lesson (goal, theory, tasks, quiz).
+ *  - **lesson**: the hand-out of a guided lesson (goal, theory, tasks, quiz);
+ *  - **quickRef**: the quick-reference card of src/ui/print/quickRef.ts.
  *
  * The exporter and react-dom/server are loaded on first use, so this module stays small.
  */
@@ -38,6 +39,8 @@ export interface PrintChoices {
   grapher: boolean;
   /** the ladder program's rung comments and address cross-reference (src/ui/print/ladderPrint.ts) */
   ladder?: boolean;
+  /** the quick-reference card: first-circuit steps, keyboard shortcuts, the main menus (quickRef.ts) */
+  quickRef?: boolean;
   /** report id, '' = none */
   report: string;
   /** lesson id, '' = none */
@@ -53,6 +56,8 @@ export interface PrintContext {
   selection: readonly SelItem[];
   probeValues?: Record<string, string>;
   monochrome: boolean;
+  /** the interface is in beginner mode (the quick-reference card lists only what is on screen) */
+  beginner?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -196,6 +201,10 @@ export async function buildContents(ctx: PrintContext, choices: PrintChoices): P
   }
   if (choices.grapher) {
     for (const c of contributions.getState()) if (c.available()) out.push(...(await c.pages({ monochrome: ctx.monochrome })));
+  }
+  if (choices.quickRef) {
+    const { quickReferenceContents } = await import('./quickRef');
+    out.push(...quickReferenceContents({ beginner: !!ctx.beginner }));
   }
   if (choices.report) out.push(...(await reportTable(ctx, choices.report)));
   if (choices.lesson) {

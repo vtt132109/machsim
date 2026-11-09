@@ -5,6 +5,7 @@ export default {
   'help.title': ['Trợ giúp MachSim', 'MachSim help'],
   'help.topics': ['Mục lục trợ giúp', 'Help topics'],
   'help.whatIsThis': ['Đây là gì?', 'What is this?'],
+  'help.printQuickRef': ['In thẻ tham khảo nhanh…', 'Print the quick-reference card…'],
   'help.what': ['Đây là gì?', 'What is it?'],
   'help.use': ['Dùng khi nào?', 'When to use it'],
   'help.read': ['Đọc kết quả thế nào?', 'How to read it'],

@@ -15,6 +15,8 @@ import { adcDac, counter7seg, flipflop, logicGates } from './digital';
 import { mcuBlink } from './mcu';
 import { ladderStartStop } from './ladder';
 import { hysteresisBlock, icPackage, ladderTraffic, mcuButton, measRise, rcStages, realCapacitor, realFlipflop, transferBlock, variantBoards } from './round3';
+import { blockMeters, dualOpamp, mcuDebug, printHandout, stepSweep } from './round4';
+import { audioFilter, batteryRuntime, relayLatch, scriptSweep } from './round4b';
 
 export const LESSONS: readonly LessonDef[] = [
   ohm,
@@ -49,6 +51,15 @@ export const LESSONS: readonly LessonDef[] = [
   rcStages,
   variantBoards,
   measRise,
+  printHandout,
+  blockMeters,
+  stepSweep,
+  dualOpamp,
+  mcuDebug,
+  relayLatch,
+  audioFilter,
+  batteryRuntime,
+  scriptSweep,
 ];
 
 export { LESSON_LEVELS };

@@ -75,6 +75,7 @@ const SKIP = [
   'ui/integration/electroSamples.ts',
   'ui/integration/sectionSamples.ts',
   'ui/integration/deviceSamples.ts',
+  'ui/integration/learnSamples.ts',
   'ui/integration/examples.ts',
 ];
 

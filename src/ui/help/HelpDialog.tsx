@@ -142,6 +142,11 @@ function Page({ topic, go, close }: { topic: HelpTopic; go: (t: HelpTopic) => vo
       return (
         <div className="ms-help-page ms-help">
           <h3>{t('cmd.help.shortcuts')}</h3>
+          <p>
+            <button type="button" className="ms-btn" onClick={() => void import('../print/PrintPreview').then((m) => m.openPrintPreview({ sheets: false, instruments: false, quickRef: true }))}>
+              {t('help.printQuickRef')}
+            </button>
+          </p>
           {SHORTCUT_HELP.map((sec) => (
             <section key={sec.section}>
               <h4>{t(sec.section)}</h4>

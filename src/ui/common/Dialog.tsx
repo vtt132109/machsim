@@ -6,6 +6,17 @@ import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { Icon } from './icons';
 import './common.css';
 import { t } from '../../i18n';
+import type { GuidePageId } from '../../i18n/helpGuides';
+
+let helpOpener: ((page: GuidePageId) => void) | null = null;
+
+/**
+ * The help browser registers itself here (src/ui/help/open.ts), so a dialog can offer its guide page
+ * (`guide` prop) without importing the help module: the common frame stays free of the help text.
+ */
+export function setDialogHelpOpener(opener: ((page: GuidePageId) => void) | null): void {
+  helpOpener = opener;
+}
 
 export interface DialogProps {
   title: string;
@@ -17,11 +28,13 @@ export interface DialogProps {
   /** element to focus first (selector inside the dialog) */
   initialFocus?: string;
   className?: string;
+  /** guide page of the help browser that explains this dialog: shows a "?" button and answers F1 */
+  guide?: GuidePageId;
 }
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export function Dialog({ title, onClose, children, footer, width = 420, initialFocus, className }: DialogProps) {
+export function Dialog({ title, onClose, children, footer, width = 420, initialFocus, className, guide }: DialogProps) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const closeRef = useRef(onClose);
@@ -49,6 +62,11 @@ export function Dialog({ title, onClose, children, footer, width = 420, initialF
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     e.stopPropagation();
+    if (e.key === 'F1' && guide) {
+      e.preventDefault();
+      helpOpener?.(guide);
+      return;
+    }
     if (e.key === 'Escape') {
       e.preventDefault();
       closeRef.current();
@@ -83,6 +101,11 @@ export function Dialog({ title, onClose, children, footer, width = 420, initialF
       >
         <div className="ms-dialog-title">
           <h2 id={titleId}>{title}</h2>
+          {guide ? (
+            <button type="button" className="ms-icon-btn ms-dialog-help" aria-label={t('common.helpDialog')} title={t('common.helpDialog')} onClick={() => helpOpener?.(guide)}>
+              ?
+            </button>
+          ) : null}
           <button type="button" className="ms-icon-btn" aria-label={t('common.close')} onClick={() => closeRef.current()}>
             <Icon name="close" />
           </button>

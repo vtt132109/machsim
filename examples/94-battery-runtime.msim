@@ -1,0 +1,161 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Battery runtime: constant current against a resistor",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/battery-nonideal",
+          "refdes": "BT1",
+          "x": 160,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "chem": "liion",
+            "cells": "1",
+            "capacity": "0.005",
+            "soc": "100",
+            "r0": "0.05"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/dc-current",
+          "refdes": "I1",
+          "x": 360,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "50m"
+          }
+        },
+        {
+          "id": "p7",
+          "partId": "sources/battery-nonideal",
+          "refdes": "BT2",
+          "x": 160,
+          "y": 380,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "chem": "liion",
+            "cells": "1",
+            "capacity": "0.005",
+            "soc": "100",
+            "r0": "0.05"
+          }
+        },
+        {
+          "id": "p10",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 360,
+          "y": 380,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "84"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 160,
+          "y": 170,
+          "name": "P1",
+          "rotation": 0
+        },
+        {
+          "id": "l3",
+          "x": 160,
+          "y": 230,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l5",
+          "x": 360,
+          "y": 170,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 360,
+          "y": 230,
+          "name": "P1",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 160,
+          "y": 350,
+          "name": "P2",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 160,
+          "y": 410,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 330,
+          "y": 380,
+          "name": "P2",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 390,
+          "y": 380,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 60,
+          "y": 500,
+          "text": "Thời gian chạy ở dòng không đổi: t = C · 3600 / I. Mức điện tích V(BT1.soc) giảm đều từ 1 về 0 sau 360 s; điện áp pin tụt nhanh ở những giây cuối.",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet1",
+          "x": 60,
+          "y": 520,
+          "text": "Tải điện trở: I = V/R giảm khi pin cạn, nên đường V(BT2.soc) cong và kéo dài hơn. Đổi “Hoá học” sang kiềm để thấy điện trở trong tăng mạnh hơn.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 2,
+        "tstop": 420
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Hai pin Li-ion giống nhau (5 mAh, đầy điện). BT1 nuôi tải dòng không đổi 50 mA nên cạn đúng sau C·3600/I = 0,005 · 3600 / 0,05 = 360 s. BT2 nuôi một điện trở 84 Ω (cũng khoảng 50 mA lúc đầu) nhưng điện áp pin tụt dần nên dòng giảm và pin trụ lâu hơn. Vẽ V(BT1.soc) và V(BT2.soc) trong Máy vẽ. Two identical Li-ion batteries (5 mAh, full). BT1 feeds a 50 mA constant-current load so it runs empty after exactly C·3600/I = 0.005 · 3600 / 0.05 = 360 s. BT2 feeds an 84 Ω resistor (also about 50 mA at first), but its voltage sags as it empties, the current falls and the battery lasts longer. Plot V(BT1.soc) and V(BT2.soc) in the Grapher."
+}

@@ -1065,6 +1065,43 @@ giáo viên báo đúng chứ không báo "không có gì".
   bằng “hiện vector nội bộ”), đầu vào của bộ tích phân từ thông bị cổng hoá `u(time)+u(hertz)` để điểm làm việc DC không “nạp” lõi. Dòng xoáy = một điện trở.
 - **Đồ thị X–Y**: `vs(y, x)` trong bộ xử lý sau trả `Vector` có `xValues`; `buildPlotData` vẽ theo `PlotTrace.ownX`; nút “Đường B–H” cho mọi lõi có `V(R.b)` và `V(R.h)`.
 
+## Học cho người học: bài học, mạch mẫu, trợ giúp và thuật ngữ của vòng 4 (vòng 4 bước 9)
+
+Bước này không thêm tính năng mô phỏng; nó làm cho mọi thứ vòng 4 đã thêm **học được**.
+
+**Chín bài học** (`src/learn/lessons/round4.ts`, `round4b.ts`; chữ `src/i18n/lessons/round4.ts`, `round4b.ts`, gộp vào `LESSON_TEXT` và `NOTES`): `print-handout` (lớp hiển thị + `Design.printSetup`
+lưu trong tệp), `block-meters` (đồng hồ trong hai bản của một khối: đọc `build.instruments` có `scope`), `step-sweep` (`.step` / Quét tham số của biến toàn cục: kiểm tra chạy
+`applySteps` rồi đo tần số cắt từng lần chạy), `dual-opamp` (hai phần cùng tên U1, nguồn dùng chung), `mcu-debug` (đếm chu kỳ máy: `halfPeriods(program)` chạy chính `Cpu8051`
+và đòi đúng 1000 chu kỳ giữa hai lần đổi P1.0, rồi mô phỏng thấy 500 Hz), `relay-latch` (cuộn và tiếp điểm nối bằng tên; nguồn xung thay nút nhấn; đọc nút trạng thái
+`<cuộn>.st` ở 1,5 s và 3,5 s), `audio-filter` (đo tỉ số ở chân + của loa tại 440 Hz và 3 kHz), `battery-runtime` (đo thời điểm `V(<pin>.soc)` qua 0,5, thời gian chạy = 2 lần đó,
+đòi 360 s ± 6 %), `script-sweep` (mạch do tập lệnh dựng ra qua `showDesign()` là mạch được kiểm tra). Mỗi bài đạt trên lời giải mẫu, rớt trên trang trống và rớt **đúng lời nhắn**
+trên lỗi thường gặp (`src/learn/lessonsRound4.test.ts`). Bài nào nhắc lệnh bị ẩn ở chế độ người mới (`block-meters`, `print-handout`, `script-sweep`) hiện nút “Bật chế độ đầy đủ”;
+danh sách đó được khoá trong `tests/review/round4/beginner-menu-paths.test.ts`. Phép kiểm tra dùng lại `ledPath`, `mcuOf`, `programProblem`, `EXACT_DELAY_PROGRAM` của `lessons/mcu.ts`.
+
+**Chín mạch mẫu** (`src/ui/integration/learnSamples.ts`, số 90 – 98 để không đụng số của kỹ sư song song; tệp trong `examples/`): hai trang có cài đặt in, khối hai bản có đồng hồ,
+`.step`, 8051 trễ đúng 1000 chu kỳ, pin chạy 360 s, 7474 hai phần chia 4, biến áp nguồn có tải / không tải, cầu chì I²t và áp-tô-mát, nguồn tệp số đo. Mỗi con số ghi trên trang được
+kiểm bằng công thức trong `tests/review/round4/learner-samples.test.ts` (không so với kết quả đã lưu).
+
+**Ghi chú mạch mẫu bằng tiếng Anh** (`src/i18n/sampleNotes.ts`, bảng nạp theo yêu cầu): tệp mẫu giữ ghi chú tiếng Việt; khi giao diện là tiếng Anh, `localizeOpenedSample`
+(`sampleLocalize.ts`) tải bảng và `localizeNotes` thay từng ghi chú còn **nguyên văn** chữ Việt đã lưu bằng chữ Anh (ghi chú người học tự sửa không bao giờ bị đổi; không có việc gì
+được làm khi giao diện là tiếng Việt). Bảng là danh sách `[chữ Việt, chữ Anh]` theo thứ tự trong tệp; `tests/review/round4/sample-notes.test.ts` đọc mọi tệp mẫu và đòi mọi ghi chú có
+mặt, đúng thứ tự, chữ Anh không còn dấu tiếng Việt và cùng các con số. Mạch mẫu mới: sửa ghi chú trong bộ dựng, chạy `MACHSIM_UPDATE_EXAMPLES=1 npx vitest run tests/examples.test.ts`, thêm
+cặp vào bảng (test chỉ ra chỗ thiếu).
+
+**Trợ giúp**: Getting Started có bước 16 (nhiều thiết kế, in, thẻ tham khảo) và 17 (gỡ lỗi, nghe, tập lệnh); “Có gì mới” có 5 mục vòng 4; một test khoá số bài học ghi trong chữ bằng
+`LESSONS.length`. `Dialog` nhận thuộc tính `guide` (id trang hướng dẫn): hiện nút ? và trả lời F1; module trợ giúp đăng ký hàm mở qua `setDialogHelpOpener` nên khung chung không nhập chữ
+trợ giúp. F1 trong cửa sổ nổi dùng bảng `WINDOW_GUIDES` (`src/ui/help/open.ts`: tập lệnh, âm thanh, trình soạn 8051, bài học, hộp mô tả).
+
+**Thẻ tham khảo nhanh** (`src/ui/print/quickRef.ts`): thêm lựa chọn `PrintChoices.quickRef` vào hộp Xem trước khi in. Nội dung sinh ra từ `SHORTCUT_HELP` và mô hình menu đang chạy
+(`buildMenus` + `beginnerMenus` khi chế độ người mới bật), nên không có gì gõ hai lần; chữ nằm ở `printText.ts` (`qr*`). `PrintContext.beginner` truyền chế độ vào.
+
+**Chế độ người mới**: mọi lệnh vòng 4 có một quyết định có lý do trong `tests/review/round4/beginner-decisions.test.ts`; bảng đó fail khi một id menu mới (so với ảnh chụp
+`menu-ids-round3.json`) chưa có quyết định. Chỉ `file.close`, `window.next`, `window.previous`, `simulate.audio` hiện; phần còn lại ẩn có chủ ý.
+
+**Thuật ngữ** (`src/i18n/glossary.ts` + `glossary.test.ts`): bảng “một khái niệm một tên” (`GLOSSARY`: từ dùng và các cách viết bị cấm) và `DISTINCT` (các cặp trông như đồng nghĩa nhưng là hai
+khái niệm: tham số / thông số, trang / tờ, cuộn hút / cuộn dây, công-tắc-tơ / khởi động từ). Máy quét import mọi module của `src/i18n`, lấy mọi chữ tiếng Việt (`{vi, en}`, cặp
+`[vi, en]`, bảng `*.vi.ts`) và ghi chú trên mọi tệp mẫu, và báo bảng + khoá + từ vi phạm. Thêm thuật ngữ: thêm một dòng vào `GLOSSARY`, chạy máy quét, sửa chỗ nó chỉ ra.
+
 ## Hợp đồng dùng chung (chỉ thêm, không đổi nghĩa)
 
 - `src/sim/netlist.ts` — Netlist IR, analysis specs, options.
@@ -1083,6 +1120,7 @@ giáo viên báo đúng chứ không báo "không có gì".
 - `src/model/sanitize.ts` — lớp toàn vẹn dùng chung: mọi nội dung vào một thiết kế đi qua đây (`sanitizeIncoming`, `sanitizeIncomingSheets`, `sanitizeDesign`, `parseDesignSafely` / `validateDesignSafely` / `repairRawDesign`, `neededVariables` / `referencedVariables`, `SanitizeNote`). Thuần; `src/i18n/sanitize.ts` dịch ghi chú.
 - `src/mcu/debugger.ts`, `watch.ts` — bộ gỡ lỗi của lõi 8051 (điểm dừng, bước, ô theo dõi; `Behaviour.holdRequested` / `wakeTimes`, `TransientStepper.held`) và biểu thức theo dõi (thuần); `src/model/sectionPlan.ts` — luật chọn phần còn trống (thuần); `PartInstance.variantValues`, `DesignVariant.variables` — giá trị riêng theo phương án.
 - `src/audio/*` — WAV, lấy mẫu lại, phát thời gian thực và nguồn micrô (thuần trừ `webAudioSink.ts` / `input.ts`); `ToSpiceContextExt.linkTarget` / `warn` và `followDriver` (`src/library/partkit.ts`) cho phần tử nối bằng tên.
+- `src/i18n/glossary.ts` (`GLOSSARY`, `DISTINCT`, `glossaryViolations`), `src/i18n/sampleNotes.ts` (`SAMPLE_NOTES`), `src/ui/print/quickRef.ts` (`quickReferenceContents`), `src/ui/common/Dialog.tsx` (`guide`, `setDialogHelpOpener`) — chữ cho người học; chỉ thêm.
 - `src/script/protocol.ts` (`SCRIPT_METHODS`, thông điệp worker ↔ host, `ScriptResult`), `session.ts` (`ScriptIO`), `runner.ts` (`startScript`), `cli.ts`; `src/sim/results.ts` `Vector.xValues / xName / xUnit` (đồ thị X–Y, chỉ thêm); `LibraryPartDef` không đổi — lõi từ trễ và MOSFET compact chỉ thêm linh kiện.
 
 ## Luồng dữ liệu

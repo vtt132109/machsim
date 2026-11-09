@@ -1,0 +1,215 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Two copies of one block, each with its own meter",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p11",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 80,
+          "y": 120,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "5"
+          }
+        },
+        {
+          "id": "p12",
+          "partId": "hier:child1",
+          "refdes": "X1",
+          "x": 300,
+          "y": 120,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "RB": "1k"
+          }
+        },
+        {
+          "id": "p13",
+          "partId": "hier:child1",
+          "refdes": "X2",
+          "x": 300,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "RB": "3k"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l14",
+          "x": 80,
+          "y": 90,
+          "name": "VIN",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 290,
+          "y": 140,
+          "name": "VIN",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 290,
+          "y": 320,
+          "name": "VIN",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 80,
+          "y": 150,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 60,
+          "y": 420,
+          "text": "Vout = 5 V · RB / (1k + RB): X1 → 2,5 V, X2 → 3,75 V. Hai bản cùng một khối nhưng RB khác nhau, nên hai đồng hồ đọc khác nhau.",
+          "size": 11
+        },
+        {
+          "id": "note2_sheet1",
+          "x": 60,
+          "y": 440,
+          "text": "Bấm Chạy rồi mở bảng Mô phỏng: thiết bị đo được liệt kê theo đường dẫn (X1.XMM1, X2.XMM1). Mở một khối để xem cả đồng hồ lẫn LED của đúng bản đó.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "op",
+    "specs": {
+      "op": {
+        "type": "op"
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Khối DIV là một cầu phân áp R1 – R2 có sẵn đồng hồ XMM1 bên trong. Đặt hai bản X1 (RB = 1k) và X2 (RB = 3k): mỗi bản có đồng hồ riêng tên X1.XMM1 và X2.XMM1 và đọc đúng điện áp của bản mình: 2,5 V và 3,75 V. Nhấp đúp một khối để xem bên trong. The block DIV is an R1 – R2 divider with a meter XMM1 inside it. Two copies are placed, X1 (RB = 1k) and X2 (RB = 3k): each has its own meter, named X1.XMM1 and X2.XMM1, and reads the voltage of its own copy: 2.5 V and 3.75 V. Double-click a block to look inside.",
+  "children": [
+    {
+      "id": "child1",
+      "kind": "hierarchical",
+      "name": "DIV",
+      "sheets": [
+        {
+          "id": "child1_sheet1",
+          "name": "Sheet 1",
+          "parts": [
+            {
+              "id": "p2",
+              "partId": "basic/resistor",
+              "refdes": "R1",
+              "x": 100,
+              "y": 0,
+              "rotation": 0,
+              "mirror": false,
+              "params": {
+                "value": "1k"
+              }
+            },
+            {
+              "id": "p3",
+              "partId": "basic/resistor",
+              "refdes": "R2",
+              "x": 300,
+              "y": 0,
+              "rotation": 0,
+              "mirror": false,
+              "params": {
+                "value": "{RB}"
+              }
+            },
+            {
+              "id": "p4",
+              "partId": "instruments/multimeter",
+              "refdes": "XMM1",
+              "x": 500,
+              "y": 0,
+              "rotation": 0,
+              "mirror": false,
+              "params": {}
+            }
+          ],
+          "wires": [],
+          "labels": [
+            {
+              "id": "l1",
+              "x": -100,
+              "y": 0,
+              "name": "IN",
+              "rotation": 0,
+              "kind": "hier"
+            },
+            {
+              "id": "l5",
+              "x": 70,
+              "y": 0,
+              "name": "IN",
+              "rotation": 0
+            },
+            {
+              "id": "l6",
+              "x": 130,
+              "y": 0,
+              "name": "MID",
+              "rotation": 0
+            },
+            {
+              "id": "l7",
+              "x": 270,
+              "y": 0,
+              "name": "MID",
+              "rotation": 0
+            },
+            {
+              "id": "l8",
+              "x": 330,
+              "y": 0,
+              "name": "GND",
+              "rotation": 0
+            },
+            {
+              "id": "l9",
+              "x": 490,
+              "y": 30,
+              "name": "MID",
+              "rotation": 0
+            },
+            {
+              "id": "l10",
+              "x": 510,
+              "y": 30,
+              "name": "GND",
+              "rotation": 0
+            }
+          ],
+          "probes": [],
+          "notes": []
+        }
+      ],
+      "variables": {
+        "RB": "1k"
+      }
+    }
+  ]
+}

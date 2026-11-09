@@ -85,7 +85,7 @@ export const LADDER_GUIDE_PAGES: Record<'ladder' | 'mecha', GuidePage> = {
       {
         heading: L('Sao chép, cắt, dán', 'Copy, cut and paste'),
         body: L(
-          'Chọn một bậc, một tiếp điểm hay một cuộn dây rồi nhấn Sao chép / Cắt / Dán (hoặc Ctrl+C, Ctrl+X, Ctrl+V). Giữ Shift khi nhấp để chọn cả một dãy bậc liền nhau. Bậc dán vào ngay dưới bậc đang chọn và được cấp mã mới; tiếp điểm dán nối tiếp sau phần tử đang chọn (“Dán song song” đặt nó bên dưới); cuộn dây dán vào cuối bậc. Nội dung nằm cả trên clipboard của hệ thống ở dạng chữ, nên dán được sang thiết kế khác hoặc cửa sổ MachSim khác.',
+          'Chọn một bậc, một tiếp điểm hay một cuộn dây rồi nhấn Sao chép / Cắt / Dán (hoặc Ctrl+C, Ctrl+X, Ctrl+V). Giữ Shift khi nhấp để chọn cả một dãy bậc liền nhau. Bậc dán vào ngay dưới bậc đang chọn và được cấp mã mới; tiếp điểm dán nối tiếp sau phần tử đang chọn (“Dán song song” đặt nó bên dưới); cuộn dây dán vào cuối bậc. Nội dung nằm cả trên bộ nhớ tạm của hệ thống ở dạng chữ, nên dán được sang thiết kế khác hoặc cửa sổ MachSim khác.',
           'Select a rung, a contact or a coil, then press Copy / Cut / Paste (or Ctrl+C, Ctrl+X, Ctrl+V). Hold Shift while clicking to select a whole run of rungs. A pasted rung goes right below the selected rung and gets new ids; a pasted contact goes in series after the selected element (“Paste in parallel” puts it below); a pasted coil goes at the end of the rung. The content also sits on the system clipboard as text, so it pastes into another design or another MachSim window.',
         ),
       },

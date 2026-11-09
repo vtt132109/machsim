@@ -172,7 +172,7 @@ export const ELECTRO_FAMILY_HELP: Record<string, HelpEntry> = {
   },
   'Measurement file sources': {
     what: L('Nguồn phát lại một kênh của tệp đo lường (văn bản LVM, CSV, TSV) thành điện áp hoặc dòng điện.', 'Sources that play back one channel of a measurement file (LVM text, CSV, TSV) as a voltage or a current.'),
-    use: L('Đưa tín hiệu đã đo thật từ máy hiện sóng hoặc bộ thu thập dữ liệu vào mạch mô phỏng để thử bộ lọc, mạch bảo vệ …', 'Feed a signal really measured with an oscilloscope or a data logger into a simulated circuit to try a filter, a protection circuit …'),
+    use: L('Đưa tín hiệu đã đo thật từ dao động ký hoặc bộ thu thập dữ liệu vào mạch mô phỏng để thử bộ lọc, mạch bảo vệ …', 'Feed a signal really measured with an oscilloscope or a data logger into a simulated circuit to try a filter, a protection circuit …'),
     read: L('Cột đầu là thời gian, các cột sau là kênh. Hệ số thời gian 2 phát chậm gấp đôi; có thể lặp lại, dịch trễ và đổi tỉ lệ giá trị.', 'The first column is time, the next ones are channels. A time scale of 2 plays twice as slowly; the recording can repeat, be delayed and rescaled in value.'),
   },
 };

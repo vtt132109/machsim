@@ -142,8 +142,14 @@ describe('a lesson that names a hidden command offers the full interface in one 
   it('the lessons that need the full interface are exactly the ones about the professional tools', () => {
     const menus = menusIn('en');
     const needing = LESSON_IDS.filter((id) => lessonHiddenCommands(LESSON_TEXT[id]).length);
-    // the variant lesson reads the bill of materials, the 555 lesson uses the circuit wizard
-    expect(needing.sort()).toEqual(['timer555', 'variant-boards']);
+    // the variant lesson reads the bill of materials, the 555 lesson uses the circuit wizard; round 4
+    // added the block lesson (Place › New hierarchical block), the hand-out lesson (Edit › Layer
+    // settings) and the scripting lesson (Tools › Scripts), professional tools that beginner mode
+    // hides on purpose: their lesson pages offer the one-click switch to the full interface
+    expect(needing.sort()).toEqual(['block-meters', 'print-handout', 'script-sweep', 'timer555', 'variant-boards']);
+    expect(lessonHiddenCommands(LESSON_TEXT['print-handout'])).toContain('edit.layers');
+    expect(lessonHiddenCommands(LESSON_TEXT['block-meters'])).toContain('place.newHierBlock');
+    expect(lessonHiddenCommands(LESSON_TEXT['script-sweep'])).toContain('tools.script');
     expect(lessonHiddenCommands(LESSON_TEXT['variant-boards'])).toContain('reports.bom');
     expect(lessonHiddenCommands(LESSON_TEXT['timer555'])).toContain('tools.wizard.555');
     // and every other lesson is fully usable in beginner mode

@@ -106,6 +106,15 @@ export const DESIGN_EXAMPLES: readonly ExampleMeta[] = [
   { file: '73-dual-opamp-variants.msim', topic: 'opamps', title: 'Dual op-amp in sections with two gain variants', summary: 'LM358 vẽ thành hai phần U1A / U1B, hai phương án lắp ráp khác giá trị R2 · độ lợi 2 và 11' },
   { file: '80-hysteresis-bh-loop.msim', topic: 'power', title: 'B-H loop of an iron core (Jiles-Atherton hysteresis)', summary: 'Cuộn 100 vòng trên lõi thép silic có từ trễ Jiles–Atherton và dòng xoáy · vẽ đường B–H trong Grapher' },
   { file: '81-ekv-bsim4-inverter.msim', topic: 'digital', title: 'CMOS inverter with EKV and BSIM4 transistors', summary: 'Cổng đảo CMOS vẽ hai lần: MOSFET EKV 2.6 và MOSFET BSIM4 · quét DC' },
+  { file: '90-handout-two-sheets.msim', topic: 'basics', title: 'Hand-out: low-pass and high-pass on two sheets', summary: 'Phiếu bài tập hai trang đã đặt sẵn khổ giấy, chân trang và lớp tên net · Ctrl+P' },
+  { file: '91-block-meters.msim', topic: 'hierarchy', title: 'Two copies of one block, each with its own meter', summary: 'Hai bản của một khối, mỗi bản có đồng hồ riêng đọc điện áp của bản mình' },
+  { file: '92-step-sweep.msim', topic: 'analyses', title: 'Parameter sweep of a schematic with a .step card', summary: 'Dòng .step trong ô SPICE quét Rx của bộ lọc RC: ba đường AC chồng lên nhau' },
+  { file: '93-mcu-exact-delay.msim', topic: 'mixed', title: '8051 delay loop of exactly 1000 machine cycles', summary: '8051 đổi P1.0 sau đúng 1000 chu kỳ máy = 1 ms · thực hành gỡ lỗi từng dòng' },
+  { file: '94-battery-runtime.msim', topic: 'power', title: 'Battery runtime: constant current against a resistor', summary: 'Pin Li-ion cạn sau C·3600/I khi tải dòng không đổi, lâu hơn khi tải điện trở' },
+  { file: '95-7474-sections.msim', topic: 'digital', title: 'A 7474 drawn as two sections: divide by four', summary: 'Một 7474 vẽ thành hai phần U1A / U1B làm bộ chia 4 · 1 kHz → 500 Hz → 250 Hz' },
+  { file: '96-transformer-regulation.msim', topic: 'power', title: 'Line transformer regulation: loaded and unloaded', summary: 'Biến áp nguồn 230 V → 12 V: 12 V khi đầy tải, 13,8 V khi không tải' },
+  { file: '97-fuse-vs-breaker.msim', topic: 'power', title: 'I²t fuse against a breaker on the same short circuit', summary: 'Cầu chì I²t chảy sau 5,5 ms, áp-tô-mát C cắt nhiệt sau 0,70 s ở dòng 10 A' },
+  { file: '98-measurement-replay.msim', topic: 'instruments', title: 'Replay a recorded sensor waveform', summary: 'Nguồn tệp số đo phát lại dạng sóng đã ghi qua bộ lọc RC làm mượt' },
 ];
 
 /** Metadata of the SPICE decks in examples/spice (title = the deck's first line). */
