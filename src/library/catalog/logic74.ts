@@ -190,7 +190,7 @@ function octal540(pn: string, name: string, vi: string, invert: boolean, fam: st
   };
 }
 
-function transceiver(pn: string, name: string, vi: string, invert: boolean, fam: string): LogicSpec {
+export function transceiver(pn: string, name: string, vi: string, invert: boolean, fam: string): LogicSpec {
   return {
     pn,
     name,
@@ -417,7 +417,7 @@ function dualFf(o: {
 }
 
 /** Octal register / latch with the 273 / 373 / 374 / 377 corner pinout or the 573 / 574 flow-through one. */
-function octalReg(o: { pn: string; name: string; vi: string; desc: string; descVi: string; fam: string; latch?: boolean; ctrl1: 'OE' | 'CLR' | 'EN'; flow?: boolean; invert?: boolean }): LogicSpec {
+export function octalReg(o: { pn: string; name: string; vi: string; desc: string; descVi: string; fam: string; latch?: boolean; ctrl1: 'OE' | 'CLR' | 'EN'; flow?: boolean; invert?: boolean }): LogicSpec {
   const dNums = o.flow ? [2, 3, 4, 5, 6, 7, 8, 9] : [3, 4, 7, 8, 13, 14, 17, 18];
   const qNums = o.flow ? [19, 18, 17, 16, 15, 14, 13, 12] : [2, 5, 6, 9, 12, 15, 16, 19];
   const clkName = o.latch ? 'LE' : 'CLK';

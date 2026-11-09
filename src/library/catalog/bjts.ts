@@ -522,3 +522,6 @@ function arrayPart(a: ArrayRow): LibraryPartDef {
 }
 
 export const BJT_CATALOG: LibraryPartDef[] = [...BJT_ROWS.map((r) => (r.kind === 'd' ? darlingtonPart(r) : singleBjt(r))), ...ARRAYS.map(arrayPart)];
+
+/** Round 4 (library breadth): the row parser and part builders, for the extra part-number tables. */
+export { row as bjtRowFromText, singleBjt, darlingtonPart };

@@ -627,3 +627,6 @@ const pentodes: LibraryPartDef[] = PENTODES.map(([pn, desc, descVi, k]) =>
 );
 
 export const SENSOR_CATALOG: LibraryPartDef[] = [...rtds, ...thermocouples, ...tempIcs, lm335, ...magnetic, ...pressure, ...light, ...ldrs, ...position, ...triodes, ...pentodes];
+
+/** Round 4 (library breadth): the parameter helpers, for the extra sensor tables (catalog/more/sensorsMore.ts). */
+export { slider, keyParam, stepParam, sensorMeta, IC3_SYMBOL };

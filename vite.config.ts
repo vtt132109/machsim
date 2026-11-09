@@ -28,7 +28,8 @@ export default defineConfig({
             { name: 'catalogue-rf', test: /[\\/]src[\\/]library[\\/]catalog[\\/]rf\.ts/ },
             // the start-up digital catalogue (logic kit, memories, converters, displays)
             { name: 'catalogue-digital', test: /[\\/]src[\\/]library[\\/]catalog[\\/](logicKit|digitalMisc|mixedSignal|displayParts)/ },
-            { name: 'catalogue', test: /[\\/]src[\\/]library[\\/]catalog[\\/]/ },
+            // (src/library/catalog/more holds the round 4 library-breadth packs: lazy dynamic-import chunks of their own, not the core)
+            { name: 'catalogue', test: /[\\/]src[\\/]library[\\/]catalog[\\/](?!more[\\/])/ },
           ],
         },
       },

@@ -23,7 +23,7 @@
 import { elC, elR, internalNode, numParam, optNum, type LibraryPartDef } from '../partkit';
 import { capacitorBody, rect, resistorBody, text, twoPinH } from '../symbols';
 import { seriesValues } from '../series';
-import type { ParamDef, ToSpiceContext } from '../types';
+import type { ESeriesName, ParamDef, ToSpiceContext } from '../types';
 import type { ElementIR } from '../../sim/netlist';
 import { burnParam, eng, tauParam, userNum, withMeta } from './kit';
 import { RES_RATINGS, icParam, resistorParams, resistorSpice, valueCode } from './passives';
@@ -45,7 +45,7 @@ interface ResSeries {
   slug: string;
   family: string;
   series: string;
-  e: 'E24' | 'E12' | 'E6';
+  e: ESeriesName;
   min: number;
   max: number;
   tol: string;
@@ -227,3 +227,7 @@ const filmCaps: LibraryPartDef[] = FILM_SERIES.flatMap((s) => s.values.map((v) =
 const slowTau = (p: LibraryPartDef): LibraryPartDef => (Number(p.specs?.power) >= 5 ? { ...p, params: p.params.map((d) => (d.key === 'tau' ? tauParam('1') : d)) } : p);
 
 export const PASSIVE_SERIES_CATALOG: LibraryPartDef[] = [...resistors.map(slowTau), ...polarCaps, ...filmCaps];
+
+/** Round 4 (library breadth): the part builders and symbols, for the extra series (more/passivesMore.ts). */
+export { resistorPart, filmPart, SMD_SYMBOL, RES_SYMBOL, CAP_SYMBOL, FILM_SYMBOL };
+export type { ResSeries, FilmSeries };

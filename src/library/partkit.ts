@@ -123,6 +123,13 @@ export interface LadderIoSpec {
 export interface LibraryPartDef extends PartDef {
   /** parametric data (browser filters, comparison); numbers in SI units */
   specs?: PartSpecs;
+  /**
+   * Package / second-source variant of another part (round 4 library breadth): the id of the base
+   * part whose model (`toSpice`) this part shares unchanged. Only the id, name, footprint, package
+   * and pin numbers differ, so the per-part simulation benches test the base and the variant tests
+   * check the sharing (src/library/catalog/more/variants.ts).
+   */
+  variantOf?: string;
   /** Vietnamese name / description of a generated catalogue part (src/i18n/library.ts reads it) */
   textVi?: { name?: string; description?: string };
   /** order inside the family (e.g. the nominal value); parts without one come first */
