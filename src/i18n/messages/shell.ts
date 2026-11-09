@@ -64,6 +64,7 @@ export default {
   'cmd.view.nextSheet': ['Trang sau', 'Next sheet'],
   'cmd.view.prevSheet': ['Trang trước', 'Previous sheet'],
   'cmd.place.component': ['Linh kiện…', 'Component…'],
+  'cmd.place.newPackage': ['Mỗi phần vào một vi mạch mới', 'New package for each section'],
   'cmd.place.wire': ['Dây nối', 'Wire'],
   'cmd.place.label': ['Nhãn net', 'Net label'],
   'cmd.place.text': ['Ghi chú chữ', 'Text note'],

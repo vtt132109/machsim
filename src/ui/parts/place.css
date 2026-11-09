@@ -56,3 +56,9 @@ textarea.ms-place-model { resize: vertical; }
 .ms-variant-grid table { width: 100%; }
 .ms-variant-grid th.is-active { color: var(--accent); }
 .ms-variant-grid td.ms-variant-cell { text-align: center; }
+.ms-variant-cell .ms-input { display: block; width: 100%; min-width: 5rem; margin-top: 2px; }
+.ms-variant-own { border-color: var(--accent); }
+.ms-variant-detail { margin-top: 12px; padding: 8px; border: 1px solid var(--border); border-radius: 3px; }
+.ms-variant-detail h4 { margin: 0 0 4px; }
+.ms-link-button { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline; font: inherit; }
+tr.is-selected { background: var(--bg-hover, rgba(128, 128, 128, 0.12)); }

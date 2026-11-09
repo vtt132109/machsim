@@ -29,7 +29,7 @@ export const REPORT_UI = {
   'report.modelData.title': ['Dữ liệu mô hình', 'Model data'],
   'report.modelData.desc': ['Các thẻ .model và .subckt mà mô phỏng dùng, với tham số và linh kiện dùng chúng.', 'The .model and .subckt cards the simulation uses, with their parameters and the parts using them.'],
   'report.spareGates.title': ['Cổng còn trống', 'Spare gates'],
-  'report.spareGates.desc': ['Các cổng (phần) chưa dùng của IC nhiều cổng như 7400: có thể dùng thay vì thêm IC mới. Chân vào của cổng trống nên nối đất hoặc nguồn.', 'Unused sections of multi-gate ICs such as the 7400: use them instead of adding an IC. Tie the inputs of spare gates to ground or the supply.'],
+  'report.spareGates.desc': ['Các cổng (phần) chưa dùng của IC nhiều phần như 7400, 7474, 4066, op-amp kép / tư, 556: có thể dùng thay vì thêm IC mới. Chân vào của phần trống nên nối đất hoặc nguồn; với op-amp trống, nối ngõ vào + xuống đất và ngõ vào − với ngõ ra.', 'Unused sections of multi-section ICs such as the 7400, 7474, 4066, dual / quad op-amps and the 556: use them instead of adding an IC. Tie the inputs of spare sections to ground or the supply; for a spare op-amp, tie the + input to ground and the - input to its output.'],
   'report.crossReference.title': ['Tham chiếu chéo', 'Cross-reference'],
   'report.crossReference.desc': ['Mỗi linh kiện nằm ở trang và ô nào của bản vẽ (hàng A…F, cột 1…8); mỗi net đi qua những trang và chân nào.', 'Where each part sits (sheet and drawing zone, rows A…F, columns 1…8) and which sheets and pins each net reaches.'],
   'report.statistics.title': ['Thống kê sơ đồ', 'Schematic statistics'],

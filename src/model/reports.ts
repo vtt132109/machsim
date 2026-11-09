@@ -6,7 +6,8 @@
  *   componentDetails(design)    part, value, every parameter, pins with numbers / types / nets,
  *                               footprint, models, BOM fields, provenance
  *   modelData(design)           every .model / .subckt the netlist uses, its parameters, its users
- *   spareGates(design)          unused sections of multi-gate ICs (7400 …: pins 1A 1B 1Y, 2A …)
+ *   spareGates(design)          unused sections of multi-section ICs (7400 gates, 7474 flip-flops,
+ *                               4066 switches, dual / quad op-amps, 556 timers)
  *   crossReference(design)      parts by sheet and drawing zone (rows A…F, columns 1…8); nets by
  *                               the sheets and pins they reach
  *   schematicStatistics(design) counts of sheets, parts by group, wires, length, nets, pins …
@@ -27,7 +28,7 @@ import type { SubcktDef } from '../sim/netlist';
 import { childVariableScope, resolveDesignVariables, substituteVariables, type VariableScope } from './variables';
 import { splitRefdes } from './annotate';
 import { variantView } from './variants';
-import { packageParts } from './sections';
+import { packageParts, sectionPartId } from './sections';
 
 // ---------------------------------------------------------------------------------------------
 // traversal
@@ -284,29 +285,53 @@ export function gateSections(def: PartDef): Map<string, string[]> {
 }
 
 /**
+ * Sections of a package whose pin names do not start with the section number (the 556: TRIG1,
+ * TRIG2 …), from its section parts (`<package id>-a`, `-b` …): section letter -> the pins that
+ * belong to that section alone (shared pins such as VCC / GND are left out). Empty for an ordinary
+ * part or a package without section parts.
+ */
+export function packageSections(def: PartDef): Map<string, string[]> {
+  const found: { letter: string; pins: string[] }[] = [];
+  for (let k = 1; k <= 8; k++) {
+    const letter = String.fromCharCode(64 + k);
+    const section = getPart(sectionPartId(def.id, letter));
+    if (!section) break;
+    found.push({ letter, pins: section.symbol.pins.map((p) => p.name) });
+  }
+  if (found.length < 2) return new Map();
+  const count = new Map<string, number>();
+  for (const s of found) for (const p of s.pins) count.set(p, (count.get(p) ?? 0) + 1);
+  return new Map(found.map((s) => [s.letter, s.pins.filter((p) => count.get(p) === 1)]));
+}
+
+/**
  * Unused sections of every multi-section IC. A section is spare when none of its outputs drives
  * another pin and none of its inputs is connected to a signal (inputs tied to a supply rail or
- * ground, as unused inputs should be, still count as spare).
+ * ground, as unused inputs should be, still count as spare). A net that only joins pins of the
+ * section itself (an unused op-amp wired as a follower: - input to its own output) does not make
+ * the section used either.
  */
 export function spareGates(design: Design): SpareGateEntry[] {
   const build = safeBuild(design);
   if (!build) return [];
-  const pinsOn = new Map<string, number>();
-  for (const n of build.nets) pinsOn.set(n.name, n.pins.length);
+  const pinsOn = new Map<string, { refdes: string; pin: string }[]>();
+  for (const n of build.nets) pinsOn.set(n.name, n.pins);
   const rail = new Map(build.nets.map((n) => [n.name, n.name === '0' || RAIL_NAMES.has(n.displayName.toLowerCase())]));
   const out: SpareGateEntry[] = [];
   for (const p of packageParts(placedParts(design), getPart)) {
-    const sections = gateSections(p.def);
+    let sections = gateSections(p.def);
+    if (!sections.size) sections = packageSections(p.def);
     if (!sections.size) continue;
     const nets = build.partNets[p.path] ?? {};
     const list: GateSection[] = [];
     for (const [section, pins] of sections) {
       let used = false;
+      const own = new Set(pins);
       for (const pin of pins) {
         const node = nets[pin];
         if (!node || node.startsWith('NC_') || rail.get(node)) continue;
-        // connected to at least one other pin
-        if ((pinsOn.get(node) ?? 1) > 1) used = true;
+        // connected to at least one pin that is not a pin of this section itself
+        if ((pinsOn.get(node) ?? []).some((q) => !(q.refdes === p.path && own.has(q.pin)))) used = true;
       }
       list.push({ section, pins, spare: !used });
     }

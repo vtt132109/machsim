@@ -132,6 +132,13 @@ export interface Behaviour {
    * breakpoint just after it when it falls within the next step.
    */
   predict?(io: EvalIO): number | undefined;
+  /**
+   * The behaviour wants the interactive simulation held at the present time (the microcontroller
+   * debugger stopped at a breakpoint). See Device.holdRequested.
+   */
+  holdRequested?(): boolean;
+  /** extra times the engine must place a timepoint at (the end of a debugger step), ascending */
+  wakeTimes?(): number[];
   /** runtime parameter change (interactive simulation); false when the key is unknown */
   setParam?(key: string, value: number): boolean;
   /** current value of a runtime parameter */

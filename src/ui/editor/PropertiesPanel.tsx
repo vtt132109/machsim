@@ -38,6 +38,7 @@ import { asLibraryPart } from '../../library/partkit';
 /** The WAV file field and the time-current curve load on demand (they bring the audio texts and codecs). */
 const WavField = lazyComponent(() => import('./WavField').then((m) => m.WavField));
 const TripCurve = lazyComponent(() => import('./TripCurve').then((m) => m.TripCurve));
+const PackagePanel = lazyComponent(() => import('./PackagePanel').then((m) => m.PackagePanel));
 import { isFaultable } from '../../model/faults';
 import { formatEng, parseUserNumber } from '../../util/units';
 
@@ -171,9 +172,16 @@ function VariantFields({ inst }: { inst: PartInstance }) {
   if (!variants?.length) return null;
   return (
     <>
-      {variants.map((v) => (
-        <CheckField key={v.id} label={t('variant.toggleFitted', { variant: v.name })} checked={isFitted(inst, v.id)} onChange={(on) => actions.applyDesign((d) => setFitted(d, [inst.id], v.id, on))} />
-      ))}
+      {variants.map((v) => {
+        const own = variantValuesOf(inst, v.id);
+        const text = own ? [...Object.entries(own.params ?? {}).map(([k, x]) => `${k} = ${x}`), ...Object.entries(own.fields ?? {}).map(([k, x]) => `${k} = ${x}`)].join(', ') : '';
+        return (
+          <div key={v.id}>
+            <CheckField label={t('variant.toggleFitted', { variant: v.name })} checked={isFitted(inst, v.id)} onChange={(on) => actions.applyDesign((d) => setFitted(d, [inst.id], v.id, on))} />
+            {text ? <div className="ms-hint">{t('variant.ownValues', { variant: v.name, values: text })}</div> : null}
+          </div>
+        );
+      })}
     </>
   );
 }
@@ -317,6 +325,8 @@ export function PartProperties({ partId }: { partId: string }) {
     ...tabs.map((t) => ({ id: t.group, title: t.label })),
     ...(isFaultable(def) ? [{ id: 'fault', title: t('editor.properties.fault') }] : []),
     ...(def && !def.instrument && def.globalNet === undefined ? [{ id: 'bom', title: t('learn.fields.tab') }] : []),
+    // a section of a multi-section chip (7474A, TL072B …): which sections are taken, move / switch
+    ...(def && asLibraryPart(def).pkg ? [{ id: 'package', title: t('editor.properties.package') }] : []),
     { id: 'info', title: t('editor.properties.info') },
   ];
   const active = items.some((t) => t.id === tab) ? tab : tabs.length ? tabs[0].group : 'label';
@@ -334,6 +344,7 @@ export function PartProperties({ partId }: { partId: string }) {
         {active === 'info' ? <PartInfoTab inst={inst} def={def} /> : null}
         {active === 'fault' ? <PartFaultTab inst={inst} def={def} /> : null}
         {active === 'bom' ? <PartFieldsTab inst={inst} def={def} /> : null}
+        {active === 'package' && def ? <PackagePanel def={def} inst={inst} /> : null}
         {current ? (
           <div className="ms-prop-section">
             {current.params.map((p) => (
@@ -543,7 +554,7 @@ export function ItemProperties({ item }: { item: SelItem }) {
 // ---------------------------------------------------------------------------
 
 import { parseVariablesText, variablesToText } from './variablesText';
-import { isFitted, setFitted } from '../../model/variants';
+import { isFitted, setFitted, variantValuesOf } from '../../model/variants';
 export { parseVariablesText, variablesToText };
 
 export function SheetAndDesignProperties() {

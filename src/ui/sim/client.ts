@@ -110,7 +110,7 @@ export interface RunHandle {
 export interface SessionHandlers {
   onStarted?(info: { vectors: string[]; warnings: string[] }): void;
   onChunk?(chunk: TransientChunk, info: { latest: Record<string, number>; simTime: number; rate: number }): void;
-  onState?(state: SessionState, simTime: number): void;
+  onState?(state: SessionState, simTime: number, held?: boolean): void;
   /** fatal errors end the session (followed by done); non-fatal ones are informational */
   onError?(message: string, fatal: boolean, code: string): void;
 }
@@ -276,7 +276,7 @@ export class SimClient {
         return;
       case 'state':
         s.simTime = msg.simTime;
-        s.handlers.onState?.(msg.state, msg.simTime);
+        s.handlers.onState?.(msg.state, msg.simTime, msg.held);
         if (msg.state === 'stopped' || msg.state === 'finished') {
           this.sessions.delete(msg.id);
           s.finish(s.fatal ? { state: 'error', message: s.fatal, simTime: msg.simTime } : { state: msg.state, simTime: msg.simTime });

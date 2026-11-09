@@ -272,4 +272,10 @@ export default {
     'Sections that share a reference designator must belong to one chip. Here {refdes} is used for: {packages}.',
   ],
   'erc.sectionPackageConflict.fix': ['Đặt tên khác cho các phần của vi mạch thứ hai (ví dụ U2A, U2B).', 'Give the sections of the second chip another designator (for example U2A, U2B).'],
+  'erc.sectionPinConflict.title': ['{a} và {b} nối chân {pin} dùng chung vào hai net khác nhau', '{a} and {b} connect their shared pin {pin} to different nets'],
+  'erc.sectionPinConflict.why': [
+    'Các phần của cùng một vi mạch dùng chung một số chân (ví dụ V+ và V− của op-amp kép). Chỉ có một chân {pin} thật trên vi mạch, nên nó không thể nằm trên hai net khác nhau.',
+    'Sections of one chip share some pins (for example V+ and V- of a dual op-amp). The chip has only one real {pin} pin, so it cannot sit on two different nets.',
+  ],
+  'erc.sectionPinConflict.fix': ['Nối chân {pin} của cả hai phần vào cùng một net (hoặc chỉ nối ở một phần).', 'Connect the {pin} pin of both sections to the same net (or wire it on one section only).'],
 } as const satisfies Catalogue;

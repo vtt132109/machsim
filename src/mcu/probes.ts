@@ -44,6 +44,13 @@ export const MCU_PROBE_KEYS: readonly string[] = [
   'Mhalt',
   'Mbase',
   ...r8('Mm', RAM_WINDOW),
+  // debugger (src/mcu/debugger.ts): why the run is held, cycles into the instruction in progress,
+  // cycles of the next instruction, number of breakpoints, the eight watch slots
+  'Mdbg',
+  'Mmid',
+  'Minsn',
+  'Mbpn',
+  ...r8('Mw', 8),
 ];
 
 /** Vector names of one MCU element, e.g. `Mpc(A_U1)`. */

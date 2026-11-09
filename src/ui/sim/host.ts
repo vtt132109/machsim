@@ -80,8 +80,8 @@ class Session {
     this.schedule(0);
   }
 
-  private postState(): void {
-    this.post({ type: 'state', id: this.id, state: this.state, simTime: this.stepper.time });
+  private postState(held = false): void {
+    this.post({ type: 'state', id: this.id, state: this.state, simTime: this.stepper.time, ...(held ? { held: true } : {}) });
   }
 
   private schedule(ms: number): void {
@@ -114,6 +114,8 @@ class Session {
   tick(): void {
     if (this.state !== 'running') return;
     const target = Math.min(this.ideal(this.clock.now()), this.tstop);
+    /** a device asked for the simulation to be held during THIS advance */
+    let held = false;
     if (this.stepper.time < target || this.stepper.time === 0) {
       let chunk;
       try {
@@ -122,6 +124,7 @@ class Session {
         this.fail(e);
         return;
       }
+      held = this.stepper.held === true;
       if (chunk.time.length) {
         const wall = this.clock.now();
         this.post(
@@ -129,6 +132,12 @@ class Session {
           chunkTransferables(chunk),
         );
       }
+    }
+    if (held) {
+      // a device (the microcontroller debugger) asked for the simulation to be held: pause at exactly this time
+      this.state = 'paused';
+      this.postState(true);
+      return;
     }
     if (this.stepper.time >= this.tstop) {
       this.finish('finished');

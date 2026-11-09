@@ -33,6 +33,9 @@ export class InteractiveStepper implements TransientStepper {
   private readonly values: Float64Array;
   private readonly recorder: Recorder;
   private readonly latestValues: Float64Array;
+  /** devices that can ask for the simulation to be held (microcontroller debugger) */
+  private readonly holdDevices: { holdRequested?(): boolean }[];
+  private heldNow = false;
 
   constructor(netlist: Netlist, opts: StepperOptions) {
     this.circuit = new Circuit(flattenNetlist(netlist));
@@ -49,8 +52,13 @@ export class InteractiveStepper implements TransientStepper {
     this.values = new Float64Array(this.probes.length);
     this.latestValues = new Float64Array(this.probes.length);
     this.recorder = new Recorder(this.probes, false, 1024);
+    this.holdDevices = this.circuit.devices.filter((d) => typeof d.holdRequested === 'function');
     this.engine.initialize();
     this.record();
+  }
+
+  get held(): boolean {
+    return this.heldNow;
   }
 
   get time(): number {
@@ -65,7 +73,12 @@ export class InteractiveStepper implements TransientStepper {
 
   advance(tUntil: number, maxWallMs = Infinity): TransientChunk {
     const t0 = now();
+    this.heldNow = false;
     while (this.engine.time < tUntil) {
+      if (this.holdDevices.length > 0 && this.holdDevices.some((d) => d.holdRequested?.())) {
+        this.heldNow = true;
+        break;
+      }
       this.engine.step();
       this.record();
       if (now() - t0 >= maxWallMs) break;

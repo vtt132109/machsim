@@ -10,7 +10,7 @@ import { SimClient } from '../sim/client';
 import { createInProcessTransport } from '../sim/inprocess';
 import type { AnalysisResult } from '../../sim/results';
 import { SimulationIntegration } from './controller';
-import { astable555Example, cmosInverterExample, rcLowPassExample, voltageDividerExample } from './exampleDesigns';
+import { astable555Example, cmosInverterExample, EXAMPLES, rcLowPassExample, voltageDividerExample } from './exampleDesigns';
 import { setLang } from '../../i18n';
 
 // these tests assert the English UI texts (the app defaults to Vietnamese)
@@ -215,5 +215,35 @@ describe('one-shot analyses', () => {
     await p;
     expect(editor.getState().sim.message).toBe('Transient cancelled');
     expect(ctrl.active).toBe(false);
+  });
+});
+
+describe('microcontroller debugging through the controller', () => {
+  const blink = () => EXAMPLES.find((e) => e.file === '51-mcu-blink.msim')!.build();
+  const core = (ctrl: SimulationIntegration): string => ctrl.live.getState().build!.mcus![0].element;
+  const readout = (ctrl: SimulationIntegration, key: string): number => {
+    const want = `${key}(${core(ctrl)})`.toLowerCase();
+    const hit = Object.entries(ctrl.live.getState().latest).find(([k]) => k.toLowerCase() === want);
+    if (!hit) throw new Error(`no read-out ${key}`);
+    return hit[1];
+  };
+
+  it('Start debugging holds the run before the first instruction and a step moves the circuit clock by the instruction time', async () => {
+    const { editor, ctrl } = setup(blink(), 1);
+    await ctrl.startDebugging();
+    await waitFor(() => ctrl.live.getState().session === 'paused', 8000, 'the hold before the first instruction');
+    expect(editor.getState().sim.message).toMatch(/debugger/i);
+    expect(ctrl.live.getState().simTime).toBe(0);
+    expect(readout(ctrl, 'Mpc')).toBe(0);
+    // CPL P1.0 is one machine cycle: 1 µs at 12 MHz
+    ctrl.setElementParam(core(ctrl), 'step', 1);
+    ctrl.resume();
+    await waitFor(() => ctrl.live.getState().session === 'paused' && readout(ctrl, 'Mcyc') === 1, 8000, 'one step');
+    expect(ctrl.live.getState().simTime).toBeCloseTo(1e-6, 12);
+    // the toolbar Run releases the debugger hold: the program goes on and the clock moves
+    await ctrl.run();
+    await waitFor(() => ctrl.live.getState().session === 'running' && ctrl.live.getState().simTime > 2e-3, 8000, 'the program running on');
+    await ctrl.stop();
+    await ctrl.idle();
   });
 });

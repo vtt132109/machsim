@@ -19,6 +19,7 @@ import { getDesktopBridge } from '../../desktop/bridge';
 import { designInfo, utf8Size } from '../../model/fileInfo';
 import { valuesHidden } from '../../model/restrictions';
 import { serializeDesign } from '../../model/serialize';
+import { activeVariant, hasVariantData } from '../../model/variants';
 import { buildSnippet, decodeSnippet, encodeSnippet, snippetDesign, snippetFileName, SnippetError, type SnippetData } from '../../model/snippet';
 import { designFromTemplate, parseTemplateFile, templateFromDesign, TEMPLATE_EXTENSION } from '../../model/templates';
 import type { Design, Point, Sheet } from '../../model/types';
@@ -87,7 +88,23 @@ export async function saveSnippetFlow(): Promise<void> {
   }
   const frag = copyItems(s.design, s.activeSheetId, s.selection, partLookup);
   if (!frag) return;
-  const data = buildSnippet(s.design, frag);
+  // a design with assembly variants: save the circuit as the active variant builds it, or keep all variants
+  let bakeVariant = false;
+  const variant = activeVariant(s.design);
+  if (variant && (hasVariantData([...frag.parts, ...(frag.children ?? []).flatMap((c) => c.sheets.flatMap((sh) => sh.parts))]) || Object.keys(variant.variables ?? {}).length)) {
+    const choice = await choiceDialog({
+      title: ft('snippetTitle'),
+      message: ft('snippetVariantQuestion', { name: variant.name }),
+      choices: [
+        { id: 'cancel', label: t('common.cancel') },
+        { id: 'all', label: ft('snippetVariantKeep') },
+        { id: 'bake', label: ft('snippetVariantBake', { name: variant.name }), primary: true },
+      ],
+    });
+    if (choice === null || choice === 'cancel') return;
+    bakeVariant = choice === 'bake';
+  }
+  const data = buildSnippet(s.design, frag, new Date(), { bakeVariant });
   const { png, blank } = await fragmentPicture(s.design, data.fragment);
   const bytes = encodeSnippet(png, data);
   const name = snippetFileName(s.design.title || baseName(s.fileName));

@@ -102,6 +102,7 @@ export const DESIGN_EXAMPLES: readonly ExampleMeta[] = [
   { file: '70-contactor-start-stop.msim', topic: 'automation', title: 'Start-stop contactor with holding contact and overload', summary: 'Mạch mở – dừng bằng công-tắc-tơ: cuộn và tiếp điểm ở hai trang, tự giữ, rơ-le nhiệt' },
   { file: '71-timer-relays.msim', topic: 'automation', title: 'On-delay and off-delay timer relays', summary: 'Rơ-le thời gian trễ đóng và trễ mở cùng một xung 24 V' },
   { file: '72-speaker-filter.msim', topic: 'mixed', title: 'Listen to a filter: two tones through an RC low-pass', summary: 'Hai âm qua lọc RC và mạch đệm tới loa · nghe tác dụng của bộ lọc' },
+  { file: '73-dual-opamp-variants.msim', topic: 'opamps', title: 'Dual op-amp in sections with two gain variants', summary: 'LM358 vẽ thành hai phần U1A / U1B, hai phương án lắp ráp khác giá trị R2 · độ lợi 2 và 11' },
 ];
 
 /** Metadata of the SPICE decks in examples/spice (title = the deck's first line). */

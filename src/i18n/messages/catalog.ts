@@ -119,6 +119,7 @@ export default {
 
   // ---------------------------------------------------------------- faults
   'editor.properties.fault': ['Lỗi giả lập', 'Faults'],
+  'editor.properties.package': ['Vi mạch', 'Chip'],
   'fault.intro': ['Tạo lỗi để luyện tìm hỏng hóc: sơ đồ không đổi, chỉ khi mô phỏng mới thấy chân bị hở, chập hoặc rò.', 'Create faults to practise troubleshooting: the drawing stays the same, only the simulation sees the open, shorted or leaky pin.'],
   'fault.none': ['Bình thường', 'Normal'],
   'fault.open': ['Hở mạch', 'Open'],

@@ -79,7 +79,9 @@ export function readPrefs(storage: KeyValueStorage | null): UiPrefs {
 
 /** Preferences to persist for an editor state. */
 export function prefsOf(s: EditorState): UiPrefs {
-  return { ui: { ...s.ui }, showGrid: s.showGrid };
+  // "new package for each section" is a working mode of this session, not a preference
+  const { newPackage: _session, ...ui } = s.ui;
+  return { ui, showGrid: s.showGrid };
 }
 
 export function writePrefs(storage: KeyValueStorage | null, prefs: UiPrefs): void {

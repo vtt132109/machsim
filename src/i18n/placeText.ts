@@ -153,7 +153,7 @@ export const PLACE_TEXT = {
 
   // ---- Variant manager
   varTitle: L('Quản lý phương án lắp ráp', 'Variant manager'),
-  varIntro: L('Một sơ đồ có thể có nhiều phương án lắp ráp (ví dụ “Đầy đủ” và “Bản rút gọn không có màn hình”). Bỏ dấu “Lắp” của linh kiện trong một phương án: khi phương án đó đang dùng, linh kiện được bỏ khỏi mô phỏng, BOM, báo cáo và tệp mạch in, và hiện mờ trên sơ đồ.', 'One schematic can have several variants (for example “Full” and “Basic without the display”). Untick “Fitted” for a part in a variant: while that variant is active the part is left out of the simulation, the BOM, the reports and the PCB files, and it is drawn dimmed.'),
+  varIntro: L('Một sơ đồ có thể có nhiều phương án lắp ráp (ví dụ “Đầy đủ” và “Bản rút gọn không có màn hình”). Bỏ dấu “Lắp” của linh kiện trong một phương án: khi phương án đó đang dùng, linh kiện được bỏ khỏi mô phỏng, BOM, báo cáo và tệp mạch in, và hiện mờ trên sơ đồ. Mỗi phương án cũng có thể đặt giá trị riêng cho linh kiện (ô cạnh dấu “Lắp”; để trống = giữ giá trị đã lưu).', 'One schematic can have several variants (for example “Full” and “Basic without the display”). Untick “Fitted” for a part in a variant: while that variant is active the part is left out of the simulation, the BOM, the reports and the PCB files, and it is drawn dimmed. A variant can also give a part its own value (the box next to “Fitted”; empty = keep the saved value).'),
   varNone: L('Thiết kế chưa có phương án nào: mọi linh kiện đều được lắp.', 'The design has no variants yet: every part is fitted.'),
   varStart: L('Tạo phương án đầu tiên', 'Create the first variant'),
   varFirstName: L('Đầy đủ', 'Full'),
@@ -176,6 +176,21 @@ export const PLACE_TEXT = {
   varCount: L('{n} linh kiện không lắp', '{n} parts not fitted'),
   varAllFitted: L('Lắp tất cả', 'Fit all'),
   varNoParts: L('Sơ đồ chưa có linh kiện.', 'The schematic has no parts yet.'),
+  varValueCount: L('{n} giá trị riêng', '{n} own values'),
+  varSameAsSaved: L('(như bản gốc)', '(as saved)'),
+  tipVarDetail: L('Mở tất cả tham số của linh kiện này theo từng phương án', 'Open every parameter of this part, per variant'),
+  tipVarValue: L('Giá trị của linh kiện trong phương án “{name}” (để trống = giữ giá trị đã lưu)', 'Value of the part in the variant “{name}” (empty = keep the saved value)'),
+  varDetailTitle: L('Tham số của {ref} theo phương án', 'Parameters of {ref} per variant'),
+  varDetailHint: L('Ô trống: linh kiện giữ giá trị đã lưu. Điền một giá trị để phương án đó dùng giá trị khác trong mô phỏng, BOM, báo cáo và tệp mạch in.', 'Empty box: the part keeps its saved value. Type a value to give that variant another one in the simulation, the BOM, the reports and the PCB files.'),
+  varDetailParam: L('Tham số', 'Parameter'),
+  varDetailSaved: L('Đã lưu', 'Saved'),
+  varField_manufacturer: L('Nhà sản xuất', 'Manufacturer'),
+  varField_partNumber: L('Mã linh kiện', 'Part number'),
+  varField_supplier: L('Nhà cung cấp', 'Supplier'),
+  varField_footprint: L('Kiểu vỏ', 'Footprint'),
+  varClearValues: L('Xoá giá trị riêng trong “{name}”', 'Clear own values in “{name}”'),
+  varGlobals: L('Tham số toàn cục theo phương án', 'Global parameters per variant'),
+  varGlobalsHint: L('Một biến như RF có thể có biểu thức khác trong mỗi phương án (ví dụ bản “độ lợi cao” dùng RF = 47k). Ô trống: dùng biểu thức đã lưu.', 'A variable such as RF can have another expression in each variant (for example the “high gain” build uses RF = 47k). Empty box: the saved expression is used.'),
   varLive: L('Mọi thay đổi được áp dụng ngay (Ctrl+Z để hoàn tác).', 'Every change applies at once (Ctrl+Z undoes it).'),
 
   // ---- My library (profile)

@@ -73,7 +73,8 @@ export type FromWorker =
       /** achieved rate over the last second: simulated seconds per wall-clock second */
       rate: number;
     }
-  | { type: 'state'; id: number; state: SessionState; simTime: number }
+  /** `held`: the session paused itself because a device asked for it (a microcontroller breakpoint or debugger step) */
+  | { type: 'state'; id: number; state: SessionState; simTime: number; held?: boolean }
   /** fatal errors end the run / session; non-fatal ones (a failed setParam) do not */
   | { type: 'error'; id: number; message: string; code: SimulationErrorCode | 'cancelled'; fatal: boolean };
 

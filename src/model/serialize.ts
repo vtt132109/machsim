@@ -75,6 +75,7 @@ import type {
   SavedVector,
   DesignVariant,
   DesignVariants,
+  VariantValues,
   PartLibraryRef,
   NetSettings,
   RefdesRules,
@@ -334,6 +335,32 @@ function part(c: Checker, v: unknown, path: string): PartInstance | null {
       for (const k of PART_FIELD_KEYS) if (fo[k] !== undefined && fo[k] !== null) f[k] = c.str(fo, k, `${path}.fields`);
       for (const k of Object.keys(fo)) if (!(PART_FIELD_KEYS as readonly string[]).includes(k)) c.issue(`${path}.fields.${k}`, `unknown field (expected ${PART_FIELD_KEYS.join(', ')})`);
       p.fields = f;
+    }
+  }
+  if (o.variantValues !== undefined && o.variantValues !== null) {
+    const vo = c.obj(o.variantValues, `${path}.variantValues`);
+    if (vo) {
+      const values: Record<string, VariantValues> = {};
+      for (const id of Object.keys(vo)) {
+        const where = `${path}.variantValues.${id}`;
+        const e = c.obj(vo[id], where);
+        if (!e) continue;
+        const entry: VariantValues = {};
+        const params = c.record(e, 'params', where);
+        if (Object.keys(params).length) entry.params = params;
+        if (e.fields !== undefined && e.fields !== null) {
+          const fo = c.obj(e.fields, `${where}.fields`);
+          if (fo) {
+            const f: PartFields = {};
+            for (const k of PART_FIELD_KEYS) if (fo[k] !== undefined && fo[k] !== null) f[k] = c.str(fo, k, `${where}.fields`);
+            for (const k of Object.keys(fo)) if (!(PART_FIELD_KEYS as readonly string[]).includes(k)) c.issue(`${where}.fields.${k}`, `unknown field (expected ${PART_FIELD_KEYS.join(', ')})`);
+            if (Object.keys(f).length) entry.fields = f;
+          }
+        }
+        for (const k of Object.keys(e)) if (k !== 'params' && k !== 'fields') c.issue(`${where}.${k}`, 'unknown entry (expected params, fields)');
+        if (entry.params || entry.fields) values[id] = entry;
+      }
+      if (Object.keys(values).length) p.variantValues = values;
     }
   }
   return p;
@@ -975,8 +1002,8 @@ export function validateDesign(input: unknown): Design {
     const check = (list: Sheet[], base: string) =>
       list.forEach((s, si) =>
         s.parts.forEach((p, pi) =>
-          (p.notFitted ?? []).forEach((id) => {
-            if (!known.has(id)) c.issue(`${base}[${si}].parts[${pi}].notFitted`, `unknown variant id ${JSON.stringify(id)}`);
+          [...(p.notFitted ?? []), ...Object.keys(p.variantValues ?? {})].forEach((id, k) => {
+            if (!known.has(id)) c.issue(`${base}[${si}].parts[${pi}].${k < (p.notFitted?.length ?? 0) ? 'notFitted' : 'variantValues'}`, `unknown variant id ${JSON.stringify(id)}`);
           }),
         ),
       );
@@ -1083,6 +1110,10 @@ function designVariants(c: Checker, v: unknown): DesignVariants | null {
     const item: DesignVariant = { id: c.str(e, 'id', path), name: c.str(e, 'name', path) };
     if (!item.id) c.issue(`${path}.id`, 'is required');
     if (e.description !== undefined && e.description !== null) item.description = c.str(e, 'description', path);
+    if (e.variables !== undefined && e.variables !== null) {
+      const vars = c.record(e, 'variables', path);
+      if (Object.keys(vars).length) item.variables = vars;
+    }
     list.push(item);
   });
   if (!list.length) {

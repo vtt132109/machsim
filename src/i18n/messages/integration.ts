@@ -13,6 +13,7 @@ export default {
   'integration.controller.logicConverter': ['Bộ chuyển đổi logic', 'Logic converter'],
   'integration.controller.nameCancelled': ['Đã huỷ {name}', '{name} cancelled'],
   'integration.controller.paused': ['Tạm dừng', 'Paused'],
+  'integration.controller.debugHold': ['Dừng ở điểm dừng của vi điều khiển', 'Stopped by the microcontroller debugger'],
   'integration.controller.reverse': ['ngược', 'reverse'],
   'integration.controller.startingInteractiveSimulation': ['Đang khởi động mô phỏng tương tác…', 'Starting interactive simulation…'],
   'integration.controller.stoppedAtT': ['Đã dừng tại {t}', 'Stopped at {t}'],

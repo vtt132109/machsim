@@ -55,6 +55,12 @@ export interface EngineDeviceExtensions {
    */
   breakpointsBetween?(from: number, to: number): number[];
   /**
+   * True while the device wants the interactive simulation held at the present time (a debugger
+   * stop of the microcontroller). The stepper stops after the timepoint that set it; the circuit
+   * time is then exactly the time the device asked for.
+   */
+  holdRequested?(): boolean;
+  /**
    * Initial values for the unknown vector before a UIC transient (e.g. inductor ic= sets its
    * branch current). Called after .ic node voltages have been applied.
    */
