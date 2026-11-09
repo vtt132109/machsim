@@ -1,0 +1,255 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Transmission line reflections",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/pulse-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "v1": "0",
+            "v2": "2",
+            "delay": "5n",
+            "rise": "1n",
+            "fall": "1n",
+            "width": "60n",
+            "period": "200n"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "RS",
+          "x": 200,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "50"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "rf/transmission-line",
+          "refdes": "T1",
+          "x": 320,
+          "y": 210,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "z0": "50",
+            "td": "10n"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/resistor",
+          "refdes": "RL",
+          "x": 440,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "150"
+          }
+        },
+        {
+          "id": "p12",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p15",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 600,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "A",
+            "trig.level": "0.5",
+            "timebase": "10n",
+            "A.scale": "500m",
+            "B.scale": "500m"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 100,
+              "y": 220
+            },
+            {
+              "x": 100,
+              "y": 200
+            },
+            {
+              "x": 170,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 230,
+              "y": 200
+            },
+            {
+              "x": 280,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 360,
+              "y": 200
+            },
+            {
+              "x": 440,
+              "y": 200
+            },
+            {
+              "x": 440,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 100,
+              "y": 280
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 100,
+              "y": 300
+            },
+            {
+              "x": 440,
+              "y": 300
+            },
+            {
+              "x": 440,
+              "y": 280
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 280,
+              "y": 220
+            },
+            {
+              "x": 280,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w11",
+          "points": [
+            {
+              "x": 360,
+              "y": 220
+            },
+            {
+              "x": 360,
+              "y": 300
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l13",
+          "x": 255,
+          "y": 200,
+          "name": "NEAR",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 400,
+          "y": 200,
+          "name": "FAR",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 550,
+          "y": 280,
+          "name": "NEAR",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 590,
+          "y": 280,
+          "name": "FAR",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 360,
+          "text": "Đầu gần: 1 V (chia đôi với RS) rồi lên 1,5 V khi sóng phản xạ quay về (20 ns). Đầu xa: 1,5 V sau 10 ns. Thử RL = 50 Ω: hết phản xạ.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 1e-10,
+        "tstop": 1e-7
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Đường truyền 50 Ω trễ 10 ns kết thúc bằng tải 150 Ω: hệ số phản xạ Γ = (150 − 50)/(150 + 50) = 0,5, nên sau 20 ns phía đầu vào có thêm một bậc phản xạ. A 50 Ω, 10 ns line ending in 150 Ω: reflection coefficient Γ = 0.5, so after 20 ns the input shows a reflected step."
+}

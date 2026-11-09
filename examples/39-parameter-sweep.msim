@@ -1,0 +1,188 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Parameter sweep of an RC filter",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "1",
+            "freq": "1k",
+            "acmag": "1"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 200,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 300,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100n"
+          }
+        },
+        {
+          "id": "p8",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w4",
+          "points": [
+            {
+              "x": 100,
+              "y": 220
+            },
+            {
+              "x": 100,
+              "y": 200
+            },
+            {
+              "x": 170,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 230,
+              "y": 200
+            },
+            {
+              "x": 300,
+              "y": 200
+            },
+            {
+              "x": 300,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 100,
+              "y": 280
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 100,
+              "y": 320
+            },
+            {
+              "x": 300,
+              "y": 320
+            },
+            {
+              "x": 300,
+              "y": 280
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l9",
+          "x": 140,
+          "y": 200,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 270,
+          "y": 200,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 380,
+          "text": "fc ≈ 1,59 kHz (1k), 723 Hz (2,2k), 339 Hz (4,7k). Mô phỏng > Phân tích đang chọn: Quét tham số, rồi Chạy phân tích.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "paramsweep",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "ac": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 20,
+        "fstart": 10,
+        "fstop": 1000000
+      },
+      "paramsweep": {
+        "type": "paramsweep",
+        "target": "R1",
+        "param": "value",
+        "values": [
+          1000,
+          2200,
+          4700
+        ],
+        "base": {
+          "type": "ac",
+          "sweep": "dec",
+          "points": 20,
+          "fstart": 10,
+          "fstop": 1000000
+        }
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Quét tham số: phân tích AC chạy lại với R1 = 1k, 2,2k, 4,7k; Grapher vẽ chồng ba đường, tần số cắt fc = 1/(2π·R1·C1) giảm khi R1 tăng. Parameter sweep: the AC analysis runs again with R1 = 1k, 2.2k, 4.7k; the Grapher overlays the curves and fc = 1/(2π·R1·C1) falls as R1 grows."
+}

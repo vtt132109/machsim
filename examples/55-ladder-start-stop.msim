@@ -1,0 +1,299 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Motor start / stop with a ladder diagram",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "24"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 100,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "basic/push-button",
+          "refdes": "S1",
+          "x": 240,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "key": "S"
+          }
+        },
+        {
+          "id": "p8",
+          "partId": "basic/push-button",
+          "refdes": "S2",
+          "x": 240,
+          "y": 240,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "key": "T",
+            "contact": "nc"
+          }
+        },
+        {
+          "id": "p11",
+          "partId": "misc-digital/plc-input-8",
+          "refdes": "PLCI1",
+          "x": 460,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "byte": "0"
+          }
+        },
+        {
+          "id": "p15",
+          "partId": "misc-digital/plc-output-8",
+          "refdes": "PLCQ1",
+          "x": 680,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "byte": "0"
+          }
+        },
+        {
+          "id": "p18",
+          "partId": "misc-digital/plc-controller",
+          "refdes": "PLC1",
+          "x": 460,
+          "y": 420,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "scan": "10m"
+          }
+        },
+        {
+          "id": "p19",
+          "partId": "indicators/lamp",
+          "refdes": "X1",
+          "x": 880,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "vrated": "24",
+            "prated": "5"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 100,
+              "y": 230
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l4",
+          "x": 100,
+          "y": 170,
+          "name": "P24",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 210,
+          "y": 160,
+          "name": "P24",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 270,
+          "y": 160,
+          "name": "START",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 210,
+          "y": 240,
+          "name": "P24",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 270,
+          "y": 240,
+          "name": "STOP",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 400,
+          "y": 150,
+          "name": "START",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 400,
+          "y": 170,
+          "name": "STOP",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 460,
+          "y": 320,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 740,
+          "y": 150,
+          "name": "KM1",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 680,
+          "y": 320,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 880,
+          "y": 190,
+          "name": "KM1",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 880,
+          "y": 250,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l23",
+          "x": 820,
+          "y": 160,
+          "name": "KM1",
+          "rotation": 0
+        }
+      ],
+      "probes": [
+        {
+          "id": "pr22",
+          "kind": "digital",
+          "x": 820,
+          "y": 160,
+          "name": "KM1",
+          "color": "#e53935"
+        }
+      ],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 100,
+          "y": 480,
+          "text": "Mô-đun vào đọc hai nút: I0.0 = KHỞI ĐỘNG, I0.1 = DỪNG. Mô-đun ra Q0.0 cấp điện cho cuộn dây khởi động từ (ở đây là đèn X1). Thử bỏ tiếp điểm song song Q0.0 trong bậc 1: động cơ chỉ chạy khi còn giữ nút — đó chính là vì sao cần tự giữ.",
+          "size": 11
+        }
+      ]
+    },
+    {
+      "id": "sheet2",
+      "name": "Ladder 1",
+      "parts": [],
+      "wires": [],
+      "labels": [],
+      "probes": [],
+      "notes": [],
+      "kind": "ladder",
+      "ladder": [
+        {
+          "id": "rung1",
+          "comment": "Tự giữ: (khởi động HOẶC đang chạy) VÀ chưa dừng → chạy",
+          "outputs": [
+            {
+              "kind": "coil",
+              "address": "Q0.0"
+            }
+          ],
+          "logic": {
+            "kind": "series",
+            "items": [
+              {
+                "kind": "parallel",
+                "items": [
+                  {
+                    "kind": "contact",
+                    "type": "no",
+                    "address": "I0.0"
+                  },
+                  {
+                    "kind": "contact",
+                    "type": "no",
+                    "address": "Q0.0"
+                  }
+                ]
+              },
+              {
+                "kind": "contact",
+                "type": "no",
+                "address": "I0.1"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.002,
+        "tstop": 2
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Bài toán đầu tiên của điều khiển: nút KHỞI ĐỘNG chỉ đóng trong lúc nhấn, nên bậc thang phải “tự giữ”. Đọc bậc 1 ra lời: (khởi động HOẶC đang chạy) VÀ nút dừng chưa nhấn → chạy. Nút dừng S2 là tiếp điểm THƯỜNG ĐÓNG như trong tủ điện thật, nên trong chương trình nó là tiếp điểm thường MỞ của I0.1. Nhấn Chạy (F5), rồi nhấp vào S1 (hoặc phím S) để khởi động và S2 (hoặc phím T) để dừng. The first exercise in control: the START button is only closed while it is pressed, so the rung has to hold itself. Read rung 1 out loud: (start OR already running) AND the stop button not pressed → run. The stop button S2 is a NORMALLY CLOSED contact, as in a real cabinet, so in the program it is a normally OPEN contact of I0.1. Press Run (F5), then click S1 (key S) to start and S2 (key T) to stop."
+}

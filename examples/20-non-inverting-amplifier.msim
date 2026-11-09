@@ -1,0 +1,313 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Op-amp non-inverting amplifier",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "basic/resistor",
+          "refdes": "RF",
+          "x": 400,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "90k"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "analog/lm741",
+          "refdes": "U1",
+          "x": 400,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p3",
+          "partId": "sources/vcc",
+          "refdes": "VCC1",
+          "x": 400,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "15"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/vee",
+          "refdes": "VEE1",
+          "x": 400,
+          "y": 350,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "-15"
+          }
+        },
+        {
+          "id": "p11",
+          "partId": "basic/resistor",
+          "refdes": "RG",
+          "x": 320,
+          "y": 340,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p14",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 320,
+          "y": 400,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p16",
+          "partId": "instruments/function-generator",
+          "refdes": "XFG1",
+          "x": 150,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "waveform": "sine",
+            "freq": "1k",
+            "amplitude": "100m"
+          }
+        },
+        {
+          "id": "p19",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 150,
+          "y": 360,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p20",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 660,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "A",
+            "trig.level": "0",
+            "timebase": "500u",
+            "A.scale": "100m",
+            "B.scale": "1"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 400,
+              "y": 250
+            },
+            {
+              "x": 400,
+              "y": 270
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 400,
+              "y": 330
+            },
+            {
+              "x": 400,
+              "y": 350
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 360,
+              "y": 290
+            },
+            {
+              "x": 340,
+              "y": 290
+            },
+            {
+              "x": 340,
+              "y": 200
+            },
+            {
+              "x": 370,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 430,
+              "y": 200
+            },
+            {
+              "x": 470,
+              "y": 200
+            },
+            {
+              "x": 470,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 440,
+              "y": 300
+            },
+            {
+              "x": 520,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w12",
+          "points": [
+            {
+              "x": 320,
+              "y": 310
+            },
+            {
+              "x": 320,
+              "y": 290
+            },
+            {
+              "x": 340,
+              "y": 290
+            }
+          ]
+        },
+        {
+          "id": "w13",
+          "points": [
+            {
+              "x": 320,
+              "y": 370
+            },
+            {
+              "x": 320,
+              "y": 400
+            }
+          ]
+        },
+        {
+          "id": "w18",
+          "points": [
+            {
+              "x": 150,
+              "y": 330
+            },
+            {
+              "x": 150,
+              "y": 360
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l10",
+          "x": 520,
+          "y": 300,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 360,
+          "y": 310,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 130,
+          "y": 330,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 610,
+          "y": 280,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 650,
+          "y": 280,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 460,
+          "text": "Av = 1 + RF/RG = 10: vào 0,1 V đỉnh → ra 1 V đỉnh, cùng pha. Trở kháng vào rất lớn.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.000005,
+        "tstop": 0.005
+      },
+      "ac": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 20,
+        "fstart": 1,
+        "fstop": 10000000
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Khuếch đại không đảo: Av = 1 + Rf/Rg = 1 + 90k/10k = 10, cùng pha với đầu vào. Non-inverting amplifier: Av = 1 + Rf/Rg = 10, in phase with the input."
+}

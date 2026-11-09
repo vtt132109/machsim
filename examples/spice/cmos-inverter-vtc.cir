@@ -1,0 +1,12 @@
+CMOS inverter VTC
+* Level-1 CMOS inverter, VDD = 5 V. The PMOS is 2.5x wider so both devices have
+* beta = KP*W/L = 1 mA/V^2; the switching threshold is (VDD - |VTP| + VTN)/2 = 2.45 V.
+* Cong dao CMOS level 1, quet DC VIN tu 0 den 5 V.
+VDD vdd 0 DC 5
+VIN in 0 DC 0
+MP out in vdd vdd PMOS1 W=25u L=1u
+MN out in 0 0 NMOS1 W=10u L=1u
+.model NMOS1 NMOS(LEVEL=1 VTO=0.7 KP=100u LAMBDA=0)
+.model PMOS1 PMOS(LEVEL=1 VTO=-0.8 KP=40u LAMBDA=0)
+.dc VIN 0 5 5m
+.end

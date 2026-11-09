@@ -1,0 +1,179 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Monte Carlo of a voltage divider",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 250,
+          "y": 180,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10k",
+            "tolerance": "5"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 250,
+          "y": 320,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10k",
+            "tolerance": "5"
+          }
+        },
+        {
+          "id": "p8",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 380,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w4",
+          "points": [
+            {
+              "x": 100,
+              "y": 220
+            },
+            {
+              "x": 100,
+              "y": 120
+            },
+            {
+              "x": 250,
+              "y": 120
+            },
+            {
+              "x": 250,
+              "y": 150
+            }
+          ]
+        },
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 250,
+              "y": 210
+            },
+            {
+              "x": 250,
+              "y": 290
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 100,
+              "y": 280
+            },
+            {
+              "x": 100,
+              "y": 380
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 100,
+              "y": 380
+            },
+            {
+              "x": 250,
+              "y": 380
+            },
+            {
+              "x": 250,
+              "y": 350
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l9",
+          "x": 250,
+          "y": 250,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 440,
+          "text": "Với dung sai đều ±5 % ở cả hai điện trở, V(OUT) lệch tối đa ≈ ±0,25 V (±5 %); hầu hết các lần chạy gần 5 V hơn.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "montecarlo",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "montecarlo": {
+        "type": "montecarlo",
+        "runs": 50,
+        "seed": 1,
+        "tolerances": [
+          {
+            "target": "R1",
+            "param": "value",
+            "tol": 0.05,
+            "dist": "uniform"
+          },
+          {
+            "target": "R2",
+            "param": "value",
+            "tol": 0.05,
+            "dist": "uniform"
+          }
+        ],
+        "base": {
+          "type": "op"
+        }
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Monte Carlo: R1 và R2 có dung sai 5 %; 50 lần chạy với giá trị ngẫu nhiên cho thấy V(OUT) dao động quanh 5 V trong khoảng ±0,25 V. Monte Carlo: R1 and R2 have 5 % tolerance; 50 runs with random values show V(OUT) spreading around 5 V by about ±0.25 V."
+}

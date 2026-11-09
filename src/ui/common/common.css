@@ -1,0 +1,283 @@
+/*
+ * Shared widgets: buttons, form fields, dialogs, menus, tabs, floating windows, tables.
+ * Class prefix "ms-". Colours come from the tokens in src/ui/theme.css.
+ */
+
+.ms-icon { display: block; flex: none; }
+
+/* ------------------------------------------------------------------ buttons */
+.ms-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 2px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ms-btn:hover:not(:disabled) { background: var(--hover); }
+.ms-btn:active:not(:disabled) { background: var(--pressed); }
+.ms-btn:disabled { opacity: 0.5; cursor: default; }
+.ms-btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ms-btn-primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.08); }
+.ms-btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+.ms-btn-danger:hover:not(:disabled) { background: var(--danger); filter: brightness(1.08); }
+.ms-btn-small { min-height: 22px; padding: 1px 8px; font-size: var(--font-size-small); }
+
+.ms-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.ms-icon-btn:hover:not(:disabled) { background: var(--hover); }
+.ms-icon-btn:active:not(:disabled), .ms-icon-btn[aria-pressed='true'] { background: var(--pressed); border-color: var(--border); }
+.ms-icon-btn:disabled { opacity: 0.38; cursor: default; }
+
+/* -------------------------------------------------------------- form fields */
+.ms-input, .ms-select, .ms-form input, .ms-form select, .ms-form textarea {
+  min-height: 24px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--input-bg);
+  color: var(--text);
+}
+.ms-input:focus, .ms-select:focus, .ms-form input:focus, .ms-form select:focus, .ms-form textarea:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -1px;
+}
+.ms-input[aria-invalid='true'], .ms-form input[aria-invalid='true'] { border-color: var(--danger); }
+.ms-form { display: flex; flex-direction: column; gap: 10px; }
+.ms-form textarea { resize: vertical; font-family: var(--mono); }
+.ms-field { display: flex; flex-direction: column; gap: 3px; }
+.ms-field > span { color: var(--text-dim); font-size: var(--font-size-small); }
+.ms-field-row { display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 8px; }
+.ms-field-error { color: var(--danger); font-size: var(--font-size-small); }
+.ms-check { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.ms-hint { color: var(--text-dim); font-size: var(--font-size-small); }
+
+/* ------------------------------------------------------------------ dialogs */
+.ms-dialog-layer { position: fixed; inset: 0; z-index: 2000; pointer-events: none; }
+.ms-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 14, 22, 0.35);
+  pointer-events: auto;
+}
+.ms-dialog {
+  display: flex;
+  flex-direction: column;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 48px);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.ms-dialog:focus { outline: none; }
+.ms-dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+  border-radius: 6px 6px 0 0;
+}
+.ms-dialog-title h2 { flex: 1; margin: 0; font-size: 13px; font-weight: 600; }
+.ms-dialog-body { padding: 14px; overflow: auto; }
+.ms-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+}
+.ms-dialog-message { white-space: pre-wrap; line-height: 1.5; }
+
+/* -------------------------------------------------------------------- menus */
+.ms-menu {
+  position: fixed;
+  z-index: 3000;
+  min-width: 200px;
+  padding: 4px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--menu-bg);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  user-select: none;
+}
+.ms-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px 0 4px;
+  cursor: default;
+  white-space: nowrap;
+}
+.ms-menu-item:focus, .ms-menu-item.is-open { background: var(--accent-weak); outline: none; }
+.ms-menu-item.is-disabled { color: var(--text-dim); opacity: 0.55; }
+.ms-menu-item.is-danger { color: var(--danger); }
+.ms-menu-check { width: 16px; text-align: center; }
+.ms-menu-label { flex: 1; }
+.ms-menu-shortcut { margin-left: 24px; color: var(--text-dim); font-size: var(--font-size-small); }
+.ms-menu-arrow { margin-left: 12px; color: var(--text-dim); }
+.ms-menu-sep { height: 1px; margin: 4px 0; background: var(--border); }
+
+/* --------------------------------------------------------------------- tabs */
+.ms-tabs { display: flex; align-items: stretch; min-width: 0; }
+.ms-tablist { display: flex; align-items: stretch; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
+.ms-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border-right: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+.ms-tabs-normal .ms-tab { height: 28px; }
+.ms-tabs-small .ms-tab { height: 24px; padding: 0 10px; font-size: var(--font-size-small); }
+.ms-tab:hover { background: var(--hover); color: var(--text); }
+.ms-tab.is-active { background: var(--panel); color: var(--text); box-shadow: inset 0 -2px 0 var(--accent); }
+.ms-tab.is-disabled { opacity: 0.5; cursor: default; }
+.ms-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.ms-tab-close:hover { background: var(--pressed); }
+
+/* ---------------------------------------------------------- floating windows */
+.ms-float {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.ms-float.is-active { border-color: var(--accent); }
+.ms-float-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 4px 0 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+.ms-float.is-active .ms-float-title { background: var(--accent-weak); }
+.ms-float-name { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-float-body { flex: 1; min-height: 0; overflow: auto; }
+.ms-float-grip-e { position: absolute; top: 28px; right: 0; bottom: 8px; width: 6px; cursor: ew-resize; touch-action: none; }
+.ms-float-grip-s { position: absolute; left: 0; right: 8px; bottom: 0; height: 6px; cursor: ns-resize; touch-action: none; }
+.ms-float-grip-se { position: absolute; right: 0; bottom: 0; width: 12px; height: 12px; cursor: nwse-resize; touch-action: none; }
+
+/* ------------------------------------------------------------------- tables */
+.ms-table { width: 100%; border-collapse: collapse; font-size: var(--font-size-small); }
+.ms-table th, .ms-table td { padding: 2px 8px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.ms-table th { position: sticky; top: 0; z-index: 1; background: var(--panel-2); font-weight: 600; color: var(--text-dim); cursor: default; }
+.ms-table th button { all: unset; cursor: pointer; }
+.ms-table th button:focus-visible { outline: 2px solid var(--focus-ring); }
+.ms-table tbody tr:nth-child(even) { background: var(--row-alt); }
+.ms-table tbody tr:hover { background: var(--hover); }
+.ms-table tbody tr.is-selected { background: var(--accent-weak); }
+.ms-table tbody tr:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.ms-table td.num { text-align: right; font-family: var(--mono); }
+.ms-empty { padding: 12px; color: var(--text-dim); }
+
+.ms-kbd {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  background: var(--panel-2);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-align: center;
+}
+.ms-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------- commit / select fields */
+.ms-cfield { display: grid; gap: 2px 8px; min-width: 0; }
+.ms-cfield-row { grid-template-columns: minmax(84px, 38%) 1fr; align-items: center; }
+.ms-cfield-stack { grid-template-columns: 1fr; }
+.ms-cfield-label { color: var(--text-dim); font-size: var(--font-size-small); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-cfield-control { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.ms-cfield-control .ms-input, .ms-cfield-control .ms-select { flex: 1; min-width: 0; width: 100%; }
+.ms-cfield-control textarea.ms-input { resize: vertical; font-family: var(--mono); }
+.ms-cfield-unit { color: var(--text-dim); font-size: var(--font-size-small); min-width: 14px; }
+.ms-cfield-msg { grid-column: 1 / -1; }
+.ms-cfield-row .ms-cfield-msg { padding-left: calc(38% + 8px); }
+.ms-cfield-check { font-size: var(--font-size-small); }
+.ms-swatches { flex-wrap: wrap; }
+.ms-swatch {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+}
+.ms-swatch.is-active { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.ms-color-input { width: 26px; height: 20px; padding: 0; border: 1px solid var(--border); border-radius: 3px; background: none; cursor: pointer; }
+
+/* --------------------------------------------------------------- splitter */
+.ms-splitter { flex: none; background: var(--border); }
+.ms-splitter-v { width: 4px; cursor: col-resize; }
+.ms-splitter-h { height: 4px; cursor: row-resize; }
+.ms-splitter:hover, .ms-splitter.is-dragging, .ms-splitter:focus-visible { background: var(--accent); outline: none; }
+
+/* ------------------------------------------- technical detail (collapsed) */
+/* The beginner-friendly explanation is always visible; the engine's own English message hides
+   behind this toggle so a Vietnamese learner is not shown two languages at once. */
+.ms-tech { margin-top: 4px; }
+.ms-tech > summary { cursor: pointer; color: var(--text-dim); font-size: var(--font-size-small); list-style: none; }
+.ms-tech > summary::marker, .ms-tech > summary::-webkit-details-marker { display: none; }
+.ms-tech > summary::before { content: '▸ '; }
+.ms-tech[open] > summary::before { content: '▾ '; }
+.ms-tech > summary:hover { color: var(--accent); }
+.ms-tech small { display: block; margin-top: 2px; overflow-wrap: anywhere; font-family: var(--mono); }

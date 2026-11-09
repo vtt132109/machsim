@@ -1,0 +1,243 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Fourier analysis of a clipped sine",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "3",
+            "freq": "1k",
+            "acmag": "0"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 200,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "diodes/1n4148",
+          "refdes": "D1",
+          "x": 300,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p4",
+          "partId": "diodes/1n4148",
+          "refdes": "D2",
+          "x": 380,
+          "y": 250,
+          "rotation": 270,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p11",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p14",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 540,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "A",
+            "trig.level": "0",
+            "timebase": "500u",
+            "A.scale": "2",
+            "B.scale": "1"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 100,
+              "y": 220
+            },
+            {
+              "x": 100,
+              "y": 200
+            },
+            {
+              "x": 170,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 230,
+              "y": 200
+            },
+            {
+              "x": 380,
+              "y": 200
+            },
+            {
+              "x": 380,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 300,
+              "y": 200
+            },
+            {
+              "x": 300,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 100,
+              "y": 280
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 100,
+              "y": 320
+            },
+            {
+              "x": 380,
+              "y": 320
+            },
+            {
+              "x": 380,
+              "y": 280
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 300,
+              "y": 280
+            },
+            {
+              "x": 300,
+              "y": 320
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l12",
+          "x": 140,
+          "y": 200,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 340,
+          "y": 200,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 490,
+          "y": 280,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 530,
+          "y": 280,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 380,
+          "text": "Sóng gần vuông chủ yếu có hài bậc 3, 5, 7…; hài chẵn rất nhỏ vì hai diode đối xứng.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "four",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.000005,
+        "tstop": 0.005
+      },
+      "four": {
+        "type": "four",
+        "fundamental": 1000,
+        "harmonics": 9,
+        "outputs": [
+          "V(OUT)"
+        ],
+        "settleCycles": 3,
+        "samples": 256
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Phân tích Fourier: sóng sin 3 V bị hai diode xén ở ±0,7 V nên có thêm hài bậc lẻ; bảng kết quả cho biên độ từng hài và độ méo THD. Fourier analysis: a 3 V sine clipped at ±0.7 V by two diodes gains odd harmonics; the table gives each harmonic and the THD."
+}

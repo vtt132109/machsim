@@ -1,0 +1,243 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "RC low-pass filter",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "instruments/function-generator",
+          "refdes": "XFG1",
+          "x": 100,
+          "y": 100,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "waveform": "sine",
+            "freq": "1k",
+            "amplitude": "1",
+            "offset": "0"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p3",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 230,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 330,
+          "y": 260,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100n"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 330,
+          "y": 330,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p12",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 560,
+          "y": 100,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "timebase": "500u",
+            "A.scale": "500m",
+            "B.scale": "500m",
+            "trig.source": "A",
+            "trig.level": "0"
+          }
+        },
+        {
+          "id": "p15",
+          "partId": "instruments/bode-plotter",
+          "refdes": "XBP1",
+          "x": 560,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "fstart": "10",
+            "fstop": "1M",
+            "points": "50",
+            "mmin": "-60",
+            "mmax": "10"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 80,
+              "y": 130
+            },
+            {
+              "x": 80,
+              "y": 200
+            },
+            {
+              "x": 200,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 100,
+              "y": 130
+            },
+            {
+              "x": 100,
+              "y": 150
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 260,
+              "y": 200
+            },
+            {
+              "x": 330,
+              "y": 200
+            },
+            {
+              "x": 330,
+              "y": 230
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 330,
+              "y": 290
+            },
+            {
+              "x": 330,
+              "y": 330
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l10",
+          "x": 150,
+          "y": 200,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 300,
+          "y": 200,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 510,
+          "y": 130,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 550,
+          "y": 130,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 530,
+          "y": 290,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 570,
+          "y": 290,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 400,
+          "text": "fc = 1/(2π·R1·C1) ≈ 1.59 kHz: tại fc biên độ ra giảm còn 0.707 (−3 dB), pha −45°.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.000005,
+        "tstop": 0.005
+      },
+      "ac": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 50,
+        "fstart": 10,
+        "fstop": 1000000
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Lọc thông thấp RC: fc = 1/(2π·R·C) = 1/(2π·1k·100n) ≈ 1,59 kHz. Máy phát XFG1 cấp sin 1 kHz; XSC1 so sánh vào/ra; XBP1 vẽ đáp ứng tần số. RC low-pass, fc ≈ 1.59 kHz: XFG1 drives a 1 kHz sine, XSC1 compares input and output, XBP1 plots the frequency response."
+}

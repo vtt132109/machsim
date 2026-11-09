@@ -1,0 +1,166 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "4-bit binary counter with hex display",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/digital-clock",
+          "refdes": "V1",
+          "x": 100,
+          "y": 210,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "freq": "5",
+            "vhigh": "5"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "ttl/7493",
+          "refdes": "U1",
+          "x": 300,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p11",
+          "partId": "indicators/hex-display",
+          "refdes": "U2",
+          "x": 550,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 140,
+              "y": 210
+            },
+            {
+              "x": 250,
+              "y": 210
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l4",
+          "x": 350,
+          "y": 210,
+          "name": "QA",
+          "rotation": 0
+        },
+        {
+          "id": "l5",
+          "x": 250,
+          "y": 230,
+          "name": "QA",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 350,
+          "y": 230,
+          "name": "QB",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 350,
+          "y": 250,
+          "name": "QC",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 350,
+          "y": 270,
+          "name": "QD",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 250,
+          "y": 270,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 250,
+          "y": 290,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 510,
+          "y": 220,
+          "name": "QA",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 510,
+          "y": 240,
+          "name": "QB",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 510,
+          "y": 260,
+          "name": "QC",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 510,
+          "y": 280,
+          "name": "QD",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 360,
+          "text": "QA đổi trạng thái ở mỗi sườn xuống của CKA; QB, QC, QD lần lượt chia đôi tiếp: 4 bit đếm 0…15 rồi quay về 0.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.001,
+        "tstop": 3.5
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "IC 7493 đếm nhị phân 4 bit (QA nối CKB) theo xung nhịp 5 Hz; màn hình hex hiện 0…F. A 7493 counts in 4-bit binary (QA wired to CKB) from a 5 Hz clock; the hex display shows 0…F."
+}

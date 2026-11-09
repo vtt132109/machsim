@@ -1,0 +1,227 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Series and parallel resistors",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "12"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 200,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 300,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "2k"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/resistor",
+          "refdes": "R3",
+          "x": 380,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "2k"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p13",
+          "partId": "instruments/multimeter",
+          "refdes": "XMM1",
+          "x": 500,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "mode": "v"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 100,
+              "y": 190
+            },
+            {
+              "x": 100,
+              "y": 150
+            },
+            {
+              "x": 170,
+              "y": 150
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 230,
+              "y": 150
+            },
+            {
+              "x": 300,
+              "y": 150
+            },
+            {
+              "x": 300,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 300,
+              "y": 150
+            },
+            {
+              "x": 380,
+              "y": 150
+            },
+            {
+              "x": 380,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 300,
+              "y": 250
+            },
+            {
+              "x": 300,
+              "y": 300
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 380,
+              "y": 250
+            },
+            {
+              "x": 380,
+              "y": 300
+            },
+            {
+              "x": 300,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w11",
+          "points": [
+            {
+              "x": 100,
+              "y": 250
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l12",
+          "x": 260,
+          "y": 150,
+          "name": "MID",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 490,
+          "y": 230,
+          "name": "MID",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 510,
+          "y": 230,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 360,
+          "text": "R2 ‖ R3 = (2k · 2k)/(2k + 2k) = 1 kΩ → R = 2 kΩ; I = 12 V / 2 kΩ = 6 mA; V(MID) = 6 mA · 1 kΩ = 6 V.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "op",
+    "specs": {
+      "op": {
+        "type": "op"
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "R1 nối tiếp với (R2 ‖ R3): R = 1k + 2k‖2k = 2 kΩ, I = 6 mA, V(MID) = 6 V. R1 in series with (R2 ‖ R3): R = 1k + 2k‖2k = 2 kΩ, I = 6 mA, V(MID) = 6 V."
+}

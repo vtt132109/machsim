@@ -1,0 +1,177 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Diode I-V characteristic",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "5"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 200,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "100"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "diodes/1n4148",
+          "refdes": "D1",
+          "x": 300,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p4",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 100,
+              "y": 190
+            },
+            {
+              "x": 100,
+              "y": 150
+            },
+            {
+              "x": 170,
+              "y": 150
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 230,
+              "y": 150
+            },
+            {
+              "x": 300,
+              "y": 150
+            },
+            {
+              "x": 300,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 300,
+              "y": 250
+            },
+            {
+              "x": 300,
+              "y": 300
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 100,
+              "y": 250
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l9",
+          "x": 260,
+          "y": 150,
+          "name": "ANODE",
+          "rotation": 0
+        }
+      ],
+      "probes": [
+        {
+          "id": "pr10",
+          "kind": "voltage",
+          "x": 260,
+          "y": 150,
+          "name": "Vd",
+          "color": "#e53935"
+        },
+        {
+          "id": "pr11",
+          "kind": "current",
+          "x": 300,
+          "y": 170,
+          "name": "Id",
+          "color": "#e53935"
+        }
+      ],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 360,
+          "text": "Quét DC: V(ANODE) gần như đứng yên ở 0,6…0,8 V trong khi dòng Id tăng; I ≈ (V1 − Vd)/100 Ω.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "dc",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "dc": {
+        "type": "dc",
+        "src": "V1",
+        "start": 0,
+        "stop": 5,
+        "step": 0.02
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Đặc tuyến V–A của diode 1N4148: quét DC nguồn V1 từ 0 đến 5 V qua điện trở 100 Ω; dòng tăng rất nhanh khi điện áp thuận vượt ≈ 0,6 V. I-V curve of a 1N4148: a DC sweep of V1 from 0 to 5 V through 100 Ω; the current rises steeply above ≈ 0.6 V forward voltage."
+}

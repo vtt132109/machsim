@@ -1,0 +1,166 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Spectrum of a square wave",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "instruments/function-generator",
+          "refdes": "XFG1",
+          "x": 150,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "waveform": "square",
+            "freq": "1k",
+            "amplitude": "1"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 150,
+          "y": 280,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 300,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p8",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 300,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p9",
+          "partId": "instruments/spectrum-analyzer",
+          "refdes": "XSA1",
+          "x": 450,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "fstart": "0",
+            "fstop": "10k"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 150,
+              "y": 230
+            },
+            {
+              "x": 150,
+              "y": 280
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 300,
+              "y": 280
+            },
+            {
+              "x": 300,
+              "y": 320
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 130,
+          "y": 230,
+          "name": "SQ",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 300,
+          "y": 220,
+          "name": "SQ",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 440,
+          "y": 230,
+          "name": "SQ",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 460,
+          "y": 230,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 380,
+          "text": "Biên độ hài bậc n của sóng vuông biên độ A: 4A/(nπ) với n lẻ; hài chẵn bằng 0. Thử đổi máy phát sang sóng tam giác: hài giảm theo 1/n².",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.000002,
+        "tstop": 0.02
+      },
+      "four": {
+        "type": "four",
+        "fundamental": 1000,
+        "harmonics": 9,
+        "outputs": [
+          "V(SQ)"
+        ],
+        "settleCycles": 2,
+        "samples": 256
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Máy phân tích phổ XSA1 cho thấy sóng vuông 1 kHz gồm các hài lẻ 1, 3, 5, 7 kHz … với biên độ giảm theo 1/n (4/π, 4/(3π) …). The spectrum analyzer XSA1 shows that a 1 kHz square wave is made of odd harmonics 1, 3, 5, 7 kHz … falling as 1/n."
+}

@@ -1,0 +1,319 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Op-amp inverting amplifier",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "analog/lm741",
+          "refdes": "U1",
+          "x": 400,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 280,
+          "y": 290,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 400,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "100k"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/vcc",
+          "refdes": "VCC1",
+          "x": 400,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "15"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "sources/vee",
+          "refdes": "VEE1",
+          "x": 400,
+          "y": 350,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "-15"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 330,
+          "y": 360,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p7",
+          "partId": "instruments/function-generator",
+          "refdes": "XFG1",
+          "x": 150,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "waveform": "sine",
+            "freq": "1k",
+            "amplitude": "500m"
+          }
+        },
+        {
+          "id": "p8",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 150,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p20",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 660,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "timebase": "500u",
+            "A.scale": "500m",
+            "B.scale": "5",
+            "trig.source": "A",
+            "trig.level": "0"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 310,
+              "y": 290
+            },
+            {
+              "x": 360,
+              "y": 290
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 340,
+              "y": 290
+            },
+            {
+              "x": 340,
+              "y": 200
+            },
+            {
+              "x": 370,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w11",
+          "points": [
+            {
+              "x": 440,
+              "y": 300
+            },
+            {
+              "x": 520,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w12",
+          "points": [
+            {
+              "x": 430,
+              "y": 200
+            },
+            {
+              "x": 470,
+              "y": 200
+            },
+            {
+              "x": 470,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w13",
+          "points": [
+            {
+              "x": 400,
+              "y": 250
+            },
+            {
+              "x": 400,
+              "y": 270
+            }
+          ]
+        },
+        {
+          "id": "w14",
+          "points": [
+            {
+              "x": 400,
+              "y": 330
+            },
+            {
+              "x": 400,
+              "y": 350
+            }
+          ]
+        },
+        {
+          "id": "w15",
+          "points": [
+            {
+              "x": 360,
+              "y": 310
+            },
+            {
+              "x": 330,
+              "y": 310
+            },
+            {
+              "x": 330,
+              "y": 360
+            }
+          ]
+        },
+        {
+          "id": "w16",
+          "points": [
+            {
+              "x": 130,
+              "y": 230
+            },
+            {
+              "x": 130,
+              "y": 290
+            },
+            {
+              "x": 250,
+              "y": 290
+            }
+          ]
+        },
+        {
+          "id": "w17",
+          "points": [
+            {
+              "x": 150,
+              "y": 230
+            },
+            {
+              "x": 150,
+              "y": 250
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l18",
+          "x": 200,
+          "y": 290,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 520,
+          "y": 300,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 610,
+          "y": 230,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 650,
+          "y": 230,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 430,
+          "text": "Av = −R2/R1 = −10: vào 0.5 V đỉnh → ra 5 V đỉnh, ngược pha 180°.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.000005,
+        "tstop": 0.005
+      },
+      "ac": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 20,
+        "fstart": 1,
+        "fstop": 10000000
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Khuếch đại đảo dùng LM741 nguồn ±15 V: Av = −R2/R1 = −100k/10k = −10. Inverting LM741 amplifier on ±15 V, Av = −R2/R1 = −10."
+}

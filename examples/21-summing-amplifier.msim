@@ -1,0 +1,376 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Op-amp summing amplifier",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "basic/resistor",
+          "refdes": "RF",
+          "x": 400,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "analog/lm741",
+          "refdes": "U1",
+          "x": 400,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p3",
+          "partId": "sources/vcc",
+          "refdes": "VCC1",
+          "x": 400,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "15"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/vee",
+          "refdes": "VEE1",
+          "x": 400,
+          "y": 350,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "-15"
+          }
+        },
+        {
+          "id": "p12",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 330,
+          "y": 370,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p13",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 270,
+          "y": 290,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p14",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 270,
+          "y": 240,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p17",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 150,
+          "y": 330,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "1"
+          }
+        },
+        {
+          "id": "p18",
+          "partId": "sources/dc-voltage",
+          "refdes": "V2",
+          "x": 100,
+          "y": 280,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "2"
+          }
+        },
+        {
+          "id": "p23",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 150,
+          "y": 400,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p24",
+          "partId": "instruments/multimeter",
+          "refdes": "XMM1",
+          "x": 600,
+          "y": 330,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "mode": "v"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 400,
+              "y": 250
+            },
+            {
+              "x": 400,
+              "y": 270
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 400,
+              "y": 330
+            },
+            {
+              "x": 400,
+              "y": 350
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 360,
+              "y": 290
+            },
+            {
+              "x": 340,
+              "y": 290
+            },
+            {
+              "x": 340,
+              "y": 200
+            },
+            {
+              "x": 370,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 430,
+              "y": 200
+            },
+            {
+              "x": 470,
+              "y": 200
+            },
+            {
+              "x": 470,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 440,
+              "y": 300
+            },
+            {
+              "x": 520,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w11",
+          "points": [
+            {
+              "x": 360,
+              "y": 310
+            },
+            {
+              "x": 330,
+              "y": 310
+            },
+            {
+              "x": 330,
+              "y": 370
+            }
+          ]
+        },
+        {
+          "id": "w15",
+          "points": [
+            {
+              "x": 300,
+              "y": 290
+            },
+            {
+              "x": 340,
+              "y": 290
+            }
+          ]
+        },
+        {
+          "id": "w16",
+          "points": [
+            {
+              "x": 300,
+              "y": 240
+            },
+            {
+              "x": 340,
+              "y": 240
+            }
+          ]
+        },
+        {
+          "id": "w19",
+          "points": [
+            {
+              "x": 150,
+              "y": 300
+            },
+            {
+              "x": 150,
+              "y": 290
+            },
+            {
+              "x": 240,
+              "y": 290
+            }
+          ]
+        },
+        {
+          "id": "w20",
+          "points": [
+            {
+              "x": 100,
+              "y": 250
+            },
+            {
+              "x": 100,
+              "y": 240
+            },
+            {
+              "x": 240,
+              "y": 240
+            }
+          ]
+        },
+        {
+          "id": "w21",
+          "points": [
+            {
+              "x": 150,
+              "y": 360
+            },
+            {
+              "x": 150,
+              "y": 400
+            }
+          ]
+        },
+        {
+          "id": "w22",
+          "points": [
+            {
+              "x": 100,
+              "y": 310
+            },
+            {
+              "x": 100,
+              "y": 400
+            },
+            {
+              "x": 150,
+              "y": 400
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l10",
+          "x": 520,
+          "y": 300,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l25",
+          "x": 590,
+          "y": 360,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l26",
+          "x": 610,
+          "y": 360,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 460,
+          "text": "Nút IN− là “đất ảo” (0 V): dòng V1/R1 + V2/R2 = 0,3 mA chảy hết qua RF → Vout = −0,3 mA · 10k = −3 V.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "op",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "dc": {
+        "type": "dc",
+        "src": "V1",
+        "start": -5,
+        "stop": 5,
+        "step": 0.1
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Mạch cộng đảo: Vout = −RF·(V1/R1 + V2/R2) = −(1 V + 2 V) = −3 V với mọi điện trở 10 kΩ. Inverting summer: Vout = −RF·(V1/R1 + V2/R2) = −3 V with all resistors 10 kΩ."
+}

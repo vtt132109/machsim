@@ -1,0 +1,108 @@
+/**
+ * Texts of the sample browser (File > Open samples), Vietnamese first. Loaded with the browser
+ * (lazy chunk); keyed by sampleKey(file) of src/ui/integration/examples.ts ("01_voltage_divider",
+ * "diode_clipper" for SPICE decks). Each sample has a title and a one- or two-sentence summary
+ * that says what the circuit shows and what to look at. Original text written for MachSim.
+ */
+import { L, type LocalizedText } from './core';
+
+export interface SampleText {
+  title: LocalizedText;
+  summary: LocalizedText;
+}
+
+/** Section titles and one-line descriptions of the sample topics. */
+export const SAMPLE_TOPIC_TEXT: Record<string, { title: LocalizedText; desc: LocalizedText }> = {
+  basics: { title: L('Cơ bản', 'Basics'), desc: L('Định luật Ohm, Kirchhoff, mạch RC / RL / RLC', "Ohm's and Kirchhoff's laws, RC / RL / RLC circuits") },
+  semiconductors: { title: L('Bán dẫn', 'Semiconductors'), desc: L('Diode, LED, Zener, transistor BJT và MOSFET', 'Diodes, LEDs, Zeners, BJT and MOSFET transistors') },
+  opamps: { title: L('Op-amp', 'Op-amps'), desc: L('Khuếch đại, cộng, tích phân, so sánh', 'Amplifiers, summers, integrators, comparators') },
+  digital: { title: L('Số', 'Digital'), desc: L('Cổng logic, flip-flop, bộ đếm, màn hình', 'Logic gates, flip-flops, counters, displays') },
+  mixed: { title: L('Hỗn hợp', 'Mixed signal'), desc: L('555, ADC / DAC, PWM', '555, ADC / DAC, PWM') },
+  power: { title: L('Nguồn', 'Power'), desc: L('Chỉnh lưu, lọc, ổn áp, nhân áp', 'Rectifiers, filters, regulators, multipliers') },
+  rf: { title: L('Cao tần (RF)', 'RF'), desc: L('Cộng hưởng, tách sóng, đường truyền', 'Resonators, detectors, transmission lines') },
+  instruments: { title: L('Thiết bị đo', 'Instruments'), desc: L('Đồng hồ, dao động ký, phân tích phổ, phân tích logic', 'Meters, oscilloscopes, spectrum and logic analyzers') },
+  analyses: { title: L('Phép phân tích', 'Analyses'), desc: L('Quét tham số, nhiệt độ, Monte Carlo, Fourier', 'Parameter and temperature sweeps, Monte Carlo, Fourier') },
+  hierarchy: { title: L('Phân cấp', 'Hierarchy'), desc: L('Mạch con, khối phân cấp, nhiều trang', 'Subcircuits, hierarchical blocks, several sheets') },
+  automation: { title: L('Tự động hoá', 'Automation'), desc: L('Sơ đồ bậc thang (PLC), mô hình máy: băng tải, đèn giao thông, bồn nước', 'Ladder diagrams (PLC) and machine models: belts, traffic lights, tanks') },
+};
+
+export const SAMPLE_TEXT: Record<string, SampleText> = {
+  '01_voltage_divider': { title: L('Cầu phân áp + đồng hồ vạn năng', 'Voltage divider + multimeter'), summary: L('Hai điện trở chia điện áp 12 V; đồng hồ XMM1 đo Vout = 12·R2/(R1+R2) ≈ 3,84 V.', 'Two resistors divide 12 V; the multimeter XMM1 reads Vout = 12·R2/(R1+R2) ≈ 3.84 V.') },
+  '02_rc_lowpass': { title: L('Lọc thông thấp RC', 'RC low-pass filter'), summary: L('Máy phát hàm, dao động ký và máy vẽ Bode trên mạch lọc RC; tần số cắt fc ≈ 1,59 kHz.', 'Function generator, oscilloscope and Bode plotter on an RC filter; cut-off fc ≈ 1.59 kHz.') },
+  '03_rectifiers': { title: L('Chỉnh lưu nửa chu kỳ và chỉnh lưu cầu', 'Half-wave and bridge rectifiers'), summary: L('So sánh gợn sóng 50 Hz của chỉnh lưu nửa chu kỳ với gợn 100 Hz của chỉnh lưu cầu.', 'Compare the 50 Hz ripple of a half-wave rectifier with the 100 Hz ripple of a bridge.') },
+  '04_common_emitter': { title: L('Khuếch đại BJT E chung', 'BJT common-emitter amplifier'), summary: L('Tầng khuếch đại 2N3904 phân cực cầu chia áp; hệ số khuếch đại ≈ −27.', 'A 2N3904 stage with divider bias; gain ≈ −27.') },
+  '05_inverting_amplifier': { title: L('Khuếch đại đảo dùng op-amp', 'Op-amp inverting amplifier'), summary: L('LM741 khuếch đại −R2/R1 = −10, đầu ra ngược pha với đầu vào.', 'An LM741 with gain −R2/R1 = −10, the output in antiphase with the input.') },
+  '06_555_led_flasher': { title: L('Mạch nháy LED dùng 555', '555 astable LED flasher'), summary: L('IC 555 dao động khoảng 1 Hz làm LED nhấp nháy khi chạy mô phỏng.', 'A 555 oscillating at about 1 Hz blinks an LED while the simulation runs.') },
+  '07_cmos_inverter': { title: L('Cổng đảo CMOS', 'CMOS inverter'), summary: L('PMOS và NMOS tạo cổng đảo; quét DC cho đặc tuyến truyền đạt, ngưỡng ≈ VDD/2.', 'A PMOS and an NMOS form an inverter; a DC sweep draws its transfer curve, threshold ≈ VDD/2.') },
+  '08_decade_counter': { title: L('Bộ đếm thập phân với LED 7 đoạn', 'Decade counter with 7-segment display'), summary: L('7490 đếm 0…9, 7447 giải mã ra LED 7 đoạn.', 'A 7490 counts 0…9 and a 7447 decodes it for a 7-segment display.') },
+  '09_lcd_hello': { title: L('LCD ký tự: hiện dòng chữ', 'Character LCD: hello text'), summary: L('Nguồn mẫu gửi lệnh và chữ tới LCD 16x2 qua bus 4 bit.', 'A pattern source sends commands and text to a 16x2 LCD over a 4-bit bus.') },
+  '10_bench_instruments': { title: L('Thiết bị đo để bàn', 'Bench instruments'), summary: L('Máy phát sóng, đồng hồ 6½ chữ số, dao động ký số và dao động ký hỗn hợp trên mạch lọc RC.', 'Waveform generator, 6½-digit multimeter, storage and mixed-signal scopes on an RC filter.') },
+  '11_ohms_law': { title: L('Định luật Ohm', "Ohm's law"), summary: L('Nguồn 9 V và điện trở 1 kΩ: ampe kế mắc nối tiếp chỉ 9 mA, vôn kế mắc song song chỉ 9 V.', 'A 9 V source and 1 kΩ: the series ammeter reads 9 mA, the parallel voltmeter 9 V.') },
+  '12_series_parallel': { title: L('Điện trở nối tiếp và song song', 'Series and parallel resistors'), summary: L('R1 nối tiếp với R2 ‖ R3: điện trở tương đương 2 kΩ, điểm giữa đúng 6 V.', 'R1 in series with R2 ‖ R3: 2 kΩ in total, exactly 6 V at the middle.') },
+  '13_rc_charging': { title: L('Tụ nạp và xả qua điện trở', 'RC charging and discharging'), summary: L('Nguồn xung 5 V nạp tụ qua 10 kΩ; sau một hằng số thời gian τ = 0,1 s tụ đạt 63 %.', 'A 5 V pulse charges the capacitor through 10 kΩ; after one time constant τ = 0.1 s it reaches 63 %.') },
+  '14_rlc_resonance': { title: L('Cộng hưởng RLC nối tiếp', 'Series RLC resonance'), summary: L('Điện áp trên R lớn nhất ở tần số cộng hưởng f0 ≈ 1,59 kHz; hệ số phẩm chất Q = 10.', 'The voltage across R peaks at the resonant frequency f0 ≈ 1.59 kHz; quality factor Q = 10.') },
+  '15_wheatstone_bridge': { title: L('Cầu Wheatstone', 'Wheatstone bridge'), summary: L('Vôn kế giữa hai nhánh chỉ 0 V khi cầu cân bằng; R4 = 1,2 kΩ làm lệch ≈ 0,45 V.', 'The voltmeter between the arms reads 0 V when the bridge is balanced; R4 = 1.2 kΩ gives ≈ 0.45 V.') },
+  '16_diode_iv': { title: L('Đặc tuyến V–A của diode', 'Diode I-V characteristic'), summary: L('Quét DC nguồn qua 100 Ω vào diode 1N4148: điện áp thuận dừng ở khoảng 0,6…0,8 V.', 'A DC sweep through 100 Ω into a 1N4148: the forward voltage stays around 0.6…0.8 V.') },
+  '17_zener_regulator': { title: L('Ổn áp dùng diode Zener', 'Zener voltage regulator'), summary: L('Khi nguồn vượt khoảng 7,5 V, đầu ra giữ gần 5,1 V nhờ diode Zener.', 'Above about 7.5 V input the Zener holds the output near 5.1 V.') },
+  '18_led_resistor': { title: L('LED và điện trở hạn dòng', 'LED with series resistor'), summary: L('Điện trở 220 Ω giới hạn dòng qua LED đỏ khoảng 14 mA; nhấn Chạy để LED sáng.', 'A 220 Ω resistor limits the red LED to about 14 mA; press Run to light it.') },
+  '19_bjt_switch': { title: L('Transistor làm khoá điều khiển LED', 'BJT switch driving an LED'), summary: L('Xung 0/5 V vào cực gốc làm 2N3904 bão hoà, LED ở cực góp sáng và tắt theo nhịp 1 Hz.', 'A 0/5 V pulse on the base saturates the 2N3904; the collector LED turns on and off at 1 Hz.') },
+  '20_non_inverting_amplifier': { title: L('Khuếch đại không đảo', 'Op-amp non-inverting amplifier'), summary: L('Hệ số khuếch đại 1 + Rf/Rg = 10, đầu ra cùng pha với đầu vào.', 'Gain 1 + Rf/Rg = 10 with the output in phase with the input.') },
+  '21_summing_amplifier': { title: L('Mạch cộng đảo', 'Op-amp summing amplifier'), summary: L('Hai điện áp 1 V và 2 V cộng lại qua op-amp: Vout = −3 V; đất ảo ở đầu vào đảo.', 'Two voltages 1 V and 2 V summed by an op-amp: Vout = −3 V; the inverting input is a virtual ground.') },
+  '22_integrator': { title: L('Mạch tích phân', 'Op-amp integrator'), summary: L('Sóng vuông ±1 V vào mạch tích phân R-C cho sóng tam giác 0,5 V đỉnh-đỉnh.', 'A ±1 V square wave into an R-C integrator gives a 0.5 Vpp triangle.') },
+  '23_schmitt_trigger': { title: L('Bộ so sánh có trễ (Schmitt trigger)', 'Comparator with hysteresis (Schmitt trigger)'), summary: L('Hồi tiếp dương tạo hai ngưỡng ±1,7 V; đầu ra không rung khi tín hiệu đi qua 0 V.', 'Positive feedback sets two thresholds ±1.7 V; the output does not chatter as the signal crosses 0 V.') },
+  '24_logic_gates': { title: L('Các cổng logic cơ bản', 'Basic logic gates'), summary: L('Bấm phím A, B để đổi công tắc logic và xem đèn của cổng AND, OR, XOR.', 'Press keys A and B to flip the logic switches and watch the AND, OR and XOR lights.') },
+  '25_flipflop_divider': { title: L('Flip-flop chia tần số', 'Flip-flop frequency divider'), summary: L('Hai flip-flop T chia xung nhịp 1 kHz thành 500 Hz và 250 Hz; xem trên máy phân tích logic.', 'Two T flip-flops divide a 1 kHz clock into 500 Hz and 250 Hz; see the logic analyzer.') },
+  '26_binary_counter': { title: L('Bộ đếm nhị phân 4 bit với màn hình hex', '4-bit binary counter with hex display'), summary: L('IC 7493 đếm từ 0 đến F theo xung 5 Hz, màn hình hex hiện từng số.', 'A 7493 counts from 0 to F on a 5 Hz clock and the hex display shows each count.') },
+  '27_555_monostable': { title: L('555 đơn ổn', '555 monostable (one-shot)'), summary: L('Mỗi xung kích ngắn tạo một xung ra dài 1,1·R·C ≈ 0,11 s và LED sáng trong thời gian đó.', 'Each short trigger pulse gives one 1.1·R·C ≈ 0.11 s output pulse and lights the LED for that time.') },
+  '28_r2r_dac': { title: L('Bộ đổi số – tương tự R-2R', 'R-2R digital-to-analog converter'), summary: L('Bộ đếm 4 bit qua thang điện trở R-2R thành điện áp bậc thang 16 mức.', 'A 4-bit counter through an R-2R ladder becomes a 16-step staircase voltage.') },
+  '29_pwm_comparator': { title: L('PWM từ sóng tam giác và bộ so sánh', 'PWM from a triangle and a comparator'), summary: L('So sánh sóng tam giác với mức 2 V cho xung PWM 40 %; lọc RC lấy lại 2 V trung bình.', 'Comparing a triangle with a 2 V level gives 40 % PWM; an RC filter recovers the 2 V average.') },
+  '30_full_wave_ct': { title: L('Chỉnh lưu toàn sóng với biến áp có điểm giữa', 'Full-wave rectifier with center-tapped transformer'), summary: L('Hai diode và biến áp có điểm giữa chỉnh lưu cả hai nửa chu kỳ, ra ≈ 15 V gợn 100 Hz.', 'Two diodes and a center-tapped transformer rectify both half-cycles: ≈ 15 V with 100 Hz ripple.') },
+  '31_regulator_7805': { title: L('IC ổn áp 7805', '7805 linear voltage regulator'), summary: L('Quét điện áp vào từ 0 đến 15 V: đầu ra giữ 5 V khi vào lớn hơn khoảng 7 V.', 'Sweep the input from 0 to 15 V: the output holds 5 V above about 7 V in.') },
+  '32_voltage_doubler': { title: L('Mạch nhân đôi điện áp', 'Voltage doubler'), summary: L('Hai diode và hai tụ biến 10 V đỉnh xoay chiều thành khoảng 18,6 V một chiều.', 'Two diodes and two capacitors turn 10 V peak AC into about 18.6 V DC.') },
+  '33_lc_tank': { title: L('Khung cộng hưởng LC song song', 'Parallel LC tank'), summary: L('Phân tích AC: biên độ lớn nhất tại f0 = 1/(2π√LC) ≈ 159 kHz, cách máy thu chọn đài.', 'AC analysis: the response peaks at f0 = 1/(2π√LC) ≈ 159 kHz, the way a receiver picks a station.') },
+  '34_am_detector': { title: L('Tách sóng AM bằng diode', 'AM envelope detector'), summary: L('Diode và mạch RC lấy lại tín hiệu âm 1 kHz từ sóng mang 50 kHz điều biên.', 'A diode and an RC filter recover the 1 kHz tone from an amplitude-modulated 50 kHz carrier.') },
+  '35_transmission_line': { title: L('Phản xạ trên đường truyền', 'Transmission line reflections'), summary: L('Đường truyền 50 Ω với tải 150 Ω: dao động ký thấy bậc phản xạ sau hai lần trễ 10 ns.', 'A 50 Ω line into 150 Ω: the oscilloscope shows the reflected step after two 10 ns delays.') },
+  '36_wattmeter': { title: L('Oát kế đo công suất tải R-L', 'Wattmeter on an RL load'), summary: L('Oát kế đo công suất thực ≈ 0,91 W và hệ số công suất ≈ 0,95 của tải R-L ở 50 Hz.', 'The wattmeter reads ≈ 0.91 W real power and a power factor ≈ 0.95 for an R-L load at 50 Hz.') },
+  '37_spectrum_square': { title: L('Phổ của sóng vuông', 'Spectrum of a square wave'), summary: L('Máy phân tích phổ cho thấy sóng vuông 1 kHz gồm các hài lẻ giảm theo 1/n.', 'The spectrum analyzer shows a 1 kHz square wave made of odd harmonics falling as 1/n.') },
+  '38_word_generator': { title: L('Máy phát từ và máy phân tích logic', 'Word generator and logic analyzer'), summary: L('Máy phát từ đếm 0…F trên 4 đường; máy phân tích logic vẽ giản đồ thời gian.', 'The word generator counts 0…F on four lines; the logic analyzer draws the timing diagram.') },
+  '39_parameter_sweep': { title: L('Quét tham số bộ lọc RC', 'Parameter sweep of an RC filter'), summary: L('Phân tích AC chạy lại với ba giá trị R1; Grapher vẽ chồng để so sánh tần số cắt.', 'The AC analysis runs again for three values of R1; the Grapher overlays them to compare cut-offs.') },
+  '40_temperature_sweep': { title: L('Quét nhiệt độ diode', 'Temperature sweep of a diode'), summary: L('Đặc tuyến DC ở −25…125 °C: điện áp thuận giảm khoảng 2 mV mỗi °C.', 'The DC curve at −25…125 °C: the forward voltage drops about 2 mV per °C.') },
+  '41_monte_carlo': { title: L('Monte Carlo cầu phân áp', 'Monte Carlo of a voltage divider'), summary: L('50 lần chạy với điện trở dung sai 5 % cho thấy đầu ra dao động quanh 5 V.', '50 runs with 5 % resistors show how the output spreads around 5 V.') },
+  '42_fourier_clipper': { title: L('Phân tích Fourier sóng sin bị xén', 'Fourier analysis of a clipped sine'), summary: L('Bảng Fourier liệt kê các hài bậc lẻ và độ méo THD của sóng sin bị hai diode xén.', 'The Fourier table lists the odd harmonics and the THD of a sine clipped by two diodes.') },
+  '43_subcircuit_cascade': { title: L('Mạch con RC dùng hai lần', 'RC subcircuit used twice'), summary: L('Một mạch con RC đặt hai lần nối tiếp thành bộ lọc bậc 2 dốc −40 dB/decade.', 'One RC subcircuit placed twice in a row makes a 2nd-order filter falling at −40 dB/decade.') },
+  '44_multi_sheet': { title: L('Hai trang nối bằng đầu nối sang trang', 'Two sheets joined by off-page connectors'), summary: L('Nguồn ở trang 1, LED ở trang 2; đầu nối “NODE” nối hai trang thành một mạch.', 'The source is on sheet 1 and the LED on sheet 2; the connector “NODE” joins them into one circuit.') },
+  '45_hierarchical_block': { title: L('Khối phân cấp có tham số', 'Hierarchical amplifier block with a parameter'), summary: L('Cùng một khối khuếch đại dùng hai lần với tham số RF khác nhau: Av = −10 và −4,7.', 'The same amplifier block used twice with different RF: Av = −10 and −4.7.') },
+  '46_block_control_loop': { title: L('Vòng điều khiển vẽ bằng khối, đo bằng .meas', 'Block-diagram control loop with .meas'), summary: L('Bộ cộng và bộ tích phân k = 1000 tạo vòng kín 1/(1 + s·1 ms), trùng với khối H(s); .meas đo thời điểm đạt 63 % = 2 ms.', 'A summer and an integrator with k = 1000 make the closed loop 1/(1 + s·1 ms), equal to the H(s) block; .meas measures the 63 % time = 2 ms.') },
+  '48_real_capacitor': { title: L('Tụ điện thực: cộng hưởng riêng', 'Real capacitor: self-resonance'), summary: L('Tụ 100 nF lý tưởng và tụ thực (ESR, ESL) trên phân tích AC: tụ thực chạm đáy bằng ESR ở ≈ 11,25 MHz rồi thành cuộn cảm.', 'An ideal and a real 100 nF capacitor (ESR, ESL) in an AC sweep: the real one bottoms out at its ESR near 11.25 MHz and then turns inductive.') },
+  '49_pll_lock': { title: L('Vòng khoá pha (PLL) bám tần số', 'Phase-locked loop locking'), summary: L('Khối PLL f0 = 10 kHz khoá vào tín hiệu 10,3 kHz; V(VC) = (fin − f0)/kv = 0,15 V, đo bằng .meas.', 'A PLL block with f0 = 10 kHz locks to a 10.3 kHz input; V(VC) = (fin − f0)/kv = 0.15 V, measured with .meas.') },
+  '50_dip_switch_leds': { title: L('Công tắc DIP, mảng điện trở và LED', 'DIP switch, resistor network and LEDs'), summary: L('Bấm vào từng vị trí công tắc DIP (hoặc phím 1–4) khi đang chạy: LED 3D tương ứng sáng qua mảng điện trở 330 Ω.', 'Click the DIP-switch positions (or keys 1–4) while running: the matching 3D LED lights through a 330 Ω resistor network.') },
+  '51_mcu_blink': { title: L('Nháy LED bằng vi điều khiển 8051', 'Blink an LED with an 8051'), summary: L('Chương trình hợp ngữ đảo chân P1.0 sau mỗi vòng trễ 100,6 ms; LED nối từ +5 V qua 330 Ω xuống chân.', 'An assembly program toggles P1.0 after a 100.6 ms delay loop; the LED hangs from +5 V through 330 Ω to the pin.') },
+  '52_mcu_seven_segment': { title: L('Đếm ra LED 7 đoạn bằng 8051', 'Seven-segment counter with an 8051'), summary: L('Bảng mã 7 đoạn tra bằng MOVC và ngắt Timer 0 mỗi 50 ms: số đếm 0…9 tăng mỗi 0,5 giây.', 'A seven-segment code table read with MOVC and a timer 0 interrupt every 50 ms: the count 0…9 goes up every half second.') },
+  '53_mcu_button': { title: L('Đọc nút nhấn bằng 8051', 'Read a push-button with an 8051'), summary: L('Nút nhấn kéo chân P1.2 xuống đất; chương trình chống dội 20 ms rồi đảo LED ở P1.0.', 'The button pulls P1.2 to ground; the program debounces for 20 ms and toggles the LED on P1.0.') },
+  '54_mcu_serial': { title: L('8051 gửi Hello ra cổng nối tiếp', '8051 sends Hello on the serial port'), summary: L('UART chế độ 1 ở 9600 baud (thạch anh 11,0592 MHz): chữ hiện trong Cửa sổ nối tiếp của Trình soạn mã, gõ vào thì được phát lại.', 'Serial mode 1 at 9600 baud (11.0592 MHz crystal): the text appears in the code editor’s serial window, and what you type is echoed.') },
+  '55_ladder_start_stop': { title: L('Khởi động / dừng động cơ bằng sơ đồ bậc thang', 'Motor start / stop with a ladder diagram'), summary: L('Mạch tự giữ kinh điển: (khởi động HOẶC đang chạy) VÀ chưa dừng → chạy; nút dừng là tiếp điểm thường đóng. Nhấn S rồi T.', 'The classic self-holding rung: (start OR already running) AND not stopped → run, with a normally-closed stop button. Press S, then T.') },
+  '56_ladder_traffic': { title: L('Đèn giao thông bằng bộ định thời bậc thang', 'Traffic-light junction with ladder timers'), summary: L('Một bộ định thời vòng 20 s và sáu tiếp điểm so sánh T1.ET điều khiển sáu đèn; mô hình nút giao tự báo nếu tín hiệu không an toàn.', 'One 20 s cycle timer and six comparison contacts on T1.ET drive the six lamps; the junction model itself reports an unsafe combination.') },
+  '57_ladder_tank': { title: L('Điều khiển mức nước bằng sơ đồ bậc thang', 'Tank filling control with a ladder diagram'), summary: L('Bơm tự giữ giữa hai công tắc phao, thêm tiếp điểm so sánh trên kênh tương tự để báo gần tràn (AI0 > 9,5 V).', 'A self-holding pump between the two float switches, plus a comparison contact on the analog channel for the overflow alarm (AI0 > 9.5 V).') },
+  '47_reference_ground': { title: L('Thứ cấp biến áp cách ly trên đất tham chiếu', 'Isolated secondary on a reference ground'), summary: L('Biến áp 2:1, phía thứ cấp chỉ nối Đất tham chiếu 1; đầu dò đo so với đất tham chiếu ≈ 5 V đỉnh.', 'A 2:1 transformer whose secondary connects only to reference ground 1; the probe reads ≈ 5 V peak against it.') },
+  diode_clipper: { title: L('Mạch xén dùng diode (SPICE)', 'Diode clipper (SPICE)'), summary: L('Netlist SPICE: hai diode ngược chiều xén sóng sin ở ≈ ±0,7 V; kết quả trong Grapher.', 'SPICE netlist: two anti-parallel diodes clip a sine at ≈ ±0.7 V; results in the Grapher.') },
+  bjt_diff_pair: { title: L('Cặp vi sai BJT (SPICE)', 'BJT differential pair (SPICE)'), summary: L('Netlist SPICE: cặp vi sai 2N3904 với nguồn dòng 1 mA, đặc tuyến hình tanh.', 'SPICE netlist: a 2N3904 differential pair with a 1 mA tail, tanh-shaped transfer.') },
+  cmos_inverter_vtc: { title: L('Đặc tuyến cổng đảo CMOS (SPICE)', 'CMOS inverter VTC (SPICE)'), summary: L('Netlist SPICE: quét DC cổng đảo CMOS mô hình level 1.', 'SPICE netlist: a DC sweep of a level-1 CMOS inverter.') },
+  rlc_bandpass: { title: L('Lọc thông dải RLC (SPICE)', 'RLC band-pass filter (SPICE)'), summary: L('Netlist SPICE: lọc thông dải RLC nối tiếp, f0 ≈ 5,03 kHz, Q ≈ 3,16.', 'SPICE netlist: a series RLC band-pass, f0 ≈ 5.03 kHz, Q ≈ 3.16.') },
+  meas_step_filter: { title: L('Họ mạch lọc RC với .meas (SPICE)', 'RC filter family with .meas (SPICE)'), summary: L('Netlist SPICE: .step param chạy R = 1k, 2k, 5k; .meas đo tần số −3 dB (1,59 kHz; 796 Hz; 318 Hz) và thời gian lên của mỗi lần chạy; thêm một bộ lọc CHEBYSHEV bậc 5.', 'SPICE netlist: .step param runs R = 1k, 2k, 5k; .meas measures the −3 dB frequency (1.59 kHz, 796 Hz, 318 Hz) and the rise time of every run; plus a 5th-order CHEBYSHEV filter.') },
+};
+
+/** Texts of the sample browser dialog itself. */
+export const SAMPLE_UI = {
+  title: L('Mạch mẫu', 'Sample circuits'),
+  search: L('Tìm mạch mẫu (có dấu hoặc không dấu)…', 'Search samples…'),
+  all: L('Tất cả chủ đề', 'All topics'),
+  open: L('Mở mạch này', 'Open this sample'),
+  run: L('Chạy netlist', 'Run the netlist'),
+  none: L('Không có mạch mẫu nào khớp.', 'No sample matches.'),
+  previewing: L('Đang vẽ hình xem trước…', 'Drawing the preview…'),
+  noPreview: L('Netlist SPICE không có sơ đồ: kết quả hiện trong Grapher khi chạy.', 'A SPICE netlist has no drawing: its results appear in the Grapher when it runs.'),
+  hint: L('Mạch mẫu mở thành thiết kế mới (chưa lưu): sửa thoải mái rồi nhấn Chạy (F5).', 'A sample opens as a new, unsaved design: change it freely, then press Run (F5).'),
+  count: L('{n} mạch mẫu', '{n} samples'),
+  kindDesign: L('Sơ đồ', 'Schematic'),
+  kindSpice: L('Netlist SPICE', 'SPICE netlist'),
+} satisfies Record<string, LocalizedText>;

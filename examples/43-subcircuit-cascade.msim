@@ -1,0 +1,281 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "RC subcircuit used twice",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p8",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "1",
+            "freq": "1k",
+            "acmag": "1"
+          }
+        },
+        {
+          "id": "p9",
+          "partId": "hier:child1",
+          "refdes": "SC1",
+          "x": 260,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p10",
+          "partId": "hier:child1",
+          "refdes": "SC2",
+          "x": 440,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p13",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p18",
+          "partId": "basic/resistor",
+          "refdes": "RL",
+          "x": 600,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "1Meg"
+          }
+        },
+        {
+          "id": "p21",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 600,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w12",
+          "points": [
+            {
+              "x": 100,
+              "y": 280
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w20",
+          "points": [
+            {
+              "x": 600,
+              "y": 280
+            },
+            {
+              "x": 600,
+              "y": 320
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l11",
+          "x": 100,
+          "y": 220,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 250,
+          "y": 220,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 350,
+          "y": 220,
+          "name": "MID",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 430,
+          "y": 220,
+          "name": "MID",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 530,
+          "y": 220,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 600,
+          "y": 220,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 380,
+          "text": "Mỗi khối là một tầng −20 dB/decade trên fc ≈ 1,59 kHz; hai tầng nối tiếp (có tải lẫn nhau) cho −40 dB/decade.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "ac",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "ac": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 20,
+        "fstart": 10,
+        "fstop": 1000000
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Mạch con “RC” (R = 1k, C = 100 nF) được đặt hai lần nối tiếp tạo bộ lọc bậc 2: độ dốc −40 dB/decade. Nhấp đúp khối SC1 để xem bên trong. The subcircuit “RC” (R = 1k, C = 100 nF) placed twice in a row makes a 2nd-order filter falling at −40 dB/decade. Double-click SC1 to look inside.",
+  "children": [
+    {
+      "id": "child1",
+      "kind": "subcircuit",
+      "name": "RC",
+      "sheets": [
+        {
+          "id": "child1_sheet1",
+          "name": "Sheet 1",
+          "parts": [
+            {
+              "id": "p1",
+              "partId": "basic/resistor",
+              "refdes": "R1",
+              "x": 200,
+              "y": 200,
+              "rotation": 0,
+              "mirror": false,
+              "params": {
+                "value": "1k"
+              }
+            },
+            {
+              "id": "p2",
+              "partId": "basic/capacitor",
+              "refdes": "C1",
+              "x": 300,
+              "y": 250,
+              "rotation": 90,
+              "mirror": false,
+              "params": {
+                "value": "100n"
+              }
+            },
+            {
+              "id": "p5",
+              "partId": "sources/ground",
+              "refdes": "GND1",
+              "x": 300,
+              "y": 320,
+              "rotation": 0,
+              "mirror": false,
+              "params": {}
+            }
+          ],
+          "wires": [
+            {
+              "id": "w3",
+              "points": [
+                {
+                  "x": 230,
+                  "y": 200
+                },
+                {
+                  "x": 300,
+                  "y": 200
+                },
+                {
+                  "x": 300,
+                  "y": 220
+                }
+              ]
+            },
+            {
+              "id": "w4",
+              "points": [
+                {
+                  "x": 300,
+                  "y": 280
+                },
+                {
+                  "x": 300,
+                  "y": 320
+                }
+              ]
+            }
+          ],
+          "labels": [
+            {
+              "id": "l6",
+              "x": 170,
+              "y": 200,
+              "name": "IN",
+              "rotation": 0,
+              "kind": "hier"
+            },
+            {
+              "id": "l7",
+              "x": 300,
+              "y": 200,
+              "name": "OUT",
+              "rotation": 0,
+              "kind": "hier"
+            }
+          ],
+          "probes": [],
+          "notes": []
+        }
+      ],
+      "variables": {}
+    }
+  ]
+}

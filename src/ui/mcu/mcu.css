@@ -1,0 +1,293 @@
+/* Microcontroller code editor and PLD wizard (loaded with their chunks). */
+
+.ms-mcu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  min-height: 0;
+}
+
+.ms-mcu-head,
+.ms-mcu-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.ms-mcu-body {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 8px;
+  min-height: 0;
+}
+
+.ms-mcu-left,
+.ms-mcu-right {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  min-width: 0;
+}
+
+.ms-mcu-left {
+  flex: 1 1 46%;
+}
+
+.ms-mcu-right {
+  flex: 1 1 54%;
+}
+
+.ms-mcu-source {
+  flex: 1 1 auto;
+  min-height: 160px;
+  font-family: var(--ms-mono, ui-monospace, 'Cascadia Mono', Consolas, monospace);
+  font-size: 12px;
+  line-height: 1.45;
+  tab-size: 8;
+  white-space: pre;
+  overflow: auto;
+  resize: none;
+  padding: 6px 8px;
+  border: 1px solid var(--ms-border);
+  border-radius: 4px;
+  background: var(--ms-input-bg, var(--ms-bg));
+  color: var(--ms-fg);
+}
+
+.ms-mcu-output {
+  flex: 0 0 auto;
+  max-height: 32%;
+  overflow: auto;
+  border-top: 1px solid var(--ms-border);
+  padding-top: 4px;
+}
+
+.ms-mcu-errors {
+  margin: 2px 0 0;
+  padding-left: 16px;
+}
+
+.ms-mcu-errors li {
+  margin: 1px 0;
+}
+
+.ms-mcu-ok {
+  margin: 2px 0;
+  color: var(--ms-ok, #2e7d32);
+}
+
+.ms-mcu-error {
+  margin: 2px 0;
+  color: var(--ms-error, #c62828);
+}
+
+.ms-mcu-warn {
+  margin: 2px 0;
+  color: var(--ms-warning, #e8590c);
+}
+
+.ms-mcu-cell-label {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.ms-mcu-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ms-mcu-cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 72px;
+  padding: 2px 6px;
+  border: 1px solid var(--ms-border);
+  border-radius: 3px;
+}
+
+.ms-mcu-cell-value {
+  font-family: var(--ms-mono, ui-monospace, Consolas, monospace);
+  font-size: 12px;
+}
+
+.ms-mcu-flags {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ms-mcu-flag,
+.ms-mcu-bit {
+  display: inline-block;
+  min-width: 22px;
+  text-align: center;
+  padding: 1px 4px;
+  border: 1px solid var(--ms-border);
+  border-radius: 3px;
+  font-family: var(--ms-mono, ui-monospace, Consolas, monospace);
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.ms-mcu-flag.is-on,
+.ms-mcu-bit.is-on {
+  opacity: 1;
+  background: var(--ms-accent-soft, rgba(26, 79, 214, 0.15));
+  border-color: var(--ms-accent, #1a4fd6);
+}
+
+.ms-mcu-table {
+  border-collapse: collapse;
+  font-family: var(--ms-mono, ui-monospace, Consolas, monospace);
+  font-size: 12px;
+}
+
+.ms-mcu-table th,
+.ms-mcu-table td {
+  border: 1px solid var(--ms-border);
+  padding: 1px 6px;
+  text-align: right;
+}
+
+.ms-mcu-symbols td,
+.ms-mcu-symbols th {
+  text-align: left;
+}
+
+.ms-mcu-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-bottom: 1px solid var(--ms-border);
+}
+
+.ms-mcu-tabbody {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ms-mcu-view {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.ms-mcu-terminal {
+  margin: 0;
+  min-height: 120px;
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: var(--ms-mono, ui-monospace, Consolas, monospace);
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1px solid var(--ms-border);
+  border-radius: 4px;
+  background: var(--ms-input-bg, var(--ms-bg));
+}
+
+.ms-mcu-listing {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--ms-mono, ui-monospace, Consolas, monospace);
+  font-size: 12px;
+}
+
+.ms-mcu-line {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  white-space: pre;
+}
+
+.ms-mcu-line.is-current {
+  background: var(--ms-accent-soft, rgba(26, 79, 214, 0.15));
+}
+
+.ms-mcu-break {
+  width: 16px;
+  border: 0;
+  background: none;
+  color: inherit;
+  opacity: 0.4;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ms-mcu-break.is-on {
+  opacity: 1;
+  color: var(--ms-error, #c62828);
+}
+
+.ms-mcu-break:disabled {
+  cursor: default;
+  opacity: 0.15;
+}
+
+.ms-mcu-addr {
+  min-width: 34px;
+  opacity: 0.7;
+}
+
+.ms-mcu-bytes {
+  min-width: 68px;
+  opacity: 0.8;
+}
+
+.ms-mcu-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+/* ---- PLD wizard ---- */
+
+.ms-pld {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.ms-pld-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 8px;
+  align-items: start;
+}
+
+.ms-pld-logic {
+  min-height: 140px;
+  font-family: var(--ms-mono, ui-monospace, Consolas, monospace);
+  font-size: 12px;
+  white-space: pre;
+  overflow: auto;
+  resize: vertical;
+  padding: 6px 8px;
+  border: 1px solid var(--ms-border);
+  border-radius: 4px;
+  background: var(--ms-input-bg, var(--ms-bg));
+  color: var(--ms-fg);
+}
+
+.ms-pld-preview {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre;
+  font-family: var(--ms-mono, ui-monospace, Consolas, monospace);
+  font-size: 11px;
+  padding: 6px 8px;
+  border: 1px solid var(--ms-border);
+  border-radius: 4px;
+  background: var(--ms-input-bg, var(--ms-bg));
+}

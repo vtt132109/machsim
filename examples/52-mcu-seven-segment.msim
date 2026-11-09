@@ -1,0 +1,395 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Seven-segment counter with an 8051",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "5"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 380,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "misc-digital/mcu-8051-p1",
+          "refdes": "U1",
+          "x": 340,
+          "y": 280,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "program": "; Dem 0..9 ra LED 7 doan anode chung tren P1\nTICKS   EQU  30h            ; so lan ngat con lai\nDIGIT   EQU  31h            ; chu so dang hien\n        ORG  0\n        LJMP MAIN\n        ORG  0Bh            ; vec-to Timer 0\n        LJMP T0ISR\n\n        ORG  30h\nMAIN:   MOV  SP,#60h\n        MOV  TMOD,#01h      ; Timer 0, che do 1 (16 bit)\n        MOV  TH0,#3Ch       ; 65536 - 50000 = 15536 = 3CB0h\n        MOV  TL0,#0B0h\n        MOV  IE,#82h        ; EA + ET0\n        SETB TR0\n        MOV  TICKS,#10\n        MOV  DIGIT,#0\n        ACALL SHOW\nLOOP:   SJMP LOOP\n\nT0ISR:  MOV  TH0,#3Ch       ; nap lai 50 ms\n        MOV  TL0,#0B0h\n        DJNZ TICKS,DONE\n        MOV  TICKS,#10      ; 10 x 50 ms = 0,5 s\n        MOV  A,DIGIT\n        INC  A\n        CJNE A,#10,KEEP\n        MOV  A,#0\nKEEP:   MOV  DIGIT,A\n        ACALL SHOW\nDONE:   RETI\n\nSHOW:   MOV  A,DIGIT        ; tra bang ma 7 doan\n        MOV  DPTR,#TABLE\n        MOVC A,@A+DPTR\n        MOV  P1,A\n        RET\n\n; bit 0 = a ... bit 6 = g, muc 0 la sang (anode chung)\nTABLE:  DB   0C0h,0F9h,0A4h,0B0h,99h\n        DB   92h,82h,0F8h,80h,90h\n        END",
+            "fosc": "12M"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "indicators/seven-seg-ca",
+          "refdes": "DS1",
+          "x": 760,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p7",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 580,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p12",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 580,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p17",
+          "partId": "basic/resistor",
+          "refdes": "R3",
+          "x": 580,
+          "y": 240,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p22",
+          "partId": "basic/resistor",
+          "refdes": "R4",
+          "x": 580,
+          "y": 280,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p27",
+          "partId": "basic/resistor",
+          "refdes": "R5",
+          "x": 580,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p32",
+          "partId": "basic/resistor",
+          "refdes": "R6",
+          "x": 580,
+          "y": 360,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p37",
+          "partId": "basic/resistor",
+          "refdes": "R7",
+          "x": 580,
+          "y": 400,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 100,
+              "y": 330
+            },
+            {
+              "x": 100,
+              "y": 380
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l4",
+          "x": 100,
+          "y": 270,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 410,
+          "y": 210,
+          "name": "S0",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 550,
+          "y": 160,
+          "name": "S0",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 610,
+          "y": 160,
+          "name": "SEG0",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 720,
+          "y": 230,
+          "name": "SEG0",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 410,
+          "y": 230,
+          "name": "S1",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 550,
+          "y": 200,
+          "name": "S1",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 610,
+          "y": 200,
+          "name": "SEG1",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 720,
+          "y": 250,
+          "name": "SEG1",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 410,
+          "y": 250,
+          "name": "S2",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 550,
+          "y": 240,
+          "name": "S2",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 610,
+          "y": 240,
+          "name": "SEG2",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 720,
+          "y": 270,
+          "name": "SEG2",
+          "rotation": 0
+        },
+        {
+          "id": "l23",
+          "x": 410,
+          "y": 270,
+          "name": "S3",
+          "rotation": 0
+        },
+        {
+          "id": "l24",
+          "x": 550,
+          "y": 280,
+          "name": "S3",
+          "rotation": 0
+        },
+        {
+          "id": "l25",
+          "x": 610,
+          "y": 280,
+          "name": "SEG3",
+          "rotation": 0
+        },
+        {
+          "id": "l26",
+          "x": 720,
+          "y": 290,
+          "name": "SEG3",
+          "rotation": 0
+        },
+        {
+          "id": "l28",
+          "x": 410,
+          "y": 290,
+          "name": "S4",
+          "rotation": 0
+        },
+        {
+          "id": "l29",
+          "x": 550,
+          "y": 320,
+          "name": "S4",
+          "rotation": 0
+        },
+        {
+          "id": "l30",
+          "x": 610,
+          "y": 320,
+          "name": "SEG4",
+          "rotation": 0
+        },
+        {
+          "id": "l31",
+          "x": 800,
+          "y": 230,
+          "name": "SEG4",
+          "rotation": 0
+        },
+        {
+          "id": "l33",
+          "x": 410,
+          "y": 310,
+          "name": "S5",
+          "rotation": 0
+        },
+        {
+          "id": "l34",
+          "x": 550,
+          "y": 360,
+          "name": "S5",
+          "rotation": 0
+        },
+        {
+          "id": "l35",
+          "x": 610,
+          "y": 360,
+          "name": "SEG5",
+          "rotation": 0
+        },
+        {
+          "id": "l36",
+          "x": 800,
+          "y": 250,
+          "name": "SEG5",
+          "rotation": 0
+        },
+        {
+          "id": "l38",
+          "x": 410,
+          "y": 330,
+          "name": "S6",
+          "rotation": 0
+        },
+        {
+          "id": "l39",
+          "x": 550,
+          "y": 400,
+          "name": "S6",
+          "rotation": 0
+        },
+        {
+          "id": "l40",
+          "x": 610,
+          "y": 400,
+          "name": "SEG6",
+          "rotation": 0
+        },
+        {
+          "id": "l41",
+          "x": 800,
+          "y": 270,
+          "name": "SEG6",
+          "rotation": 0
+        },
+        {
+          "id": "l42",
+          "x": 760,
+          "y": 190,
+          "name": "VCC",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 440,
+          "text": "Bảng mã nằm trong chương trình (TABLE). Timer 0 ngắt mỗi 50 ms; sau 10 lần thì tăng số đếm. Mở Trình soạn mã để xem thanh ghi TL0 / TH0 chạy.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.002,
+        "tstop": 3
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Vi điều khiển 8051 đếm 0…9 ra LED 7 đoạn kiểu anode chung ở cổng P1, dùng bảng mã tra bằng lệnh MOVC A,@A+DPTR. Bộ định thời 0 chế độ 1 đếm 50 000 chu kỳ máy (50 ms) và ngắt; sau 10 lần ngắt (0,5 s) số đếm tăng 1. Mã trong bảng là mã tích cực thấp vì anode chung nối lên +5 V. An 8051 counts 0…9 on a common-anode seven-segment display on port 1, using a code table read with MOVC A,@A+DPTR. Timer 0 in mode 1 counts 50,000 machine cycles (50 ms) and interrupts; after ten interrupts (0.5 s) the count goes up by one. The table holds active-low codes because the common anode is tied to +5 V."
+}

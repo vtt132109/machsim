@@ -1,0 +1,248 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Two sheets joined by off-page connectors",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "9"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 220,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "470"
+          }
+        },
+        {
+          "id": "p7",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 100,
+              "y": 220
+            },
+            {
+              "x": 100,
+              "y": 200
+            },
+            {
+              "x": 190,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w4",
+          "points": [
+            {
+              "x": 250,
+              "y": 200
+            },
+            {
+              "x": 320,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 100,
+              "y": 280
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l5",
+          "x": 320,
+          "y": 200,
+          "name": "NODE",
+          "rotation": 0,
+          "kind": "offpage"
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 380,
+          "text": "Trang 1: nguồn 9 V và R1. Đầu nối “NODE” nối tiếp sang trang 2.",
+          "size": 11
+        }
+      ]
+    },
+    {
+      "id": "sheet2",
+      "name": "Sheet 2",
+      "parts": [
+        {
+          "id": "p9",
+          "partId": "diodes/led-yellow",
+          "refdes": "LED1",
+          "x": 200,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p10",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 300,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p15",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 200,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w11",
+          "points": [
+            {
+              "x": 100,
+              "y": 200
+            },
+            {
+              "x": 300,
+              "y": 200
+            },
+            {
+              "x": 300,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w12",
+          "points": [
+            {
+              "x": 200,
+              "y": 200
+            },
+            {
+              "x": 200,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w13",
+          "points": [
+            {
+              "x": 200,
+              "y": 280
+            },
+            {
+              "x": 200,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w14",
+          "points": [
+            {
+              "x": 200,
+              "y": 320
+            },
+            {
+              "x": 300,
+              "y": 320
+            },
+            {
+              "x": 300,
+              "y": 280
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l8",
+          "x": 100,
+          "y": 200,
+          "name": "NODE",
+          "rotation": 0,
+          "kind": "offpage"
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n2",
+          "x": 60,
+          "y": 380,
+          "text": "Trang 2: LED vàng và tải R2. I ≈ (9 − 2)/470 ≈ 15 mA.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "op",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.0001,
+        "tstop": 0.01
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Thiết kế hai trang: nguồn và điện trở ở trang 1, LED và tải ở trang 2, nối bằng đầu nối sang trang “NODE”. Mở thẻ trang phía dưới để chuyển trang. Two sheets: source and resistor on sheet 1, LED and load on sheet 2, joined by the off-page connector “NODE”. Use the sheet tabs to switch."
+}

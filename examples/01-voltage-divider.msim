@@ -1,0 +1,205 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Voltage divider + multimeter",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "12"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 250,
+          "y": 130,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 250,
+          "y": 270,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "4.7k"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 330,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "instruments/multimeter",
+          "refdes": "XMM1",
+          "x": 400,
+          "y": 170,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "mode": "v"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 100,
+              "y": 170
+            },
+            {
+              "x": 100,
+              "y": 100
+            },
+            {
+              "x": 250,
+              "y": 100
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 250,
+              "y": 160
+            },
+            {
+              "x": 250,
+              "y": 240
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 250,
+              "y": 300
+            },
+            {
+              "x": 250,
+              "y": 330
+            },
+            {
+              "x": 100,
+              "y": 330
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 100,
+              "y": 230
+            },
+            {
+              "x": 100,
+              "y": 330
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 250,
+              "y": 200
+            },
+            {
+              "x": 390,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w11",
+          "points": [
+            {
+              "x": 410,
+              "y": 200
+            },
+            {
+              "x": 410,
+              "y": 330
+            },
+            {
+              "x": 250,
+              "y": 330
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l12",
+          "x": 250,
+          "y": 200,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 400,
+          "text": "Vout = 12 V × 4.7k / (10k + 4.7k) ≈ 3.84 V — đo bằng XMM1 (DC volts).",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.0001,
+        "tstop": 0.01
+      },
+      "dc": {
+        "type": "dc",
+        "src": "V1",
+        "start": 0,
+        "stop": 12,
+        "step": 0.5
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Cầu phân áp: Vout = V1·R2/(R1+R2) = 12·4,7k/14,7k ≈ 3,84 V. Nhấn Run (F5) và mở đồng hồ vạn năng XMM1 (nhấp đúp). Voltage divider: Vout = V1·R2/(R1+R2) ≈ 3.84 V. Press Run (F5) and double-click XMM1 to read it."
+}

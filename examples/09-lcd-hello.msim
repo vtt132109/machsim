@@ -1,0 +1,247 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Character LCD: hello text",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "misc-digital/pattern-source",
+          "refdes": "U1",
+          "x": 160,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "pattern": "22 02 22 02 28 08 20 00 2C 0C 20 00 21 01 20 00 26 06 35 15 38 18 36 16 39 19 36 16 3E 1E 32 12 30 10 36 16 33 13 36 16 38 18 36 16 31 11 36 16 3F 1F 32 12 31 11 2C 0C 20 00 34 14 3D 1D 36 16 31 11 36 16 33 13 36 16 38 18 35 15 33 13 36 16 39 19 36 16 3D 1D 32 12 30 10 34 14 3C 1C 34 14 33 13 34 14 34 14",
+            "period": "50u",
+            "repeat": "false"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "indicators/lcd-16x2",
+          "refdes": "LCD1",
+          "x": 620,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p3",
+          "partId": "sources/vcc",
+          "refdes": "VCC1",
+          "x": 380,
+          "y": 120,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "5"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 380,
+          "y": 500,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 900,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "100"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l6",
+          "x": 380,
+          "y": 500,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 210,
+          "y": 230,
+          "name": "DB4",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 670,
+          "y": 310,
+          "name": "DB4",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 210,
+          "y": 250,
+          "name": "DB5",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 690,
+          "y": 310,
+          "name": "DB5",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 210,
+          "y": 270,
+          "name": "DB6",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 710,
+          "y": 310,
+          "name": "DB6",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 210,
+          "y": 290,
+          "name": "DB7",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 730,
+          "y": 310,
+          "name": "DB7",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 210,
+          "y": 310,
+          "name": "RS",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 530,
+          "y": 310,
+          "name": "RS",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 210,
+          "y": 330,
+          "name": "E",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 570,
+          "y": 310,
+          "name": "E",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 470,
+          "y": 310,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 550,
+          "y": 310,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 510,
+          "y": 310,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 770,
+          "y": 310,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l23",
+          "x": 490,
+          "y": 310,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l24",
+          "x": 870,
+          "y": 160,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l25",
+          "x": 930,
+          "y": 160,
+          "name": "BL",
+          "rotation": 0
+        },
+        {
+          "id": "l26",
+          "x": 750,
+          "y": 310,
+          "name": "BL",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 520,
+          "text": "Mỗi lần gửi: đặt RS và 4 bit dữ liệu, đưa E lên rồi xuống (LCD chốt ở sườn xuống của E). Byte gửi nửa cao trước. Lệnh: 0x28 = 4 bit, 2 dòng; 0x0C = bật hiển thị; 0x01 = xoá; 0x06 = tự tăng địa chỉ; 0xC0 = đầu dòng 2.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.00001,
+        "tstop": 0.0053
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Nguồn mẫu (pattern source) gửi lệnh khởi động và chữ tới LCD 16x2 qua bus 4 bit: D0..D3 → D4..D7 của LCD, D4 → RS, D5 → E. Chạy mô phỏng để thấy chữ hiện trên màn hình. A pattern source sends the start-up instructions and text to a 16x2 LCD over a 4-bit bus: D0..D3 → LCD D4..D7, D4 → RS, D5 → E. Run the simulation to see the text on the screen."
+}

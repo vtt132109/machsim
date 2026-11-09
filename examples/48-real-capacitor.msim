@@ -1,0 +1,274 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Real capacitor: self-resonance",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "1",
+            "freq": "1Meg",
+            "acmag": "1"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 200,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "50"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 300,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100n"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 420,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "50"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "basic/nonideal-capacitor",
+          "refdes": "C2",
+          "x": 520,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100n"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p17",
+          "partId": "instruments/bode-plotter",
+          "refdes": "XBP1",
+          "x": 700,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "fstart": "10k",
+            "fstop": "1G",
+            "points": "100",
+            "mmin": "-80",
+            "mmax": "0"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 100,
+              "y": 190
+            },
+            {
+              "x": 100,
+              "y": 150
+            },
+            {
+              "x": 170,
+              "y": 150
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 230,
+              "y": 150
+            },
+            {
+              "x": 300,
+              "y": 150
+            },
+            {
+              "x": 300,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 300,
+              "y": 250
+            },
+            {
+              "x": 300,
+              "y": 300
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 100,
+              "y": 250
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w11",
+          "points": [
+            {
+              "x": 450,
+              "y": 150
+            },
+            {
+              "x": 520,
+              "y": 150
+            },
+            {
+              "x": 520,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w12",
+          "points": [
+            {
+              "x": 520,
+              "y": 250
+            },
+            {
+              "x": 520,
+              "y": 300
+            },
+            {
+              "x": 300,
+              "y": 300
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l13",
+          "x": 140,
+          "y": 150,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 390,
+          "y": 150,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 270,
+          "y": 150,
+          "name": "CI",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 490,
+          "y": 150,
+          "name": "CR",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 670,
+          "y": 250,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 710,
+          "y": 250,
+          "name": "CR",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 360,
+          "text": "f0 = 1/(2π·√(2 nH · 100 nF)) ≈ 11,25 MHz: V(CR) nhỏ nhất ≈ 30 mΩ / 50 Ω (−64 dB), pha đổi dấu. Trên f0 tụ C2 hoạt động như cuộn cảm. Đặt ESL của C2 = 0: tụ trở lại lý tưởng.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "ac",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "ac": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 50,
+        "fstart": 10000,
+        "fstop": 1000000000
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Hai tụ 100 nF qua điện trở 50 Ω: C1 lý tưởng, C2 là tụ thực (ESR 30 mΩ, ESL 2 nH). Ở tần số cao trở kháng của C1 giảm mãi, còn C2 chạm đáy bằng ESR tại tần số cộng hưởng riêng f0 = 1/(2π√(ESL·C)) ≈ 11,25 MHz rồi tăng lại như một cuộn cảm. Two 100 nF capacitors behind 50 Ω: C1 is ideal, C2 a real one (ESR 30 mΩ, ESL 2 nH). At high frequency the impedance of C1 keeps falling, while C2 bottoms out at its ESR at the self-resonance f0 = 1/(2π√(ESL·C)) ≈ 11.25 MHz and then rises like an inductor.",
+  "customSpice": "* Tần số cộng hưởng riêng (pha = 0) và đáy của V(CR): bảng \"Phép đo (.meas)\" dưới đồ thị\n.meas AC fres WHEN VP(CR)=0\n.meas AC vmin MIN VDB(CR)\n"
+}

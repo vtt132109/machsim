@@ -1,0 +1,217 @@
+/*
+ * Schematic editor: canvas chrome, interaction overlay, properties panel and component browser.
+ * Scene drawing rules (parts, wires, labels ...) live in sceneStyle.ts (shared with export).
+ */
+
+/* ------------------------------------------------------------------- canvas */
+.ms-canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--canvas);
+}
+.ms-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ms-canvas:focus { outline: none; }
+.ms-canvas:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.ms-canvas.tool-select { cursor: default; }
+.ms-canvas.tool-place, .ms-canvas.tool-wire, .ms-canvas.tool-label, .ms-canvas.tool-probe { cursor: crosshair; }
+.ms-canvas.tool-text { cursor: text; }
+.ms-canvas.is-pan-ready { cursor: grab; }
+.ms-canvas.is-panning { cursor: grabbing; }
+.ms-canvas-bg { fill: var(--canvas); }
+.ms-grid-dot { fill: var(--grid-dot); }
+.ms-grid-dot-major { fill: var(--grid-dot-major); }
+.ms-grid-line { fill: none; stroke: var(--grid-dot); }
+.ms-grid-line-major { fill: none; stroke: var(--grid-dot-major); }
+.ms-bus-draft { stroke-width: 4 !important; stroke: var(--bus, var(--wire)); }
+.ms-shape-draft { fill: none; stroke: var(--wire-selected); stroke-dasharray: 5 3; }
+
+.ms-canvas-hint {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  max-width: calc(100% - 16px);
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--panel) 85%, transparent);
+  color: var(--text-dim);
+  font-size: 11px;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ms-canvas-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 360px;
+  padding: 14px 18px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--panel) 90%, transparent);
+  color: var(--text-dim);
+  text-align: center;
+  pointer-events: none;
+}
+.ms-canvas-empty strong { display: block; margin-bottom: 4px; color: var(--text); }
+
+/* ------------------------------------------------------------------ overlay */
+.ms-overlay { pointer-events: none; }
+.ms-ghost { opacity: 0.6; color: var(--ghost) !important; }
+.ms-ghost .ms-part-label { fill: var(--ghost) !important; }
+.ms-pin-mark { fill: none; stroke: var(--pin); }
+.ms-wire-draft { fill: none; stroke: var(--wire); stroke-width: 1.6; stroke-dasharray: 5 3; stroke-linecap: round; stroke-linejoin: round; }
+.ms-wire-corner { fill: var(--wire); }
+.ms-target { fill: none; stroke: var(--pin-hover); }
+.ms-target-wire { stroke: var(--wire-selected); }
+.ms-crosshair { fill: none; stroke: var(--text-dim); }
+.ms-probe-draft { stroke: var(--text-dim); stroke-dasharray: 4 3; }
+.ms-label-ghost path { fill: none; stroke: var(--label); stroke-width: 1.4; }
+.ms-band { stroke-dasharray: 4 3; }
+.ms-band-inside { fill: var(--band-inside); stroke: var(--accent); }
+.ms-band-crossing { fill: var(--band-crossing); stroke: var(--ok); }
+.ms-hover-pin { fill: none; stroke: var(--pin-hover); }
+
+/* --------------------------------------------------------- properties panel */
+.ms-props {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  background: var(--panel);
+}
+.ms-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex: none;
+}
+.ms-panel-title .ms-panel-actions { margin-left: auto; display: flex; gap: 2px; }
+.ms-panel-title .ms-icon-btn { width: 20px; height: 20px; }
+.ms-props-body { flex: 1; min-height: 0; overflow: auto; }
+.ms-prop-section { display: flex; flex-direction: column; gap: 6px; padding: 8px; }
+.ms-prop-head { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.ms-prop-head strong { font-size: 13px; }
+.ms-prop-head span { color: var(--text-dim); font-size: var(--font-size-small); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-part-props > .ms-prop-head { padding: 8px 8px 4px; }
+.ms-part-props .ms-tabs { border-bottom: 1px solid var(--border); padding: 0 4px; }
+.ms-prop-tabpanel { min-height: 0; }
+.ms-prop-sep { height: 1px; margin: 2px 0; background: var(--border); }
+.ms-modified { color: var(--accent); }
+.ms-reset-btn { width: 22px; height: 22px; }
+.ms-btn-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.ms-mono { font-family: var(--mono); }
+.ms-info { display: grid; grid-template-columns: max-content 1fr; gap: 3px 10px; margin: 0; font-size: var(--font-size-small); }
+.ms-info dt { color: var(--text-dim); }
+.ms-info dd { margin: 0; overflow-wrap: anywhere; }
+.ms-props-dialog .ms-dialog-body { padding: 0; }
+.ms-props-dialog .ms-part-props, .ms-props-dialog .ms-prop-section { min-height: 260px; }
+
+/* ------------------------------------------------------- component browser */
+.ms-browser {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  background: var(--panel);
+}
+.ms-browser-search { display: flex; gap: 4px; padding: 6px; border-bottom: 1px solid var(--border); flex: none; }
+.ms-browser-search .ms-input { flex: 1; min-width: 0; }
+.ms-browser-tree { flex: 1; min-height: 132px; overflow: auto; padding: 2px 0; outline: none; }
+.ms-browser-tree:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.ms-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding-right: 6px;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+.ms-tree-row:hover { background: var(--hover); }
+.ms-tree-row.is-active { background: var(--accent-weak); }
+.ms-browser-tree:focus .ms-tree-row.is-active { box-shadow: inset 2px 0 0 var(--accent); }
+.ms-tree-row .ms-tree-twisty { width: 14px; flex: none; color: var(--text-dim); display: inline-flex; justify-content: center; }
+.ms-tree-row .ms-tree-twisty.is-open svg { transform: rotate(90deg); }
+.ms-tree-row .ms-tree-label { overflow: hidden; text-overflow: ellipsis; }
+.ms-tree-row .ms-tree-count { margin-left: auto; padding-left: 6px; color: var(--text-dim); font-size: 11px; }
+.ms-tree-group > .ms-tree-label { font-weight: 600; }
+.ms-tree-part { cursor: grab; }
+.ms-tree-part .ms-tree-meta { color: var(--text-dim); font-size: 11px; margin-left: 6px; overflow: hidden; text-overflow: ellipsis; }
+.ms-tree-part .ms-tree-user { color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 0 4px; line-height: 14px; flex: none; }
+.ms-browser-preview {
+  flex: none;
+  max-height: 45%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px 8px;
+  border-top: 1px solid var(--border);
+  background: var(--panel-2);
+}
+.ms-browser-preview-svg {
+  display: block;
+  width: 100%;
+  height: 96px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--canvas);
+}
+.ms-browser-preview-name { font-weight: 600; }
+.ms-browser-preview-desc { color: var(--text-dim); font-size: var(--font-size-small); max-height: 3.2em; overflow: hidden; }
+.ms-browser-preview .ms-btn-row { justify-content: flex-end; }
+.ms-browser-empty { padding: 10px; color: var(--text-dim); font-size: var(--font-size-small); }
+.ms-browser-views { flex: none; padding: 4px 6px 0; }
+.ms-browser-views .ms-tablist { overflow-x: auto; scrollbar-width: none; }
+.ms-browser-views .ms-tablist::-webkit-scrollbar { display: none; }
+.ms-browser-views .ms-tabs-small .ms-tab { padding: 0 7px; }
+.ms-browser-footer { flex: none; padding: 4px 6px; border-top: 1px solid var(--border); justify-content: flex-end; }
+.ms-tree-row .ms-tree-fav { visibility: hidden; flex: none; width: 18px; height: 18px; margin-left: auto; font-size: 12px; color: var(--text-dim); }
+.ms-tree-row:hover .ms-tree-fav, .ms-tree-row.is-active .ms-tree-fav, .ms-tree-row .ms-tree-fav.is-on { visibility: visible; }
+.ms-tree-row .ms-tree-fav.is-on { color: var(--accent); }
+.ms-tree-part .ms-tree-meta + .ms-tree-fav { margin-left: 4px; }
+.ms-browser-filters { flex: none; border-bottom: 1px solid var(--border); padding: 3px 6px; background: var(--panel-2); max-height: 30%; overflow: auto; }
+.ms-browser-filters-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: var(--font-size-small); }
+.ms-browser-filters-head .ms-link-btn { display: inline-flex; align-items: center; gap: 4px; min-width: 0; text-align: left; background: none; border: none; padding: 2px 0; color: var(--text); cursor: pointer; }
+.ms-browser-filters-head .ms-link-btn:hover { color: var(--accent); }
+.ms-browser-filters-body { display: flex; flex-direction: column; gap: 3px; padding-top: 4px; }
+.ms-browser-filter { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 4px; align-items: center; font-size: var(--font-size-small); }
+.ms-browser-filter-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-dim); }
+.ms-browser-filter-range { display: flex; gap: 3px; min-width: 0; }
+.ms-browser-filter .ms-input { min-width: 0; width: 100%; height: 22px; padding: 0 4px; font-size: var(--font-size-small); }
+.ms-browser-specs { display: grid; grid-template-columns: auto 1fr; gap: 1px 8px; margin: 0; font-size: var(--font-size-small); }
+.ms-browser-spec { display: contents; }
+.ms-browser-spec dt { color: var(--text-dim); }
+.ms-browser-spec dd { margin: 0; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* "What is this?" button of group / family rows (shown on hover and on the active row) */
+.ms-tree-row .ms-tree-help { visibility: hidden; flex: none; width: 18px; height: 18px; margin-left: 4px; border-radius: 50%; font-size: 11px; font-weight: 700; }
+.ms-tree-row:hover .ms-tree-help, .ms-tree-row.is-active .ms-tree-help { visibility: visible; }
+
+/* ------------------------------------------------------- catalogue extras in the properties panel */
+.ms-value-picker { width: 96px; flex: none; height: 24px; padding: 0 4px; }
+.ms-data-field { display: flex; flex-direction: column; gap: 4px; }
+.ms-fault-row { display: grid; grid-template-columns: 70px minmax(0, 1fr) 64px 72px; gap: 4px; align-items: center; margin-bottom: 3px; }
+.ms-fault-row .ms-input { min-width: 0; height: 24px; padding: 0 4px; }

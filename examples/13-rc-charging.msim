@@ -1,0 +1,212 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "RC charging and discharging",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/pulse-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "v1": "0",
+            "v2": "5",
+            "delay": "0",
+            "rise": "1u",
+            "fall": "1u",
+            "width": "0.5",
+            "period": "1"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 200,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 300,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10u"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p12",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 480,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "A",
+            "trig.level": "2.5",
+            "timebase": "100m",
+            "A.scale": "2",
+            "B.scale": "2"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 100,
+              "y": 190
+            },
+            {
+              "x": 100,
+              "y": 150
+            },
+            {
+              "x": 170,
+              "y": 150
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 230,
+              "y": 150
+            },
+            {
+              "x": 300,
+              "y": 150
+            },
+            {
+              "x": 300,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 300,
+              "y": 250
+            },
+            {
+              "x": 300,
+              "y": 300
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 100,
+              "y": 250
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l9",
+          "x": 140,
+          "y": 150,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 270,
+          "y": 150,
+          "name": "VC",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 430,
+          "y": 180,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 470,
+          "y": 180,
+          "name": "VC",
+          "rotation": 0
+        }
+      ],
+      "probes": [
+        {
+          "id": "pr11",
+          "kind": "voltage",
+          "x": 270,
+          "y": 150,
+          "name": "Vc",
+          "color": "#e53935"
+        }
+      ],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 360,
+          "text": "Sau τ = 0,1 s tụ đạt 63 % (3,16 V); sau 5τ = 0,5 s gần như đầy (99 %).",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.001,
+        "tstop": 2
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Tụ C1 nạp qua R1 khi nguồn xung lên 5 V và xả khi về 0 V; hằng số thời gian τ = R·C = 10k · 10 µF = 0,1 s. C1 charges through R1 when the pulse goes to 5 V and discharges when it returns to 0 V; τ = R·C = 0.1 s."
+}

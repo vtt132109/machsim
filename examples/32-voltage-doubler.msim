@@ -1,0 +1,296 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Voltage doubler",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "10",
+            "freq": "1k",
+            "acmag": "0"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 200,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10u"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "diodes/1n4148",
+          "refdes": "D1",
+          "x": 300,
+          "y": 250,
+          "rotation": 270,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p4",
+          "partId": "diodes/1n4148",
+          "refdes": "D2",
+          "x": 380,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "basic/capacitor",
+          "refdes": "C2",
+          "x": 460,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10u"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "basic/resistor",
+          "refdes": "RL",
+          "x": 540,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100k"
+          }
+        },
+        {
+          "id": "p16",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p19",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 680,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "A",
+            "trig.level": "0",
+            "timebase": "5m",
+            "A.scale": "10",
+            "B.scale": "10"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 100,
+              "y": 220
+            },
+            {
+              "x": 100,
+              "y": 200
+            },
+            {
+              "x": 170,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 230,
+              "y": 200
+            },
+            {
+              "x": 350,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 300,
+              "y": 200
+            },
+            {
+              "x": 300,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 410,
+              "y": 200
+            },
+            {
+              "x": 540,
+              "y": 200
+            },
+            {
+              "x": 540,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w11",
+          "points": [
+            {
+              "x": 460,
+              "y": 200
+            },
+            {
+              "x": 460,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w12",
+          "points": [
+            {
+              "x": 100,
+              "y": 280
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w13",
+          "points": [
+            {
+              "x": 100,
+              "y": 320
+            },
+            {
+              "x": 540,
+              "y": 320
+            },
+            {
+              "x": 540,
+              "y": 280
+            }
+          ]
+        },
+        {
+          "id": "w14",
+          "points": [
+            {
+              "x": 300,
+              "y": 280
+            },
+            {
+              "x": 300,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w15",
+          "points": [
+            {
+              "x": 460,
+              "y": 280
+            },
+            {
+              "x": 460,
+              "y": 320
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l17",
+          "x": 260,
+          "y": 200,
+          "name": "CLAMP",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 500,
+          "y": 200,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 630,
+          "y": 280,
+          "name": "CLAMP",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 670,
+          "y": 280,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 380,
+          "text": "V(CLAMP) dao động từ ≈ −0,7 V tới ≈ +19 V; C2 giữ đỉnh đó. Tải càng nặng thì ra càng thấp và gợn càng lớn.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.00001,
+        "tstop": 0.05
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Mạch nhân đôi điện áp: C1 và D1 dịch mức tín hiệu xoay chiều lên, D2 và C2 nạp tới gần hai lần biên độ: ra ≈ 2·10 V − 2·0,7 V ≈ 18,6 V. Voltage doubler: C1 and D1 clamp the AC up, D2 and C2 charge to nearly twice the peak: about 2·10 V − 2·0.7 V ≈ 18.6 V."
+}

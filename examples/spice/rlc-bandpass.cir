@@ -1,0 +1,10 @@
+RLC band-pass filter
+* Series RLC, output across R: f0 = 1/(2*pi*sqrt(L*C)) = 5.033 kHz,
+* Q = sqrt(L/C)/R = 3.162, -3 dB bandwidth = R/(2*pi*L) = 1.592 kHz.
+* Loc thong dai RLC noi tiep, lay ra tren dien tro R1.
+VIN in 0 AC 1
+L1 in n1 10m
+C1 n1 out 100n
+R1 out 0 100
+.ac dec 200 100 100k
+.end

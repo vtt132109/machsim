@@ -1,0 +1,46 @@
+/* Help browser, welcome panel and "What is this?" buttons. */
+.ms-help-dialog .ms-dialog-body { padding: 0; }
+.ms-help-browser { display: grid; grid-template-columns: minmax(180px, 240px) 1fr; height: min(68vh, 620px); min-height: 320px; }
+.ms-help-nav { border-right: 1px solid var(--border); overflow: auto; padding: 8px 4px; background: var(--panel); }
+.ms-help-nav h4 { margin: 12px 8px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); }
+.ms-help-nav ul { list-style: none; margin: 0; padding: 0; }
+.ms-help-nav-item { display: block; width: 100%; text-align: left; border: 0; background: none; color: var(--text); font: inherit; padding: 4px 8px; border-radius: var(--radius); cursor: pointer; }
+.ms-help-nav-item.lvl-1 { padding-left: 22px; font-size: var(--font-size-small); }
+.ms-help-nav-item:hover { background: var(--hover); }
+.ms-help-nav-item.is-active { background: var(--accent-weak); color: var(--accent); font-weight: 600; }
+.ms-help-nav-item:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.ms-help-content { overflow: auto; padding: 14px 18px; line-height: 1.55; }
+.ms-help-page h3 { margin: 0 0 8px; font-size: 16px; }
+.ms-help-page h4 { margin: 12px 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); }
+.ms-help-page p { margin: 4px 0; }
+.ms-help-entry section { margin-bottom: 6px; }
+.ms-help-tip { border-left: 3px solid var(--accent); padding: 4px 8px; background: var(--accent-weak); border-radius: 0 var(--radius) var(--radius) 0; }
+.ms-help-guide { margin: 8px 0 12px; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.ms-help-guide li { border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; background: var(--panel); }
+.ms-help-try { font-family: var(--mono); font-size: var(--font-size-small); color: var(--accent); }
+.ms-help-crumb { font-size: var(--font-size-small); color: var(--text-dim); }
+.ms-help-links, .ms-help-parts { margin: 4px 0; padding-left: 18px; }
+.ms-help-parts li { margin: 2px 0; }
+.ms-link-btn { border: 0; background: none; padding: 0; color: var(--accent); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.ms-link-btn:focus-visible { outline: 2px solid var(--focus-ring); }
+.ms-help-btn { width: 20px; height: 20px; border-radius: 50%; font-weight: 700; font-size: 12px; margin-left: 6px; vertical-align: middle; }
+
+.ms-welcome { display: flex; flex-direction: column; gap: 12px; }
+.ms-welcome-head { display: flex; gap: 12px; align-items: center; }
+.ms-welcome-head p { margin: 0; line-height: 1.5; }
+.ms-welcome-lang { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ms-welcome-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
+.ms-welcome-choice { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); color: var(--text); font: inherit; cursor: pointer; }
+.ms-welcome-choice strong { color: var(--accent); }
+.ms-welcome-choice span { font-size: var(--font-size-small); color: var(--text-dim); line-height: 1.4; }
+.ms-welcome-choice:hover:not(:disabled) { border-color: var(--accent); background: var(--hover); }
+.ms-welcome-choice:disabled { opacity: 0.55; cursor: default; }
+.ms-welcome-offer { border: 1px solid var(--accent); border-radius: var(--radius); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.ms-welcome-offer strong { color: var(--accent); }
+.ms-welcome-offer p { margin: 0; font-size: var(--font-size-small); color: var(--text-dim); line-height: 1.45; }
+
+@media (max-width: 640px) {
+  .ms-help-browser { grid-template-columns: 1fr; grid-template-rows: 160px 1fr; }
+  .ms-help-nav { border-right: 0; border-bottom: 1px solid var(--border); }
+}
+.ms-help-code { font-family: var(--mono); font-size: var(--font-size-small); background: var(--hover); border-radius: var(--radius); padding: 8px 10px; overflow-x: auto; white-space: pre; }

@@ -1,0 +1,236 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "AM envelope detector",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/am-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "2",
+            "carrier": "50k",
+            "index": "0.5",
+            "modfreq": "1k"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "diodes/1n4148",
+          "refdes": "D1",
+          "x": 200,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p3",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 300,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10n"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 380,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p11",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p14",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 540,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "A",
+            "trig.level": "0",
+            "timebase": "500u",
+            "A.scale": "1",
+            "B.scale": "1"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 100,
+              "y": 220
+            },
+            {
+              "x": 100,
+              "y": 200
+            },
+            {
+              "x": 170,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 230,
+              "y": 200
+            },
+            {
+              "x": 380,
+              "y": 200
+            },
+            {
+              "x": 380,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 300,
+              "y": 200
+            },
+            {
+              "x": 300,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 100,
+              "y": 280
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 100,
+              "y": 320
+            },
+            {
+              "x": 380,
+              "y": 320
+            },
+            {
+              "x": 380,
+              "y": 280
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 300,
+              "y": 280
+            },
+            {
+              "x": 300,
+              "y": 320
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l12",
+          "x": 140,
+          "y": 200,
+          "name": "AM",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 340,
+          "y": 200,
+          "name": "ENV",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 490,
+          "y": 280,
+          "name": "AM",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 530,
+          "y": 280,
+          "name": "ENV",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 380,
+          "text": "Điều kiện: 1/f_sóng mang (20 µs) ≪ R·C (100 µs) ≪ 1/f_âm (1 ms). R·C quá lớn thì đầu ra không theo kịp đường bao.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 5e-7,
+        "tstop": 0.004
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Tách sóng AM bằng diode: sóng mang 50 kHz điều biên bởi âm 1 kHz; diode chỉnh lưu, R·C = 100 µs giữ đỉnh nên đầu ra theo đường bao 1 kHz. Diode AM detector: a 50 kHz carrier amplitude-modulated by 1 kHz; the diode rectifies and R·C = 100 µs holds the peaks, so the output follows the 1 kHz envelope."
+}

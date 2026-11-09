@@ -1,0 +1,58 @@
+/* Select a component dialog, Detail report, View model, Update components, Variant manager. */
+
+.ms-vlist { position: relative; overflow: auto; height: 100%; min-height: 0; outline: none; }
+.ms-vlist:focus-visible { box-shadow: inset 0 0 0 2px var(--focus-ring); }
+.ms-vlist-empty { padding: 8px; color: var(--text-dim); font-size: var(--font-size-small); }
+
+.ms-place-dialog .ms-dialog-body { display: flex; flex-direction: column; gap: 8px; }
+.ms-place-intro { margin: 0; }
+.ms-place-bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; }
+.ms-place-field { display: flex; flex-direction: column; gap: 2px; font-size: var(--font-size-small); color: var(--text-dim); }
+.ms-place-field .ms-input { min-width: 180px; }
+.ms-place-search { flex: 1 1 240px; }
+.ms-place-search .ms-input { width: 100%; }
+.ms-place-body { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(220px, 1.6fr) minmax(240px, 1.4fr); gap: 8px; height: min(460px, 58vh); min-height: 260px; }
+.ms-place-col { display: flex; flex-direction: column; min-height: 0; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius, 4px); background: var(--panel); }
+.ms-place-col > h4 { margin: 0; padding: 4px 8px; font-size: var(--font-size-small); border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ms-place-col > .ms-hint { padding: 2px 8px; }
+.ms-place-col > .ms-vlist { flex: 1 1 auto; }
+.ms-place-row { display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; white-space: nowrap; cursor: default; user-select: none; }
+.ms-place-row:hover { background: var(--hover); }
+.ms-place-row.is-active { background: var(--accent-weak); box-shadow: inset 2px 0 0 var(--accent); }
+.ms-place-label { overflow: hidden; text-overflow: ellipsis; }
+.ms-place-count { margin-left: auto; color: var(--text-dim); font-size: 11px; }
+.ms-place-desc { margin-left: auto; padding-left: 8px; color: var(--text-dim); font-size: 11px; overflow: hidden; text-overflow: ellipsis; max-width: 55%; }
+.ms-place-detail { overflow: auto; padding: 6px 8px; }
+.ms-place-info h4 { margin: 0 0 6px; display: flex; align-items: center; gap: 6px; }
+.ms-place-symbol { display: block; width: 100%; height: 120px; border: 1px solid var(--border); border-radius: 3px; background: var(--canvas); }
+.ms-place-fields { margin: 8px 0; display: grid; gap: 2px; font-size: var(--font-size-small); }
+.ms-place-fields > div { display: grid; grid-template-columns: minmax(90px, 40%) 1fr; gap: 6px; }
+.ms-place-fields dt { color: var(--text-dim); }
+.ms-place-fields dd { margin: 0; overflow-wrap: anywhere; }
+.ms-place-keep { margin-right: auto; }
+.ms-place-report-table { margin-bottom: 10px; }
+.ms-place-report-table h4 { margin: 4px 0; }
+.ms-place-model { width: 100%; min-height: 260px; max-height: 50vh; overflow: auto; margin: 0; font-family: var(--mono); font-size: 12px; white-space: pre; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 3px; padding: 6px; box-sizing: border-box; }
+textarea.ms-place-model { resize: vertical; }
+
+@media (max-width: 720px) {
+  .ms-place-body { grid-template-columns: 1fr; height: auto; }
+  .ms-place-col { height: 220px; }
+  .ms-place-detail { height: auto; }
+}
+
+/* Update components from library */
+.ms-update-list { max-height: 52vh; overflow: auto; border: 1px solid var(--border); border-radius: 3px; }
+.ms-update-item { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.ms-update-item:last-child { border-bottom: 0; }
+.ms-update-item > label { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.ms-update-item ul { margin: 4px 0 0 26px; padding: 0; font-size: var(--font-size-small); }
+.ms-update-item .ms-update-refs { color: var(--text-dim); font-weight: normal; font-size: var(--font-size-small); }
+.ms-update-item.is-missing > label { color: var(--warn); }
+
+/* Variant manager */
+.ms-variant-top { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.ms-variant-grid { max-height: 50vh; overflow: auto; border: 1px solid var(--border); border-radius: 3px; }
+.ms-variant-grid table { width: 100%; }
+.ms-variant-grid th.is-active { color: var(--accent); }
+.ms-variant-grid td.ms-variant-cell { text-align: center; }

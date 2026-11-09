@@ -1,0 +1,348 @@
+/* Virtual instrument panels. Prefix: msi-. Uses shared tokens from src/ui/theme.css. */
+
+.msi-panel {
+  --msi-chassis-top: #f3f4f6;
+  --msi-chassis-bottom: #dfe3e8;
+  --msi-chassis-edge: #b9c0ca;
+  --msi-lcd-bg: #c9d6bd;
+  --msi-lcd-fg: #17240f;
+  --msi-lcd-dim: #5b6b4d;
+  --msi-screen-bg: #0d1a16;
+  --msi-screen-grid: #1f3a31;
+  --msi-screen-grid-major: #3c6656;
+  --msi-screen-text: #b9e3d2;
+  --msi-screen-rev-bg: #ffffff;
+  --msi-screen-rev-grid: #d3d8e0;
+  --msi-screen-rev-grid-major: #9aa3b2;
+  --msi-screen-rev-text: #39404d;
+  --msi-cursor-1: #ff8787;
+  --msi-cursor-2: #74c0fc;
+  --msi-cursor-1-rev: #e03131;
+  --msi-cursor-2-rev: #1971c2;
+  --msi-marker: #f783ac;
+  --msi-marker-rev: #c2255c;
+  --msi-led-off: #4a2323;
+  --msi-led-on: #ff5252;
+  --msi-light-trace-1: #1971c2;
+  --msi-light-trace-2: #e8590c;
+  --msi-light-trace-3: #2b8a3e;
+  --msi-light-trace-4: #c2255c;
+  --msi-light-trace-5: #6741d9;
+  --msi-light-trace-6: #0c8599;
+  --msi-light-trace-7: #e67700;
+  --msi-light-trace-8: #495057;
+  /* screens with a white background use the light palette (see canvas.ts tracePalette) */
+  --msr-light-trace-1: var(--msi-light-trace-1);
+  --msr-light-trace-2: var(--msi-light-trace-2);
+  --msr-light-trace-3: var(--msi-light-trace-3);
+  --msr-light-trace-4: var(--msi-light-trace-4);
+  --msr-light-trace-5: var(--msi-light-trace-5);
+  --msr-light-trace-6: var(--msi-light-trace-6);
+  --msr-light-trace-7: var(--msi-light-trace-7);
+  --msr-light-trace-8: var(--msi-light-trace-8);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  min-width: 260px;
+  color: var(--text);
+  font: 12px/1.35 var(--font);
+  background: linear-gradient(180deg, var(--msi-chassis-top), var(--msi-chassis-bottom));
+  border: 1px solid var(--msi-chassis-edge);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .msi-panel {
+    --msi-chassis-top: #2a303c;
+    --msi-chassis-bottom: #1f242e;
+    --msi-chassis-edge: #3c4454;
+    --msi-lcd-bg: #12221c;
+    --msi-lcd-fg: #8ff0c4;
+    --msi-lcd-dim: #4f8f74;
+  }
+}
+:root[data-theme='dark'] .msi-panel {
+  --msi-chassis-top: #2a303c;
+  --msi-chassis-bottom: #1f242e;
+  --msi-chassis-edge: #3c4454;
+  --msi-lcd-bg: #12221c;
+  --msi-lcd-fg: #8ff0c4;
+  --msi-lcd-dim: #4f8f74;
+}
+
+.msi-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; }
+.msi-secondary { align-items: center; gap: 6px 16px; }
+.msi-dim { color: var(--text-dim); font-size: 11px; }
+.msi-spacer { flex: 1; }
+.msi-mono { font-family: var(--mono); }
+.msi-center { text-align: center; }
+.msi-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; align-items: end; }
+
+/* ---- fields ---------------------------------------------------------------- */
+.msi-field { display: inline-flex; flex-direction: column; gap: 2px; min-width: 0; }
+.msi-field-wide { display: flex; }
+.msi-field-label { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+.msi-field-box { display: inline-flex; align-items: center; gap: 3px; }
+.msi-input, .msi-select {
+  font: 12px var(--mono);
+  padding: 2px 5px;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--input-bg, var(--panel));
+  color: var(--text);
+}
+.msi-select { font-family: var(--font); }
+.msi-input:focus, .msi-select:focus { outline: 2px solid var(--focus-ring, var(--accent)); outline-offset: 0; }
+.msi-input:disabled { opacity: 0.5; }
+.msi-field-invalid .msi-input, .msi-input.msi-invalid { border-color: var(--danger); }
+.msi-field-error { color: var(--danger); font-size: 11px; }
+.msi-unit { font-size: 11px; color: var(--text-dim); }
+.msi-errors { margin: 0; padding: 4px 8px 4px 22px; color: var(--danger); border: 1px solid var(--danger); border-radius: var(--radius); }
+
+/* ---- buttons / switches ---------------------------------------------------- */
+.msi-btn {
+  font: 12px var(--font);
+  padding: 3px 10px;
+  border: 1px solid var(--msi-chassis-edge);
+  border-radius: 4px;
+  color: var(--text);
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+.msi-btn:hover:not(:disabled) { border-color: var(--accent); }
+.msi-btn:active:not(:disabled) { box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2); }
+.msi-btn:disabled { opacity: 0.5; cursor: default; }
+.msi-btn.msi-on { background: var(--accent-weak); border-color: var(--accent); }
+.msi-btn-icon { padding: 2px 6px; font-size: 10px; line-height: 1; }
+.msi-btn-small { padding: 1px 6px; font-size: 11px; }
+.msi-btn-block { display: block; width: 100%; text-align: left; margin-bottom: 4px; }
+.msi-btn:focus-visible, .msi-seg button:focus-visible, .msi-bit:focus-visible { outline: 2px solid var(--focus-ring, var(--accent)); outline-offset: 1px; }
+
+.msi-seg-wrap { display: inline-flex; flex-direction: column; gap: 2px; }
+.msi-seg { display: inline-flex; border: 1px solid var(--msi-chassis-edge); border-radius: 4px; overflow: hidden; background: var(--panel); }
+.msi-seg button {
+  font: 12px var(--font);
+  border: none;
+  padding: 3px 10px;
+  color: var(--text);
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.msi-seg button + button { border-left: 1px solid var(--msi-chassis-edge); }
+.msi-seg button.msi-on { background: var(--accent); color: #fff; }
+.msi-seg button:disabled { opacity: 0.5; cursor: default; }
+.msi-seg-small button { padding: 2px 7px; font-size: 11px; }
+.msi-waveicon { display: block; }
+
+.msi-stepfield { display: inline-flex; align-items: flex-end; gap: 3px; }
+.msi-stepbtns { display: inline-flex; gap: 2px; padding-bottom: 1px; }
+
+/* ---- sections -------------------------------------------------------------- */
+.msi-section {
+  margin: 0;
+  padding: 6px 8px 8px;
+  border: 1px solid var(--msi-chassis-edge);
+  border-radius: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 6px 10px;
+  min-width: 0;
+}
+.msi-section > legend { padding: 0 4px; font-size: 11px; font-weight: 600; color: var(--text-dim); }
+.msi-section-off { opacity: 0.55; }
+
+/* ---- LCD ------------------------------------------------------------------- */
+.msi-lcd {
+  background: var(--msi-lcd-bg);
+  color: var(--msi-lcd-fg);
+  border: 2px solid var(--msi-chassis-edge);
+  border-radius: 5px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
+  padding: 4px 10px 6px;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.msi-lcd-flags { display: flex; gap: 8px; font-size: 10px; font-weight: 700; color: var(--msi-lcd-dim); letter-spacing: 0.06em; min-height: 13px; }
+.msi-lcd-row { display: flex; align-items: baseline; justify-content: flex-end; gap: 8px; }
+.msi-lcd-digits { letter-spacing: 0.04em; }
+.msi-lcd-large .msi-lcd-digits { font-size: 34px; line-height: 1.1; }
+.msi-lcd-medium .msi-lcd-digits { font-size: 24px; }
+.msi-lcd-small .msi-lcd-digits { font-size: 16px; }
+.msi-lcd-unit { font-size: 16px; min-width: 2.5em; }
+.msi-lcd-caption { font-size: 10px; color: var(--msi-lcd-dim); text-align: right; }
+
+.msi-readout { display: inline-flex; flex-direction: column; min-width: 0; }
+.msi-readout-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.msi-readout-value { font: 12px var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.msi-note {
+  font-size: 11px;
+  padding: 4px 8px;
+  border: 1px dashed var(--warn);
+  border-radius: var(--radius);
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 7%, transparent);
+}
+
+/* ---- screens --------------------------------------------------------------- */
+.msi-screen {
+  position: relative;
+  width: 100%;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 3px solid #2b2f36;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.25);
+  background: var(--msi-screen-bg);
+}
+.msi-screen canvas { display: block; touch-action: none; }
+.msi-screen canvas:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* ---- tables ---------------------------------------------------------------- */
+.msi-table { border-collapse: collapse; width: 100%; font-size: 11px; background: var(--panel); border: 1px solid var(--border); }
+.msi-table th, .msi-table td { padding: 2px 6px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.msi-table thead th { background: var(--panel-2); font-weight: 600; }
+.msi-num { text-align: right !important; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.msi-cur1 { color: var(--danger); }
+.msi-cur2 { color: var(--accent); }
+.msi-row-sel { background: var(--accent-weak); }
+.msi-row-cur > th { box-shadow: inset 3px 0 0 var(--ok); }
+.msi-row-off { opacity: 0.5; }
+.msi-chip { display: inline-block; padding: 0 6px; border-radius: 8px; font-size: 10px; color: #111; }
+.msi-ch-A.msi-chip { background: var(--trace-1); }
+.msi-ch-B.msi-chip { background: var(--trace-2); }
+.msi-ch-C.msi-chip { background: var(--trace-3); }
+.msi-ch-D.msi-chip { background: var(--trace-4); }
+legend .msi-ch-A, legend .msi-ch-B, legend .msi-ch-C, legend .msi-ch-D { padding-left: 14px; position: relative; }
+legend .msi-ch-A::before, legend .msi-ch-B::before, legend .msi-ch-C::before, legend .msi-ch-D::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin-top: -5px;
+  border-radius: 50%;
+}
+legend .msi-ch-A::before { background: var(--trace-1); }
+legend .msi-ch-B::before { background: var(--trace-2); }
+legend .msi-ch-C::before { background: var(--trace-3); }
+legend .msi-ch-D::before { background: var(--trace-4); }
+
+.msi-swatch { display: inline-block; width: 12px; height: 4px; border-radius: 2px; vertical-align: middle; }
+.msi-c1 { background: var(--trace-1); }
+.msi-c2 { background: var(--trace-2); }
+.msi-c3 { background: var(--trace-3); }
+.msi-c4 { background: var(--trace-4); }
+.msi-c5 { background: var(--trace-5); }
+.msi-c6 { background: var(--trace-6); }
+.msi-c7 { background: var(--trace-7); }
+.msi-c8 { background: var(--trace-8); }
+
+/* ---- instrument layouts ---------------------------------------------------- */
+.msi-multimeter, .msi-clamp, .msi-wattmeter { max-width: 420px; }
+.msi-terminals { gap: 14px; font-size: 11px; }
+.msi-terminals b { font-family: var(--mono); }
+
+.msi-scope-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
+.msi-scope-controls .msi-section { flex-direction: column; align-items: flex-start; }
+.msi-cursor-table th:first-child { width: 48px; }
+
+.msi-bode-axes, .msi-spectrum-controls, .msi-iv-controls, .msi-logic-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+
+/* word generator */
+.msi-wordgen-top { display: flex; flex-direction: column; gap: 4px; }
+.msi-leds { display: flex; flex-wrap: wrap; gap: 3px; padding: 4px 6px; background: #1b1e24; border-radius: 4px; }
+.msi-led {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--msi-led-off);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.msi-led-on { background: var(--msi-led-on); box-shadow: 0 0 6px var(--msi-led-on); }
+.msi-led-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 8px var(--mono); color: rgba(255, 255, 255, 0.7); }
+.msi-wordgen-body { display: grid; grid-template-columns: minmax(200px, 260px) minmax(0, 1fr); gap: 8px; align-items: start; }
+.msi-wordgen-controls { display: flex; flex-direction: column; gap: 8px; }
+.msi-wordgen-grid { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.msi-wordtable { display: block; max-height: 380px; overflow: auto; }
+.msi-wordtable tr { cursor: pointer; }
+.msi-hexcell { width: auto; }
+.msi-bits { display: inline-flex; gap: 1px; }
+.msi-bit {
+  font: 11px var(--mono);
+  min-width: 18px;
+  padding: 0 3px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--panel);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.msi-bit-on { background: var(--accent-weak); color: var(--text); border-color: var(--accent); }
+
+/* logic converter */
+.msi-logicconv-body { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 8px; align-items: start; }
+.msi-truth-scroll { max-height: 420px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+.msi-truth { border: none; }
+.msi-truth thead th { position: sticky; top: 0; z-index: 1; text-align: center; }
+.msi-out-1 { background: var(--accent-weak); color: var(--text); border-color: var(--accent); }
+.msi-out-X { color: var(--warn); border-style: dashed; }
+.msi-logicconv-side { display: flex; flex-direction: column; gap: 8px; }
+.msi-logicconv-side .msi-section { display: block; }
+
+@media (max-width: 640px) {
+  .msi-wordgen-body, .msi-logicconv-body { grid-template-columns: 1fr; }
+  .msi-grid2 { grid-template-columns: 1fr; }
+}
+
+/* ---------------------------------------------------------------- bench-style instruments */
+.msi-bench {
+  --msi-bench-bezel: #2b3038;
+  --msi-bench-bezel-edge: #171a1f;
+  --msi-bench-display-bg: #0e1c24;
+  --msi-bench-display-fg: #9be7ff;
+  --msi-bench-display-dim: #5a8ea3;
+  --msi-bench-on: #6ee7a8;
+  --msi-bench-bad: #ff8a80;
+}
+.msi-bench-display {
+  background: var(--msi-bench-display-bg);
+  color: var(--msi-bench-display-fg);
+  border: 3px solid var(--msi-bench-bezel);
+  outline: 1px solid var(--msi-bench-bezel-edge);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-family: var(--mono);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6);
+}
+.msi-bench-display-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
+.msi-bench-big { font-size: 30px; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+.msi-bench-unit { font-size: 18px; color: var(--msi-bench-display-fg); }
+.msi-bench-small { font-size: 12px; color: var(--msi-bench-display-dim); }
+.msi-bench-flags { display: flex; gap: 8px; font-size: 11px; color: var(--msi-bench-display-dim); min-height: 14px; }
+.msi-bench-flag { font-size: 11px; padding: 0 6px; border: 1px solid var(--msi-bench-display-dim); border-radius: 3px; color: var(--msi-bench-display-dim); }
+.msi-bench-flag-on { color: var(--msi-bench-on); border-color: var(--msi-bench-on); }
+.msi-bench-flag-bad { color: var(--msi-bench-bad); }
+.msi-bench-keys { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+.msi-bench-keys > .msi-section { flex: 1 1 200px; }
+.msi-bench-output.msi-on { background: var(--msi-bench-on); color: #062814; }
+.msi-bench-scope-main { display: flex; gap: 10px; align-items: flex-start; }
+.msi-bench-scope-screen { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.msi-bench-scope-screen .msi-screen { border: 4px solid var(--msi-bench-bezel); border-radius: 6px; }
+.msi-bench-scope-keys { flex: 0 0 280px; display: flex; flex-direction: column; gap: 6px; max-height: 760px; overflow: auto; }
+.msi-bench-measure { display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: var(--mono); font-size: 11.5px; min-height: 16px; }
+.msi-bench-run { min-width: 64px; background: #2f9e44; color: #fff; }
+.msi-bench-run.msi-bench-stopped { background: #e03131; }
+@media (max-width: 860px) {
+  .msi-bench-scope-main { flex-direction: column; }
+  .msi-bench-scope-keys { flex: 1 1 auto; max-height: none; width: 100%; }
+}

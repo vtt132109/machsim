@@ -1,0 +1,18 @@
+BJT differential pair
+* Emitter-coupled 2N3904 pair with a 1 mA tail current:
+* V(c2)-V(c1) follows alpha*ITAIL*RC*tanh(VID/(2*VT)).
+* Cap vi sai 2N3904, nguon dong duoi 1 mA; quet DC dien ap vi sai VID.
+VCC vcc 0 DC 12
+VEE vee 0 DC -12
+VID b1 0 DC 0
+Q1 c1 b1 e Q2N3904
+Q2 c2 0 e Q2N3904
+RC1 vcc c1 5k
+RC2 vcc c2 5k
+ITAIL e vee DC 1m
+* published 2N3904 model parameters
+.model Q2N3904 NPN(IS=6.734f XTI=3 EG=1.11 VAF=74.03 BF=416.4 NE=1.259 ISE=6.734f IKF=66.78m XTB=1.5
++ BR=.7371 NC=2 ISC=0 IKR=0 RC=1 CJC=3.638p MJC=.3085 VJC=.75 FC=.5 CJE=4.493p MJE=.2593 VJE=.75
++ TR=239.5n TF=301.2p ITF=.4 VTF=4 XTF=2 RB=10)
+.dc VID -0.2 0.2 1m
+.end

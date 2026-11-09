@@ -1,0 +1,222 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Isolated secondary on a reference ground",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "10",
+            "freq": "50",
+            "acmag": "0"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/transformer",
+          "refdes": "T1",
+          "x": 240,
+          "y": 210,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "turns": "2"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "basic/resistor",
+          "refdes": "RL",
+          "x": 360,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p11",
+          "partId": "sources/ground-ref1",
+          "refdes": "GND2",
+          "x": 280,
+          "y": 280,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 100,
+              "y": 190
+            },
+            {
+              "x": 100,
+              "y": 190
+            },
+            {
+              "x": 200,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 100,
+              "y": 250
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 200,
+              "y": 230
+            },
+            {
+              "x": 200,
+              "y": 300
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 280,
+              "y": 190
+            },
+            {
+              "x": 360,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 280,
+              "y": 230
+            },
+            {
+              "x": 280,
+              "y": 280
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 360,
+              "y": 250
+            },
+            {
+              "x": 360,
+              "y": 280
+            },
+            {
+              "x": 280,
+              "y": 280
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l12",
+          "x": 150,
+          "y": 190,
+          "name": "PRI",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 320,
+          "y": 190,
+          "name": "SEC",
+          "rotation": 0
+        }
+      ],
+      "probes": [
+        {
+          "id": "pr14",
+          "kind": "voltage",
+          "x": 150,
+          "y": 190,
+          "name": "Vpri",
+          "color": "#e53935"
+        },
+        {
+          "id": "pr15",
+          "kind": "voltage",
+          "x": 340,
+          "y": 190,
+          "name": "Vsec",
+          "color": "#e53935"
+        }
+      ],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 360,
+          "text": "Vsec ≈ 10 V / 2 = 5 V đỉnh, đo so với Đất tham chiếu 1. Thử nối phía thứ cấp với Đất chính bằng một điện trở: ERC cảnh báo đất tham chiếu không còn cách ly.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.0001,
+        "tstop": 0.06
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Biến áp 2:1 tách mạch thứ cấp khỏi đất chính: phía thứ cấp chỉ nối với \"Đất tham chiếu 1\", nên nó thả nổi như thật và đầu dò Vsec đo so với Đất tham chiếu 1 (biên độ ≈ 5 V). A 2:1 transformer isolates the secondary from the main ground: the secondary connects only to \"Reference ground 1\", so it floats as in reality and probe Vsec reads against reference ground 1 (about 5 V peak)."
+}

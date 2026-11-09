@@ -1,0 +1,388 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Traffic-light junction with ladder timers",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "misc-digital/plc-controller",
+          "refdes": "PLC1",
+          "x": 140,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "scan": "10m"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "misc-digital/plc-output-8",
+          "refdes": "PLCQ1",
+          "x": 340,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "byte": "0"
+          }
+        },
+        {
+          "id": "p10",
+          "partId": "misc/traffic-junction",
+          "refdes": "MJ1",
+          "x": 700,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "tfault": "300m",
+            "rin": "2k"
+          }
+        },
+        {
+          "id": "p19",
+          "partId": "indicators/lamp",
+          "refdes": "X1",
+          "x": 940,
+          "y": 300,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "vrated": "24",
+            "prated": "5"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l3",
+          "x": 400,
+          "y": 150,
+          "name": "NSR",
+          "rotation": 0
+        },
+        {
+          "id": "l4",
+          "x": 400,
+          "y": 170,
+          "name": "NSY",
+          "rotation": 0
+        },
+        {
+          "id": "l5",
+          "x": 400,
+          "y": 190,
+          "name": "NSG",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 400,
+          "y": 210,
+          "name": "EWR",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 400,
+          "y": 230,
+          "name": "EWY",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 400,
+          "y": 250,
+          "name": "EWG",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 340,
+          "y": 320,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 610,
+          "y": 200,
+          "name": "NSR",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 610,
+          "y": 220,
+          "name": "NSY",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 610,
+          "y": 240,
+          "name": "NSG",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 790,
+          "y": 200,
+          "name": "EWR",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 790,
+          "y": 220,
+          "name": "EWY",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 790,
+          "y": 240,
+          "name": "EWG",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 680,
+          "y": 270,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 720,
+          "y": 270,
+          "name": "ERR",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 940,
+          "y": 270,
+          "name": "ERR",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 940,
+          "y": 330,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l23",
+          "x": 560,
+          "y": 140,
+          "name": "NSG",
+          "rotation": 0
+        },
+        {
+          "id": "l25",
+          "x": 560,
+          "y": 180,
+          "name": "EWG",
+          "rotation": 0
+        }
+      ],
+      "probes": [
+        {
+          "id": "pr22",
+          "kind": "digital",
+          "x": 560,
+          "y": 140,
+          "name": "NSG",
+          "color": "#e53935"
+        },
+        {
+          "id": "pr24",
+          "kind": "digital",
+          "x": 560,
+          "y": 180,
+          "name": "EWG",
+          "color": "#e53935"
+        }
+      ],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 100,
+          "y": 500,
+          "text": "Chân đèn của mô hình là tải thật (2 kΩ ≈ 12 mA ở 24 V), nên mô-đun ra phải thực sự cấp dòng. Muốn chu kỳ khác, chỉ cần sửa giá trị đặt trước của T1 và các mốc so sánh.",
+          "size": 11
+        }
+      ]
+    },
+    {
+      "id": "sheet2",
+      "name": "Ladder 1",
+      "parts": [],
+      "wires": [],
+      "labels": [],
+      "probes": [],
+      "notes": [],
+      "kind": "ladder",
+      "ladder": [
+        {
+          "id": "rung1",
+          "comment": "Bộ định thời vòng: T1 đếm 20 s rồi tự xoá để bắt đầu lại",
+          "outputs": [
+            {
+              "kind": "ton",
+              "address": "T1",
+              "preset": "20"
+            }
+          ],
+          "logic": {
+            "kind": "contact",
+            "type": "nc",
+            "address": "T1"
+          }
+        },
+        {
+          "id": "rung2",
+          "comment": "0–8 s: Bắc–Nam xanh",
+          "outputs": [
+            {
+              "kind": "coil",
+              "address": "Q0.2"
+            }
+          ],
+          "logic": {
+            "kind": "compare",
+            "op": "lt",
+            "left": "T1.ET",
+            "right": "8"
+          }
+        },
+        {
+          "id": "rung3",
+          "comment": "8–10 s: Bắc–Nam vàng",
+          "outputs": [
+            {
+              "kind": "coil",
+              "address": "Q0.1"
+            }
+          ],
+          "logic": {
+            "kind": "series",
+            "items": [
+              {
+                "kind": "compare",
+                "op": "ge",
+                "left": "T1.ET",
+                "right": "8"
+              },
+              {
+                "kind": "compare",
+                "op": "lt",
+                "left": "T1.ET",
+                "right": "10"
+              }
+            ]
+          }
+        },
+        {
+          "id": "rung4",
+          "comment": "Từ 10 s: Bắc–Nam đỏ",
+          "outputs": [
+            {
+              "kind": "coil",
+              "address": "Q0.0"
+            }
+          ],
+          "logic": {
+            "kind": "compare",
+            "op": "ge",
+            "left": "T1.ET",
+            "right": "10"
+          }
+        },
+        {
+          "id": "rung5",
+          "comment": "0–10 s: Đông–Tây đỏ",
+          "outputs": [
+            {
+              "kind": "coil",
+              "address": "Q0.3"
+            }
+          ],
+          "logic": {
+            "kind": "compare",
+            "op": "lt",
+            "left": "T1.ET",
+            "right": "10"
+          }
+        },
+        {
+          "id": "rung6",
+          "comment": "10–18 s: Đông–Tây xanh",
+          "outputs": [
+            {
+              "kind": "coil",
+              "address": "Q0.5"
+            }
+          ],
+          "logic": {
+            "kind": "series",
+            "items": [
+              {
+                "kind": "compare",
+                "op": "ge",
+                "left": "T1.ET",
+                "right": "10"
+              },
+              {
+                "kind": "compare",
+                "op": "lt",
+                "left": "T1.ET",
+                "right": "18"
+              }
+            ]
+          }
+        },
+        {
+          "id": "rung7",
+          "comment": "Từ 18 s: Đông–Tây vàng",
+          "outputs": [
+            {
+              "kind": "coil",
+              "address": "Q0.4"
+            }
+          ],
+          "logic": {
+            "kind": "compare",
+            "op": "ge",
+            "left": "T1.ET",
+            "right": "18"
+          }
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.05,
+        "tstop": 22
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Nút giao thông hai chiều do một bộ định thời duy nhất điều khiển. Bậc 1 là “bộ định thời vòng”: tiếp điểm thường đóng của T1 nuôi chính T1, nên khi T1 đếm xong nó tự xoá và bắt đầu lại — chu kỳ 20 s. Sáu bậc sau chỉ so sánh thời gian đã đếm T1.ET với các mốc: 0–8 s Bắc–Nam xanh, 8–10 s vàng, 10–18 s Đông–Tây xanh, 18–20 s vàng. Mô hình nút giao tự kiểm tra: nếu hai chiều cùng xanh (hoặc một chiều tối) lâu hơn 0,3 s thì chân ERR bật đèn X1. Chương trình này đúng nên đèn đó không bao giờ sáng — hãy thử đổi một mốc thời gian để thấy nó báo lỗi. A two-direction junction run by a single timer. Rung 1 is a cycle timer: a normally-closed contact of T1 feeds T1 itself, so the timer clears and restarts as soon as it is done — a 20 s cycle. The six rungs after it only compare the elapsed time T1.ET with the switch-over times. The junction model checks itself: if both directions show green (or one goes dark) for longer than 0.3 s, the ERR pin lights lamp X1. This program is correct, so it never does — change one of the times to see it complain."
+}

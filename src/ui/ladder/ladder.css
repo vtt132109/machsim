@@ -1,0 +1,231 @@
+/* Ladder-diagram editor: rails, rungs, the inspector strip and the live read-out strip. */
+
+.ms-l-view {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  background: var(--ms-bg);
+  color: var(--ms-fg);
+}
+
+.ms-l-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--ms-border);
+  background: var(--ms-panel);
+}
+
+.ms-l-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 4px;
+  background: var(--ms-border);
+}
+
+.ms-l-badge {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: var(--ms-warn-bg, #7a3b12);
+  color: var(--ms-warn-fg, #fff);
+  font-size: 12px;
+}
+
+.ms-l-canvas {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px;
+}
+
+.ms-l-empty,
+.ms-l-hint {
+  margin: 4px 2px;
+  color: var(--ms-fg-dim);
+  font-size: 12px;
+}
+
+.ms-l-svg {
+  display: block;
+}
+
+/* rails and rungs */
+.ms-l-rail {
+  stroke: var(--ms-fg);
+  stroke-width: 2.5;
+}
+
+.ms-l-wire {
+  stroke: var(--ms-fg);
+  stroke-width: 1.6;
+}
+
+.ms-l-wire.is-live,
+.ms-l-el.is-live .ms-l-wire,
+.ms-l-el.is-live .ms-l-bar,
+.ms-l-el.is-live .ms-l-arc {
+  stroke: var(--ms-ok, #35b14a);
+  stroke-width: 2.6;
+}
+
+.ms-l-bar,
+.ms-l-arc {
+  stroke: var(--ms-fg);
+  stroke-width: 2.2;
+  fill: none;
+}
+
+.ms-l-hit {
+  fill: transparent;
+}
+
+.ms-l-el {
+  cursor: pointer;
+}
+
+.ms-l-el.is-selected .ms-l-hit {
+  fill: var(--ms-sel-bg, rgba(80, 150, 255, 0.18));
+  stroke: var(--ms-sel, #4f9bff);
+  stroke-width: 1;
+  rx: 3;
+}
+
+.ms-l-addr,
+.ms-l-preset,
+.ms-l-mark,
+.ms-l-comment,
+.ms-l-problem {
+  fill: var(--ms-fg);
+  font-size: 11px;
+  text-anchor: middle;
+  user-select: none;
+}
+
+.ms-l-mark {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.ms-l-preset {
+  fill: var(--ms-fg-dim);
+  font-size: 10px;
+}
+
+.ms-l-comment {
+  text-anchor: start;
+  fill: var(--ms-fg-dim);
+  font-size: 11px;
+}
+
+.ms-l-problem {
+  text-anchor: start;
+  fill: var(--ms-error, #e5392f);
+  font-size: 11px;
+}
+
+.ms-l-rungbox {
+  fill: transparent;
+}
+
+.ms-l-rung.is-current .ms-l-rungbox {
+  fill: var(--ms-sel-bg, rgba(80, 150, 255, 0.07));
+}
+
+.ms-l-rung.is-off {
+  opacity: 0.45;
+}
+
+.ms-l-rung.is-bad .ms-l-rungbox {
+  fill: rgba(229, 57, 47, 0.08);
+}
+
+/* inspector */
+.ms-l-inspect {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: flex-end;
+  padding: 6px 8px;
+  border-top: 1px solid var(--ms-border);
+  background: var(--ms-panel);
+}
+
+.ms-l-inspect label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--ms-fg-dim);
+}
+
+.ms-l-inspect input,
+.ms-l-inspect select {
+  min-width: 90px;
+  font-size: 12px;
+  color: var(--ms-fg);
+  background: var(--ms-bg);
+  border: 1px solid var(--ms-border);
+  border-radius: 3px;
+  padding: 2px 4px;
+}
+
+.ms-l-inspect label:first-child input {
+  min-width: 220px;
+}
+
+/* live strip */
+.ms-l-live {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 4px 8px;
+  border-top: 1px solid var(--ms-border);
+  font-size: 11px;
+  color: var(--ms-fg-dim);
+}
+
+.ms-l-on {
+  color: var(--ms-ok, #35b14a);
+  font-weight: 600;
+}
+
+.ms-l-bits {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ms-l-bitlabel {
+  margin-right: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ms-l-bits i {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--ms-border);
+  border-radius: 2px;
+  background: transparent;
+}
+
+.ms-l-bits i.is-on {
+  background: var(--ms-ok, #35b14a);
+  border-color: var(--ms-ok, #35b14a);
+}
+
+.ms-l-timer {
+  font-variant-numeric: tabular-nums;
+}
+
+.ms-l-timer.is-on {
+  color: var(--ms-ok, #35b14a);
+}
+
+.ms-l-unit {
+  margin-left: 2px;
+}

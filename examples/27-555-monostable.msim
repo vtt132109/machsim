@@ -1,0 +1,400 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "555 monostable (one-shot)",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "analog/555",
+          "refdes": "U1",
+          "x": 400,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p2",
+          "partId": "sources/vcc",
+          "refdes": "VCC1",
+          "x": 480,
+          "y": 170,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "9"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 480,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100k"
+          }
+        },
+        {
+          "id": "p10",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 300,
+          "y": 400,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "1u"
+          }
+        },
+        {
+          "id": "p13",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 300,
+          "y": 460,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p14",
+          "partId": "basic/capacitor",
+          "refdes": "C2",
+          "x": 220,
+          "y": 400,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10n"
+          }
+        },
+        {
+          "id": "p18",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 220,
+          "y": 460,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p20",
+          "partId": "sources/ground",
+          "refdes": "GND3",
+          "x": 400,
+          "y": 380,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p21",
+          "partId": "sources/pulse-voltage",
+          "refdes": "V1",
+          "x": 120,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "v1": "9",
+            "v2": "0",
+            "delay": "20m",
+            "rise": "1u",
+            "fall": "1u",
+            "width": "1m",
+            "period": "0.4"
+          }
+        },
+        {
+          "id": "p25",
+          "partId": "sources/ground",
+          "refdes": "GND4",
+          "x": 120,
+          "y": 360,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p27",
+          "partId": "basic/resistor",
+          "refdes": "R3",
+          "x": 580,
+          "y": 290,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p28",
+          "partId": "diodes/led-green",
+          "refdes": "LED1",
+          "x": 640,
+          "y": 340,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p32",
+          "partId": "sources/ground",
+          "refdes": "GND5",
+          "x": 640,
+          "y": 400,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p33",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 800,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "B",
+            "trig.level": "4",
+            "timebase": "100m",
+            "A.scale": "5",
+            "B.scale": "5"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 480,
+              "y": 170
+            },
+            {
+              "x": 480,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w12",
+          "points": [
+            {
+              "x": 300,
+              "y": 430
+            },
+            {
+              "x": 300,
+              "y": 460
+            }
+          ]
+        },
+        {
+          "id": "w17",
+          "points": [
+            {
+              "x": 220,
+              "y": 430
+            },
+            {
+              "x": 220,
+              "y": 460
+            }
+          ]
+        },
+        {
+          "id": "w19",
+          "points": [
+            {
+              "x": 400,
+              "y": 340
+            },
+            {
+              "x": 400,
+              "y": 380
+            }
+          ]
+        },
+        {
+          "id": "w24",
+          "points": [
+            {
+              "x": 120,
+              "y": 330
+            },
+            {
+              "x": 120,
+              "y": 360
+            }
+          ]
+        },
+        {
+          "id": "w30",
+          "points": [
+            {
+              "x": 610,
+              "y": 290
+            },
+            {
+              "x": 640,
+              "y": 290
+            },
+            {
+              "x": 640,
+              "y": 310
+            }
+          ]
+        },
+        {
+          "id": "w31",
+          "points": [
+            {
+              "x": 640,
+              "y": 370
+            },
+            {
+              "x": 640,
+              "y": 400
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l3",
+          "x": 410,
+          "y": 260,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l4",
+          "x": 390,
+          "y": 260,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 480,
+          "y": 250,
+          "name": "TH",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 450,
+          "y": 310,
+          "name": "TH",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 350,
+          "y": 300,
+          "name": "TH",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 300,
+          "y": 370,
+          "name": "TH",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 220,
+          "y": 370,
+          "name": "CV",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 350,
+          "y": 320,
+          "name": "CV",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 120,
+          "y": 270,
+          "name": "TRIG",
+          "rotation": 0
+        },
+        {
+          "id": "l23",
+          "x": 350,
+          "y": 280,
+          "name": "TRIG",
+          "rotation": 0
+        },
+        {
+          "id": "l26",
+          "x": 450,
+          "y": 290,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l29",
+          "x": 550,
+          "y": 290,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l34",
+          "x": 750,
+          "y": 280,
+          "name": "TRIG",
+          "rotation": 0
+        },
+        {
+          "id": "l35",
+          "x": 790,
+          "y": 280,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 520,
+          "text": "t = 1,1 · R1 · C1 = 1,1 · 100 kΩ · 1 µF ≈ 110 ms. Xung kích ngắn (1 ms) nhưng xung ra luôn dài 110 ms.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.0002,
+        "tstop": 1
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "IC 555 đơn ổn: mỗi xung kích xuống thấp ở TRIG tạo một xung ra dài t = 1,1·R1·C1 = 1,1·100k·1 µF ≈ 0,11 s. 555 monostable: every low trigger pulse on TRIG gives one output pulse t = 1.1·R1·C1 ≈ 0.11 s long."
+}

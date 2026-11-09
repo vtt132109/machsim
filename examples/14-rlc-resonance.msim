@@ -1,0 +1,231 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Series RLC resonance",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "1",
+            "freq": "1.59k",
+            "acmag": "1"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/inductor",
+          "refdes": "L1",
+          "x": 200,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10m"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 300,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "1u"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 400,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p13",
+          "partId": "instruments/bode-plotter",
+          "refdes": "XBP1",
+          "x": 560,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "fstart": "100",
+            "fstop": "100k",
+            "points": "100",
+            "mmin": "-40",
+            "mmax": "5"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 100,
+              "y": 190
+            },
+            {
+              "x": 100,
+              "y": 150
+            },
+            {
+              "x": 170,
+              "y": 150
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 230,
+              "y": 150
+            },
+            {
+              "x": 270,
+              "y": 150
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 330,
+              "y": 150
+            },
+            {
+              "x": 400,
+              "y": 150
+            },
+            {
+              "x": 400,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 400,
+              "y": 250
+            },
+            {
+              "x": 400,
+              "y": 300
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 100,
+              "y": 250
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l11",
+          "x": 100,
+          "y": 170,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 370,
+          "y": 150,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 530,
+          "y": 230,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 570,
+          "y": 230,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 360,
+          "text": "f0 = 1/(2π·√(10 mH · 1 µF)) ≈ 1,59 kHz; băng thông = f0/Q ≈ 159 Hz. Mở máy vẽ Bode XBP1 hoặc chạy phân tích AC.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "ac",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "ac": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 100,
+        "fstart": 100,
+        "fstop": 100000
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.000005,
+        "tstop": 0.01
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Mạch RLC nối tiếp cộng hưởng tại f0 = 1/(2π√(LC)) ≈ 1,59 kHz; điện áp trên R lớn nhất tại f0, Q = (1/R)·√(L/C) = 10. Series RLC resonating at f0 = 1/(2π√(LC)) ≈ 1.59 kHz; the voltage across R peaks at f0, Q = 10."
+}

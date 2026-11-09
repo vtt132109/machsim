@@ -1,0 +1,270 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "BJT switch driving an LED",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/pulse-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 350,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "v1": "0",
+            "v2": "5",
+            "delay": "0",
+            "rise": "1u",
+            "fall": "1u",
+            "width": "0.5",
+            "period": "1"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "RB",
+          "x": 200,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "transistors/2n3904",
+          "refdes": "Q1",
+          "x": 300,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p4",
+          "partId": "diodes/led-red",
+          "refdes": "LED1",
+          "x": 310,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "basic/resistor",
+          "refdes": "RC",
+          "x": 310,
+          "y": 130,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "470"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "sources/vcc",
+          "refdes": "VCC1",
+          "x": 310,
+          "y": 60,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "9"
+          }
+        },
+        {
+          "id": "p7",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 400,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p17",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 520,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "A",
+            "trig.level": "2.5",
+            "timebase": "500m",
+            "A.scale": "5",
+            "B.scale": "5"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 100,
+              "y": 320
+            },
+            {
+              "x": 100,
+              "y": 300
+            },
+            {
+              "x": 170,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 230,
+              "y": 300
+            },
+            {
+              "x": 270,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 310,
+              "y": 250
+            },
+            {
+              "x": 310,
+              "y": 270
+            }
+          ]
+        },
+        {
+          "id": "w11",
+          "points": [
+            {
+              "x": 310,
+              "y": 160
+            },
+            {
+              "x": 310,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w12",
+          "points": [
+            {
+              "x": 310,
+              "y": 60
+            },
+            {
+              "x": 310,
+              "y": 100
+            }
+          ]
+        },
+        {
+          "id": "w13",
+          "points": [
+            {
+              "x": 310,
+              "y": 330
+            },
+            {
+              "x": 310,
+              "y": 400
+            },
+            {
+              "x": 100,
+              "y": 400
+            }
+          ]
+        },
+        {
+          "id": "w14",
+          "points": [
+            {
+              "x": 100,
+              "y": 380
+            },
+            {
+              "x": 100,
+              "y": 400
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l15",
+          "x": 140,
+          "y": 300,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 310,
+          "y": 260,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 470,
+          "y": 280,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 510,
+          "y": 280,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 460,
+          "text": "IB ≈ (5 − 0,7)/10k = 0,43 mA; IC ≈ (9 − 1,9 − 0,1)/470 ≈ 15 mA < hFE·IB nên transistor bão hoà, V(OUT) ≈ 0,1 V.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.001,
+        "tstop": 3
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Transistor 2N3904 làm khoá: xung 0/5 V qua RB = 10k vào cực gốc; khi có dòng gốc, transistor bão hoà và LED ở cực góp sáng. A 2N3904 as a switch: a 0/5 V pulse through RB = 10k drives the base; with base current the transistor saturates and the collector LED lights."
+}

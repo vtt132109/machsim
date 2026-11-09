@@ -1,0 +1,234 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Flip-flop frequency divider",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/digital-clock",
+          "refdes": "V1",
+          "x": 100,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "freq": "1k",
+            "vhigh": "5"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/logic-high",
+          "refdes": "V2",
+          "x": 100,
+          "y": 100,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "vhigh": "5"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "misc-digital/tff",
+          "refdes": "U1",
+          "x": 300,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p6",
+          "partId": "misc-digital/tff",
+          "refdes": "U2",
+          "x": 500,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p19",
+          "partId": "instruments/logic-analyzer",
+          "refdes": "XLA1",
+          "x": 760,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "clockrate": "20k",
+            "pre": "20",
+            "post": "180"
+          }
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l3",
+          "x": 140,
+          "y": 200,
+          "name": "CLK",
+          "rotation": 0
+        },
+        {
+          "id": "l4",
+          "x": 140,
+          "y": 100,
+          "name": "H",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 260,
+          "y": 190,
+          "name": "H",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 260,
+          "y": 210,
+          "name": "CLK",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 340,
+          "y": 190,
+          "name": "Q1",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 340,
+          "y": 210,
+          "name": "NQ1",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 300,
+          "y": 150,
+          "name": "H",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 300,
+          "y": 240,
+          "name": "H",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 460,
+          "y": 190,
+          "name": "H",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 460,
+          "y": 210,
+          "name": "Q1",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 540,
+          "y": 190,
+          "name": "Q2",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 540,
+          "y": 210,
+          "name": "NQ2",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 500,
+          "y": 150,
+          "name": "H",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 500,
+          "y": 240,
+          "name": "H",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 720,
+          "y": 180,
+          "name": "CLK",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 720,
+          "y": 190,
+          "name": "Q1",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 720,
+          "y": 200,
+          "name": "Q2",
+          "rotation": 0
+        },
+        {
+          "id": "l23",
+          "x": 720,
+          "y": 210,
+          "name": "NQ1",
+          "rotation": 0
+        },
+        {
+          "id": "l24",
+          "x": 720,
+          "y": 220,
+          "name": "NQ2",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 420,
+          "text": "Flip-flop T với T = 1 đảo trạng thái ở mỗi sườn lên của CLK: Q1 = CLK/2, Q2 = CLK/4; NQ1, NQ2 là đầu ra đảo.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.00001,
+        "tstop": 0.01
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Hai flip-flop T nối tiếp chia tần số xung nhịp 1 kHz thành 500 Hz và 250 Hz (bộ đếm nhị phân 2 bit); xem trên máy phân tích logic XLA1. Two T flip-flops in a row divide a 1 kHz clock into 500 Hz and 250 Hz (a 2-bit binary counter); see the logic analyzer XLA1."
+}

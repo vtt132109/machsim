@@ -1,0 +1,173 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "LED with series resistor",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "5"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "indicators/ammeter",
+          "refdes": "U1",
+          "x": 200,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p3",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 320,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "220"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "diodes/led-red",
+          "refdes": "LED1",
+          "x": 400,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 100,
+              "y": 190
+            },
+            {
+              "x": 100,
+              "y": 150
+            },
+            {
+              "x": 170,
+              "y": 150
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 230,
+              "y": 150
+            },
+            {
+              "x": 290,
+              "y": 150
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 350,
+              "y": 150
+            },
+            {
+              "x": 400,
+              "y": 150
+            },
+            {
+              "x": 400,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 400,
+              "y": 250
+            },
+            {
+              "x": 400,
+              "y": 300
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 100,
+              "y": 250
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        }
+      ],
+      "labels": [],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 360,
+          "text": "Thử R1 = 1k: dòng còn ≈ 3 mA, LED mờ hơn. R1 quá nhỏ (ví dụ 10 Ω) sẽ làm LED quá dòng.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "op",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.0001,
+        "tstop": 0.01
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "LED đỏ cần điện trở hạn dòng: I = (5 V − ≈1,9 V)/220 Ω ≈ 14 mA. Nhấn Chạy (F5): LED sáng, ampe kế chỉ dòng. A red LED needs a series resistor: I = (5 V − ≈1.9 V)/220 Ω ≈ 14 mA. Press Run (F5): the LED lights and the ammeter reads the current."
+}

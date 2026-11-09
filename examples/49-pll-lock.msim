@@ -1,0 +1,235 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Phase-locked loop locking to 10.3 kHz",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 230,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "1",
+            "freq": "10.3k",
+            "acmag": "0"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "analog/pll",
+          "refdes": "U1",
+          "x": 300,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p3",
+          "partId": "basic/resistor",
+          "refdes": "RL",
+          "x": 420,
+          "y": 260,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p13",
+          "partId": "indicators/voltmeter",
+          "refdes": "U2",
+          "x": 240,
+          "y": 290,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p16",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 620,
+          "y": 230,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "A",
+            "trig.level": "0",
+            "timebase": "100u",
+            "A.scale": "1",
+            "B.scale": "5"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 100,
+              "y": 200
+            },
+            {
+              "x": 250,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 350,
+              "y": 190
+            },
+            {
+              "x": 420,
+              "y": 190
+            },
+            {
+              "x": 420,
+              "y": 230
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 420,
+              "y": 290
+            },
+            {
+              "x": 420,
+              "y": 320
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 100,
+              "y": 260
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l9",
+          "x": 180,
+          "y": 200,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 390,
+          "y": 190,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 300,
+          "y": 240,
+          "name": "VC",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 210,
+          "y": 290,
+          "name": "VC",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 270,
+          "y": 290,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 570,
+          "y": 260,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 610,
+          "y": 260,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [
+        {
+          "id": "pr12",
+          "kind": "voltage",
+          "x": 300,
+          "y": 240,
+          "name": "Vctrl",
+          "color": "#e53935"
+        }
+      ],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 400,
+          "text": "Sau vài ms vòng khoá: vcavg ≈ 0,15 V, chu kỳ OUT tper ≈ 1/10,3 kHz ≈ 97,1 µs. Đổi tần số V1 thành 13 kHz (ngoài dải giữ khoá): vòng không khoá được, OUT trôi tần số.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.000001,
+        "tstop": 0.025,
+        "tmax": 0.000001
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Khối PLL (f0 = 10 kHz, kv = 2 kHz/V) bám theo tín hiệu vào 10,3 kHz: khi đã khoá, OUT có đúng tần số ngõ vào và V(VC) = (10,3 − 10) kHz / 2 kHz/V = 0,15 V. Dải giữ khoá là ±(2/π)·kd·kv ≈ ±1,27 kHz quanh f0. A PLL block (f0 = 10 kHz, kv = 2 kHz/V) tracking a 10.3 kHz input: once locked, OUT has exactly the input frequency and V(VC) = (10.3 − 10) kHz / 2 kHz/V = 0.15 V. The hold-in range is ±(2/π)·kd·kv ≈ ±1.27 kHz around f0.",
+  "customSpice": "* Điện áp điều khiển trung bình và chu kỳ ngõ ra khi đã khoá: bảng \"Phép đo (.meas)\"\n.meas TRAN vcavg AVG V(VC) FROM=15m TO=25m\n.meas TRAN tper TRIG V(OUT) VAL=2.5 RISE=200 TARG V(OUT) VAL=2.5 RISE=201\n"
+}

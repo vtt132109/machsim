@@ -1,0 +1,318 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "DIP switch, resistor network and LEDs",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "5"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "basic/dip-switch-4",
+          "refdes": "S1",
+          "x": 260,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "s1": "true",
+            "s3": "true"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "basic/rpack-dip8-isolated",
+          "refdes": "RN1",
+          "x": 420,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p11",
+          "partId": "basic/3d-led-red",
+          "refdes": "LED1",
+          "x": 580,
+          "y": 240,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p18",
+          "partId": "basic/3d-led-green",
+          "refdes": "LED2",
+          "x": 660,
+          "y": 240,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p25",
+          "partId": "basic/3d-led-yellow",
+          "refdes": "LED3",
+          "x": 740,
+          "y": 240,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p32",
+          "partId": "basic/3d-led-blue",
+          "refdes": "LED4",
+          "x": 820,
+          "y": 240,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 100,
+              "y": 250
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l4",
+          "x": 100,
+          "y": 190,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 230,
+          "y": 190,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 290,
+          "y": 190,
+          "name": "S1",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 380,
+          "y": 190,
+          "name": "S1",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 460,
+          "y": 190,
+          "name": "L1",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 580,
+          "y": 210,
+          "name": "L1",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 580,
+          "y": 270,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 230,
+          "y": 210,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 290,
+          "y": 210,
+          "name": "S2",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 380,
+          "y": 210,
+          "name": "S2",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 460,
+          "y": 210,
+          "name": "L2",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 660,
+          "y": 210,
+          "name": "L2",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 660,
+          "y": 270,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 230,
+          "y": 230,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 290,
+          "y": 230,
+          "name": "S3",
+          "rotation": 0
+        },
+        {
+          "id": "l23",
+          "x": 380,
+          "y": 230,
+          "name": "S3",
+          "rotation": 0
+        },
+        {
+          "id": "l24",
+          "x": 460,
+          "y": 230,
+          "name": "L3",
+          "rotation": 0
+        },
+        {
+          "id": "l26",
+          "x": 740,
+          "y": 210,
+          "name": "L3",
+          "rotation": 0
+        },
+        {
+          "id": "l27",
+          "x": 740,
+          "y": 270,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l28",
+          "x": 230,
+          "y": 250,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l29",
+          "x": 290,
+          "y": 250,
+          "name": "S4",
+          "rotation": 0
+        },
+        {
+          "id": "l30",
+          "x": 380,
+          "y": 250,
+          "name": "S4",
+          "rotation": 0
+        },
+        {
+          "id": "l31",
+          "x": 460,
+          "y": 250,
+          "name": "L4",
+          "rotation": 0
+        },
+        {
+          "id": "l33",
+          "x": 820,
+          "y": 210,
+          "name": "L4",
+          "rotation": 0
+        },
+        {
+          "id": "l34",
+          "x": 820,
+          "y": 270,
+          "name": "GND",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 360,
+          "text": "Vị trí đang bật có chấm tô màu. LED đỏ: I = (5 − 1,9) V / 330 Ω ≈ 9,4 mA; LED xanh dương cần VF ≈ 3,1 V nên chỉ ≈ 5,8 mA.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.001,
+        "tstop": 1
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Công tắc DIP 4 vị trí bật LED qua mảng điện trở 330 Ω (DIP-8, 4 điện trở riêng rẽ). Bấm Chạy (F5) rồi bấm vào từng vị trí của S1 (hoặc nhấn phím 1–4): LED tương ứng sáng, I ≈ (5 V − VF)/330 Ω ≈ 9 mA với LED đỏ. A 4-position DIP switch lights LEDs through a 330 Ω resistor network (DIP-8, 4 isolated resistors). Press Run (F5), then click the positions of S1 (or press keys 1–4): the matching LED lights, I ≈ (5 V − VF)/330 Ω ≈ 9 mA for the red LED."
+}

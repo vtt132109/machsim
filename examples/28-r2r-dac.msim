@@ -1,0 +1,382 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "R-2R digital-to-analog converter",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/digital-clock",
+          "refdes": "V1",
+          "x": 100,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "freq": "1k",
+            "vhigh": "5"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "ttl/7493",
+          "refdes": "U1",
+          "x": 260,
+          "y": 190,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p11",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 480,
+          "y": 140,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "20k"
+          }
+        },
+        {
+          "id": "p14",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 580,
+          "y": 140,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "20k"
+          }
+        },
+        {
+          "id": "p17",
+          "partId": "basic/resistor",
+          "refdes": "R3",
+          "x": 680,
+          "y": 140,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "20k"
+          }
+        },
+        {
+          "id": "p20",
+          "partId": "basic/resistor",
+          "refdes": "R4",
+          "x": 780,
+          "y": 140,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "20k"
+          }
+        },
+        {
+          "id": "p23",
+          "partId": "basic/resistor",
+          "refdes": "R5",
+          "x": 530,
+          "y": 230,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p26",
+          "partId": "basic/resistor",
+          "refdes": "R6",
+          "x": 630,
+          "y": 230,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p29",
+          "partId": "basic/resistor",
+          "refdes": "R7",
+          "x": 730,
+          "y": 230,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p32",
+          "partId": "basic/resistor",
+          "refdes": "R8",
+          "x": 430,
+          "y": 290,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "20k"
+          }
+        },
+        {
+          "id": "p35",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 430,
+          "y": 340,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p36",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 960,
+          "y": 330,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "A",
+            "trig.level": "0",
+            "timebase": "5m",
+            "A.scale": "1",
+            "B.scale": "5"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 140,
+              "y": 150
+            },
+            {
+              "x": 210,
+              "y": 150
+            }
+          ]
+        },
+        {
+          "id": "w34",
+          "points": [
+            {
+              "x": 430,
+              "y": 320
+            },
+            {
+              "x": 430,
+              "y": 340
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l4",
+          "x": 310,
+          "y": 150,
+          "name": "QA",
+          "rotation": 0
+        },
+        {
+          "id": "l5",
+          "x": 210,
+          "y": 170,
+          "name": "QA",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 310,
+          "y": 170,
+          "name": "QB",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 310,
+          "y": 190,
+          "name": "QC",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 310,
+          "y": 210,
+          "name": "QD",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 210,
+          "y": 210,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 210,
+          "y": 230,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 480,
+          "y": 110,
+          "name": "QA",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 480,
+          "y": 170,
+          "name": "N0",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 580,
+          "y": 110,
+          "name": "QB",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 580,
+          "y": 170,
+          "name": "N1",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 680,
+          "y": 110,
+          "name": "QC",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 680,
+          "y": 170,
+          "name": "N2",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 780,
+          "y": 110,
+          "name": "QD",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 780,
+          "y": 170,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l24",
+          "x": 500,
+          "y": 230,
+          "name": "N0",
+          "rotation": 0
+        },
+        {
+          "id": "l25",
+          "x": 560,
+          "y": 230,
+          "name": "N1",
+          "rotation": 0
+        },
+        {
+          "id": "l27",
+          "x": 600,
+          "y": 230,
+          "name": "N1",
+          "rotation": 0
+        },
+        {
+          "id": "l28",
+          "x": 660,
+          "y": 230,
+          "name": "N2",
+          "rotation": 0
+        },
+        {
+          "id": "l30",
+          "x": 700,
+          "y": 230,
+          "name": "N2",
+          "rotation": 0
+        },
+        {
+          "id": "l31",
+          "x": 760,
+          "y": 230,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l33",
+          "x": 430,
+          "y": 260,
+          "name": "N0",
+          "rotation": 0
+        },
+        {
+          "id": "l37",
+          "x": 910,
+          "y": 360,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l38",
+          "x": 950,
+          "y": 360,
+          "name": "QA",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 400,
+          "text": "V(OUT) = Vcao · (8·QD + 4·QC + 2·QB + QA)/16: mỗi bậc ≈ Vcao/16, đếm 16 bậc mỗi 16 ms.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.00001,
+        "tstop": 0.032
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Bộ đếm 7493 cấp 4 bit cho thang điện trở R-2R (R = 10k, 2R = 20k): điện áp ra là bậc thang 16 mức, mỗi bậc = Vcao/16. A 7493 counter feeds 4 bits to an R-2R ladder (R = 10k, 2R = 20k): the output is a 16-step staircase, each step = Vhigh/16."
+}

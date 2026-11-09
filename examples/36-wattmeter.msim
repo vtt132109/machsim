@@ -1,0 +1,192 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Wattmeter on an RL load",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "14.142",
+            "freq": "50",
+            "acmag": "0"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 380,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "instruments/wattmeter",
+          "refdes": "XWM1",
+          "x": 300,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p10",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 300,
+          "y": 300,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100"
+          }
+        },
+        {
+          "id": "p11",
+          "partId": "basic/inductor",
+          "refdes": "L1",
+          "x": 300,
+          "y": 380,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100m"
+          }
+        },
+        {
+          "id": "p15",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 300,
+          "y": 440,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 100,
+              "y": 330
+            },
+            {
+              "x": 100,
+              "y": 380
+            }
+          ]
+        },
+        {
+          "id": "w13",
+          "points": [
+            {
+              "x": 300,
+              "y": 330
+            },
+            {
+              "x": 300,
+              "y": 350
+            }
+          ]
+        },
+        {
+          "id": "w14",
+          "points": [
+            {
+              "x": 300,
+              "y": 410
+            },
+            {
+              "x": 300,
+              "y": 440
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 100,
+          "y": 270,
+          "name": "SRC",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 310,
+          "y": 180,
+          "name": "SRC",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 330,
+          "y": 180,
+          "name": "LOAD",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 270,
+          "y": 180,
+          "name": "LOAD",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 290,
+          "y": 180,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 300,
+          "y": 270,
+          "name": "LOAD",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 500,
+          "text": "|Z| = √(100² + (2π·50·0,1)²) ≈ 104,8 Ω; I = 10 V/104,8 Ω ≈ 95 mA; P = I²·R ≈ 0,91 W. Oát kế: cuộn dòng nối tiếp, cuộn áp song song.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.0001,
+        "tstop": 0.2
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Oát kế XWM1 đo công suất thực trên tải R-L ở 50 Hz: P = I²·R ≈ 0,91 W, hệ số công suất cos φ = R/|Z| ≈ 0,95. Wattmeter XWM1 measures the real power of an R-L load at 50 Hz: P = I²·R ≈ 0.91 W, power factor cos φ = R/|Z| ≈ 0.95."
+}

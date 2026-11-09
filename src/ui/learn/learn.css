@@ -1,0 +1,113 @@
+/* Learning tools: rich text, formulas, Lessons panel, description box, instructor dialog. */
+
+.ms-rich { line-height: 1.5; font-size: 13px; color: var(--text); }
+.ms-rich h3 { font-size: 15px; margin: 10px 0 6px; }
+.ms-rich h4 { font-size: 14px; margin: 10px 0 4px; }
+.ms-rich h5 { font-size: 13px; margin: 8px 0 4px; }
+.ms-rich p { margin: 6px 0; }
+.ms-rich ul, .ms-rich ol { margin: 6px 0; padding-left: 22px; }
+.ms-rich code { font-family: var(--mono); background: var(--hover); padding: 0 3px; border-radius: 3px; }
+.ms-rich hr { border: 0; border-top: 1px solid var(--border); margin: 10px 0; }
+.ms-rich-note { border-left: 3px solid var(--accent); background: var(--accent-weak); padding: 6px 10px; margin: 8px 0; border-radius: 0 var(--radius) var(--radius) 0; }
+.ms-rich-math { text-align: center; margin: 8px 0; overflow-x: auto; }
+.ms-rich-figure { margin: 8px 0; text-align: center; }
+.ms-rich-figure figcaption { font-size: var(--font-size-small); color: var(--text-dim); }
+.ms-rich-img-block { max-width: 100%; height: auto; }
+.ms-rich-img { max-height: 1.6em; vertical-align: middle; }
+.ms-rich-missing { color: var(--danger); font-style: italic; }
+
+.ms-math { font-family: 'Cambria Math', 'STIX Two Math', 'Times New Roman', serif; font-size: 1.08em; white-space: nowrap; display: inline-flex; align-items: center; vertical-align: middle; }
+.ms-math-display { font-size: 1.2em; }
+.ms-math-row { display: inline-flex; align-items: center; }
+.ms-math-ident { font-style: italic; }
+.ms-math-op { margin: 0 0.25em; }
+.ms-math-punct { margin: 0 0.04em; }
+.ms-math-text, .ms-math-num { font-style: normal; }
+.ms-math-script { display: inline-flex; align-items: baseline; }
+.ms-math-sub, .ms-math-sup { font-size: 0.7em; line-height: 1; margin-left: 1px; position: relative; }
+.ms-math-sub { top: 0.35em; }
+.ms-math-sup { top: -0.55em; }
+.ms-math-scripts { display: inline-flex; flex-direction: column; font-size: 0.7em; line-height: 1.05; margin-left: 1px; vertical-align: middle; }
+.ms-math-frac { display: inline-flex; flex-direction: column; align-items: center; margin: 0 0.15em; vertical-align: middle; }
+.ms-math-numer { border-bottom: 1px solid currentColor; padding: 0 0.2em; }
+.ms-math-denom { padding: 0 0.2em; }
+.ms-math-sqrt { display: inline-flex; align-items: stretch; }
+.ms-math-radical { font-size: 1.1em; }
+.ms-math-radicand { border-top: 1px solid currentColor; padding: 0 0.15em; }
+
+/* Lessons panel */
+.ms-lessons { display: flex; flex-direction: column; height: 100%; min-height: 0; font-size: 13px; }
+.ms-lessons-head { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.ms-lessons-head .ms-grow { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-lessons-body { flex: 1; overflow: auto; padding: 8px 10px 14px; min-height: 0; }
+.ms-lessons-level { font-weight: 600; margin: 12px 0 4px; color: var(--text-dim); text-transform: uppercase; font-size: 11px; letter-spacing: 0.04em; }
+.ms-lesson-row { display: flex; width: 100%; text-align: left; gap: 8px; align-items: flex-start; padding: 6px 8px; border: 1px solid transparent; border-radius: var(--radius); background: none; color: inherit; cursor: pointer; font: inherit; }
+.ms-lesson-row:hover { background: var(--hover); border-color: var(--border); }
+.ms-lesson-row .ms-lesson-badge { flex: 0 0 auto; min-width: 42px; text-align: center; font-size: 11px; border-radius: 9px; padding: 1px 6px; background: var(--hover); color: var(--text-dim); }
+.ms-lesson-row .ms-lesson-badge.is-done { background: var(--ok); color: #fff; }
+.ms-lesson-row small { display: block; color: var(--text-dim); }
+.ms-lesson-goal { background: var(--accent-weak); border-radius: var(--radius); padding: 6px 10px; margin: 6px 0; }
+/* lesson text names a command beginner mode hides: one click switches the full interface on */
+.ms-lesson-fullmode { background: var(--warn-weak, var(--accent-weak)); border-radius: var(--radius); padding: 6px 10px; margin: 6px 0; font-size: 12px; }
+.ms-lesson-bar { height: 6px; background: var(--hover); border-radius: 3px; overflow: hidden; margin: 4px 0 8px; }
+.ms-lesson-bar > span { display: block; height: 100%; background: var(--ok); transition: width 0.3s; }
+.ms-lesson-section { margin-top: 12px; }
+.ms-lesson-section > summary, .ms-lesson-section > h4 { font-weight: 600; cursor: pointer; margin: 0 0 4px; font-size: 13px; }
+.ms-lesson-steps { list-style: none; padding: 0; margin: 4px 0; }
+.ms-lesson-step { display: grid; grid-template-columns: 22px 1fr; gap: 4px 6px; padding: 6px 4px; border-bottom: 1px dashed var(--border); }
+.ms-lesson-step.is-current { background: var(--accent-weak); border-radius: var(--radius); }
+.ms-step-icon { font-size: 15px; line-height: 1.2; text-align: center; color: var(--text-dim); }
+.ms-lesson-step.is-ok .ms-step-icon { color: var(--ok); }
+.ms-step-note { grid-column: 2; font-size: 12px; color: var(--text-dim); }
+.ms-lesson-step.is-ok .ms-step-note { color: var(--ok); }
+.ms-step-note.is-bad { color: var(--warn); }
+.ms-step-hint { grid-column: 2; font-size: 12px; background: var(--hover); border-radius: var(--radius); padding: 4px 8px; }
+.ms-step-actions { grid-column: 2; }
+.ms-linkbtn { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit; font-size: 12px; text-decoration: underline; }
+.ms-quiz-q { margin: 8px 0; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius); }
+.ms-quiz-q label { display: flex; gap: 6px; align-items: flex-start; padding: 2px 0; cursor: pointer; }
+.ms-quiz-feedback { font-size: 12px; margin-top: 4px; }
+.ms-quiz-feedback.is-ok { color: var(--ok); }
+.ms-quiz-feedback.is-bad { color: var(--warn); }
+.ms-lesson-complete { margin-top: 12px; padding: 8px 10px; border-radius: var(--radius); background: var(--ok); color: #fff; }
+.ms-lesson-foot { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+
+/* Description box */
+.ms-desc { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.ms-desc-bar { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.ms-desc-bar .ms-grow { flex: 1; }
+.ms-desc-body { flex: 1; overflow: auto; padding: 8px 12px 14px; min-height: 0; }
+.ms-desc-edit { display: grid; grid-template-rows: auto 1fr; gap: 6px; height: 100%; }
+.ms-desc-text { width: 100%; min-height: 180px; font-family: var(--mono); font-size: 12px; resize: vertical; box-sizing: border-box; }
+.ms-desc-syntax { font-size: 11px; color: var(--text-dim); font-family: var(--mono); }
+.ms-desc-locked { font-size: 12px; color: var(--text-dim); padding: 4px 0; }
+.ms-q-edit { border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 8px; margin: 6px 0; display: grid; gap: 4px; }
+.ms-q-edit textarea, .ms-q-edit input[type='text'] { width: 100%; box-sizing: border-box; }
+.ms-q-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ms-q-student { margin: 8px 0; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius); }
+.ms-q-student input[type='text'] { width: 12em; }
+.ms-q-grade.is-correct { color: var(--ok); }
+.ms-q-grade.is-wrong { color: var(--warn); }
+
+/* Instructor dialog */
+.ms-inst { display: grid; gap: 8px; font-size: 13px; }
+.ms-inst fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 10px; margin: 0; }
+.ms-inst legend { font-weight: 600; padding: 0 4px; }
+.ms-inst-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 2px 10px; }
+.ms-inst-grid label, .ms-inst label.ms-inline { display: flex; gap: 6px; align-items: center; }
+.ms-inst-error { color: var(--danger); }
+.ms-inst-note { font-size: 12px; color: var(--text-dim); }
+.ms-restricted-banner { font-size: 12px; padding: 3px 8px; background: var(--accent-weak); border-bottom: 1px solid var(--border); }
+
+/* ------------------------------------------------- lessons from files + editor */
+.ms-lesson-author { color: var(--accent); }
+.ms-lesson-file { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
+.ms-lesson-editor { max-height: min(72vh, 760px); overflow-y: auto; }
+.ms-ed-bi, .ms-ed-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.ms-ed-bi > label, .ms-ed-row > label { flex: 1 1 180px; display: flex; flex-direction: column; gap: 2px; }
+.ms-ed-bi > label > span, .ms-ed-row > label > span { font-size: var(--font-size-small); color: var(--text-dim); }
+.ms-ed-small { flex: 0 0 120px !important; }
+.ms-ed-buttons { display: flex; align-items: flex-end; gap: 4px; }
+.ms-ed-step, .ms-ed-end { border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 8px; margin: 6px 0; display: flex; flex-direction: column; gap: 4px; }
+.ms-ed-step > legend, .ms-ed-end > legend { font-size: var(--font-size-small); color: var(--text-dim); padding: 0 4px; }
+.ms-ed-problem { color: var(--danger, #c0392b); font-size: var(--font-size-small); margin: 2px 0; }

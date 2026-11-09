@@ -1,0 +1,186 @@
+/*
+ * Application shell layout: menu bar, toolbar, side panels, centre, dock, status bar, dialogs
+ * specific to the shell and the print stylesheet. Tokens from src/ui/theme.css.
+ */
+
+.ms-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+}
+.ms-app-head { flex: none; background: var(--chrome); color: var(--chrome-text); border-bottom: 1px solid var(--border); }
+
+/* ---------------------------------------------------------------- menu bar */
+.ms-menubar { display: flex; align-items: stretch; height: 26px; padding: 0 4px; user-select: none; }
+.ms-menubar-item {
+  padding: 0 10px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  cursor: default;
+}
+.ms-menubar-item:hover, .ms-menubar-item.is-open { background: var(--hover); }
+.ms-menubar-item.is-open { background: var(--pressed); }
+.ms-menubar-item:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+
+/* ----------------------------------------------------------------- toolbar */
+.ms-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1px;
+  min-height: 32px;
+  padding: 2px 6px;
+  border-top: 1px solid var(--border);
+}
+.ms-tb-btn { width: 28px; height: 28px; }
+.ms-tb-btn.has-text { width: auto; gap: 4px; padding: 0 8px; }
+.ms-tb-btn.has-text span { font-size: var(--font-size-small); }
+.ms-tb-sep { width: 1px; height: 20px; margin: 0 5px; background: var(--border); }
+.ms-tb-split { display: inline-flex; }
+.ms-tb-split .ms-tb-btn:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.ms-tb-drop { width: 14px; border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.ms-tb-analysis { display: inline-flex; margin-left: 6px; }
+.ms-tb-analysis .ms-select { min-width: 150px; height: 26px; }
+
+/* ----------------------------------------------------------- main columns */
+.ms-main { display: flex; flex: 1; min-height: 0; }
+.ms-side { flex: none; min-width: 0; min-height: 0; overflow: hidden; border-color: var(--border); }
+.ms-center { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; }
+.ms-bottom { flex: none; min-height: 0; overflow: hidden; background: var(--panel); }
+
+/* -------------------------------------------------------------- sheet tabs */
+.ms-sheet-tabs { flex: none; display: flex; background: var(--panel-2); border-bottom: 1px solid var(--border); }
+.ms-sheet-tabs .ms-tabs { flex: 1; }
+.ms-sheet-add { width: 24px; height: 24px; margin-left: 2px; }
+
+/* ------------------------------------------------- main view tabs (schematic | breadboard) */
+.ms-view-tabs { flex: none; display: flex; background: var(--panel); border-bottom: 1px solid var(--border); }
+.ms-view-tabs .ms-tabs { flex: 1; }
+.ms-view-body { position: relative; display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
+
+/* --------------------------------------------------------------------- dock */
+.ms-dock { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.ms-dock-head { flex: none; display: flex; align-items: center; background: var(--panel-2); border-bottom: 1px solid var(--border); }
+.ms-dock-head .ms-tabs { flex: 1; }
+.ms-dock-close { width: 22px; height: 22px; margin-right: 4px; }
+.ms-dock-body { flex: 1; min-height: 0; overflow: auto; }
+.ms-spreadsheet { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.ms-spreadsheet > .ms-tabs { flex: none; padding: 0 4px; border-bottom: 1px solid var(--border); }
+.ms-spreadsheet-body { flex: 1; min-height: 0; overflow: auto; }
+.ms-table td.ms-wrap { white-space: normal; overflow-wrap: anywhere; }
+.ms-messages { display: flex; flex-direction: column; min-height: 100%; }
+.ms-messages-bar { display: flex; align-items: center; justify-content: space-between; padding: 3px 8px; border-bottom: 1px solid var(--border); }
+.ms-msg-error td { color: var(--danger); }
+.ms-msg-warning td { color: var(--warn); }
+
+/* --------------------------------------------------------------- status bar */
+.ms-statusbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 22px;
+  padding: 0 4px;
+  background: var(--statusbar);
+  color: var(--statusbar-text);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.ms-sb-sim { display: flex; align-items: center; gap: 6px; padding: 0 8px; min-width: 0; overflow: hidden; }
+.ms-sb-dot { width: 8px; height: 8px; border-radius: 50%; background: #8a94a6; flex: none; }
+.ms-sb-sim.is-running .ms-sb-dot { background: #51cf66; box-shadow: 0 0 6px #51cf66; }
+.ms-sb-sim.is-paused .ms-sb-dot { background: #fcc419; }
+.ms-sb-sim.is-error .ms-sb-dot { background: #ff6b6b; }
+.ms-sb-msg { opacity: 0.85; overflow: hidden; text-overflow: ellipsis; }
+.ms-sb-time { font-family: var(--mono); }
+.ms-sb-middle { flex: 1; min-width: 0; padding: 0 8px; overflow: hidden; text-overflow: ellipsis; opacity: 0.9; }
+.ms-sb-cell { padding: 0 10px; border-left: 1px solid rgba(255, 255, 255, 0.18); font-family: var(--mono); }
+.ms-sb-btn { height: 100%; border-top: 0; border-right: 0; border-bottom: 0; background: transparent; color: inherit; font-size: 11px; cursor: pointer; }
+.ms-sb-btn:hover { background: rgba(255, 255, 255, 0.1); }
+
+/* ------------------------------------------------------- shell dialogs etc. */
+.ms-find-results { max-height: 260px; overflow: auto; border: 1px solid var(--border); border-radius: 3px; min-height: 40px; }
+.ms-find-row { display: grid; grid-template-columns: 70px 1fr auto; gap: 8px; padding: 3px 8px; cursor: default; }
+.ms-find-row.is-active { background: var(--accent-weak); }
+.ms-help { display: flex; flex-direction: column; gap: 12px; }
+.ms-help h3 { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); }
+.ms-help-table td { white-space: normal; vertical-align: top; }
+.ms-help-keys { width: 38%; font-family: var(--mono); color: var(--accent); }
+.ms-help-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; line-height: 1.5; }
+.ms-about { display: flex; gap: 16px; align-items: flex-start; }
+.ms-about h3 { margin: 0 0 6px; }
+.ms-about p { margin: 0 0 6px; }
+.ms-error-panel { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 12px; color: var(--danger); }
+.ms-error-panel pre { margin: 0; white-space: pre-wrap; font-family: var(--mono); font-size: 11px; color: var(--text); }
+.ms-float-host { position: fixed; inset: 0; pointer-events: none; z-index: 1000; }
+.ms-float-host > .ms-float { pointer-events: auto; }
+
+/* -------------------------------------------------------------------- print */
+.ms-print-area { display: none; }
+@media print {
+  @page { size: landscape; margin: 10mm; }
+  html, body, #root { height: auto; background: #fff; }
+  .ms-app, .ms-dialog-layer, .ms-menu { display: none !important; }
+  .ms-print-area { display: block; }
+  .ms-print-page { page-break-after: always; break-after: page; }
+  .ms-print-page:last-child { page-break-after: auto; break-after: auto; }
+  .ms-print-page img { display: block; width: 100%; height: auto; max-height: 185mm; object-fit: contain; }
+}
+
+/* responsive side panels: collapsed rail and overlay (layout.ts) */
+.ms-center { position: relative; }
+.ms-rail { flex: none; width: 26px; border: 0; border-color: var(--border); background: var(--chrome); color: var(--chrome-text); cursor: pointer; padding: 6px 0; display: flex; align-items: flex-start; justify-content: center; font: inherit; font-size: var(--font-size-small); }
+.ms-rail-left { border-right: 1px solid var(--border); }
+.ms-rail-right { border-left: 1px solid var(--border); }
+.ms-rail span { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; }
+.ms-rail-right span { transform: none; }
+.ms-rail:hover, .ms-rail.is-open { background: var(--hover); color: var(--accent); }
+.ms-rail:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.ms-side-overlay { position: absolute; top: 0; bottom: 0; z-index: 30; background: var(--panel); box-shadow: var(--shadow); display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.ms-side-overlay-left { left: 0; border-right: 1px solid var(--border); }
+.ms-side-overlay-right { right: 0; border-left: 1px solid var(--border); }
+
+/* beginner explanation under a simulator error in the messages list */
+.ms-msg-explain { margin-top: 3px; color: var(--text); font-size: var(--font-size-small); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.ms-msg-explain b { color: var(--danger); }
+
+/* ---- left panel tabs, design tree, sheet breadcrumb (schematic capture v2) ---- */
+.ms-left-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.ms-left-panel > .ms-tabs { flex: none; }
+.ms-left-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.ms-left-body > * { flex: 1; min-height: 0; }
+.ms-tree { overflow: auto; padding: 6px 4px; font-size: 12px; }
+.ms-tree-actions { display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 4px 8px; }
+.ms-tree-root { padding: 6px 8px 2px; color: var(--text-dim); }
+.ms-tree-node { display: flex; align-items: center; gap: 2px; }
+.ms-tree-row { display: block; width: 100%; text-align: left; background: none; border: 0; color: var(--text); padding: 3px 6px; border-radius: var(--radius); cursor: pointer; font: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ms-tree-node .ms-tree-row { width: auto; flex: 1; }
+.ms-tree-row:hover { background: var(--accent-weak); }
+.ms-tree-row.is-active { background: var(--accent); color: #fff; }
+.ms-tree-block { font-weight: 600; }
+.ms-tree-toggle { background: none; border: 0; color: var(--text-dim); cursor: pointer; width: 16px; padding: 0; }
+.ms-tree-warn { color: var(--danger); }
+.ms-tree-hint { padding: 8px; }
+.ms-breadcrumb { display: flex; align-items: center; gap: 6px; padding: 2px 8px; font-size: 12px; border-bottom: 1px solid var(--border); background: var(--panel-2); flex-wrap: wrap; }
+.ms-breadcrumb .ms-crumb button[aria-current] { font-weight: 600; text-decoration: none; }
+.ms-sheet-tabs { display: flex; flex-direction: column; }
+
+/* ---------------------------------------------------------------- digital settings / memory editor */
+.ms-fieldset { border: 1px solid var(--border, #c8ccd2); border-radius: 6px; padding: 6px 10px 8px; margin: 8px 0; }
+.ms-fieldset legend { padding: 0 4px; font-weight: 600; }
+.ms-radio-row { display: flex; gap: 8px; align-items: flex-start; margin: 5px 0; cursor: pointer; }
+.ms-radio-row input { margin-top: 3px; }
+.ms-spacer { flex: 1 1 auto; }
+.ms-warn { color: var(--warn, #b45309); }
+.ms-mem-editor { max-height: 62vh; overflow: auto; }
+.ms-mem-grid { border-collapse: collapse; font-size: 12px; }
+.ms-mem-grid th { font-weight: 600; padding: 1px 4px; text-align: center; color: var(--muted, #5f6b7a); }
+.ms-mem-grid td { padding: 1px; }
+.ms-mem-cell { width: auto; min-width: 2.4em; padding: 1px 2px; text-align: center; }
+.ms-mem-ascii { padding-left: 8px !important; letter-spacing: 1px; white-space: pre; }

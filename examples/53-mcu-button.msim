@@ -1,0 +1,197 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Read a push-button with an 8051",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "5"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 340,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "misc-digital/mcu-8051-p1",
+          "refdes": "U1",
+          "x": 380,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "program": "; Doc nut nhan o P1.2, dao LED o P1.0\n        ORG  0\n        SETB P1.0           ; LED tat (muc 1)\nWAIT:   JB   P1.2,WAIT      ; cho tai khi nut keo chan xuong 0\n        ACALL DELAY20       ; chong doi\n        JB   P1.2,WAIT      ; con nhieu thi bo qua\n        CPL  P1.0           ; dao LED\nREL:    JNB  P1.2,REL       ; cho nha nut\n        ACALL DELAY20\n        SJMP WAIT\n\nDELAY20: MOV R7,#40         ; 40 x 503 chu ky = 20120 us\nD1:     MOV  R6,#250\nD2:     DJNZ R6,D2\n        DJNZ R7,D1\n        RET\n        END",
+            "fosc": "12M"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "basic/push-button",
+          "refdes": "S1",
+          "x": 220,
+          "y": 360,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "key": "Space"
+          }
+        },
+        {
+          "id": "p10",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 600,
+          "y": 180,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p11",
+          "partId": "diodes/led-green",
+          "refdes": "LED1",
+          "x": 700,
+          "y": 240,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 100,
+              "y": 290
+            },
+            {
+              "x": 100,
+              "y": 340
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l4",
+          "x": 100,
+          "y": 230,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 450,
+          "y": 230,
+          "name": "BTN",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 220,
+          "y": 330,
+          "name": "BTN",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 220,
+          "y": 390,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 570,
+          "y": 180,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 630,
+          "y": 180,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 700,
+          "y": 210,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 700,
+          "y": 270,
+          "name": "P1_0",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 450,
+          "y": 190,
+          "name": "P1_0",
+          "rotation": 0
+        }
+      ],
+      "probes": [
+        {
+          "id": "pr17",
+          "kind": "digital",
+          "x": 450,
+          "y": 230,
+          "name": "BTN",
+          "color": "#e53935"
+        }
+      ],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 420,
+          "text": "Không cần điện trở treo ngoài: chân P1 của 8051 đã được treo lên bằng điện trở trong khoảng 50 kΩ. Nút nhấn chỉ cần kéo chân xuống đất.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.001,
+        "tstop": 1
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Vi điều khiển 8051 đọc nút nhấn ở chân P1.2 và bật LED ở P1.0 mỗi lần nhấn (đảo trạng thái). Nút nối chân xuống đất; chân được treo lên +5 V bằng điện trở trong của 8051, nên không nhấn thì đọc được mức 1. Chương trình chờ 20 ms để chống dội và chờ nhả nút. Bấm Chạy (F5) rồi nhấp vào nút S1 (hoặc nhấn phím Space). An 8051 reads a push-button on P1.2 and toggles an LED on P1.0 at every press. The button pulls the pin to ground; the pin is held up by the internal pull-up of the 8051, so an unpressed button reads 1. The program waits 20 ms to debounce and then waits for the release. Press Run (F5), then click S1 (or press Space)."
+}

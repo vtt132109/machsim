@@ -1,0 +1,442 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "555 astable LED flasher",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "analog/555",
+          "refdes": "U1",
+          "x": 400,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p2",
+          "partId": "sources/vcc",
+          "refdes": "VCC1",
+          "x": 390,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "9"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 480,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 480,
+          "y": 370,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "68k"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "basic/electrolytic",
+          "refdes": "C1",
+          "x": 300,
+          "y": 550,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10u"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "basic/capacitor",
+          "refdes": "C2",
+          "x": 340,
+          "y": 390,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10n"
+          }
+        },
+        {
+          "id": "p7",
+          "partId": "basic/resistor",
+          "refdes": "R3",
+          "x": 620,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p8",
+          "partId": "diodes/led-red",
+          "refdes": "LED1",
+          "x": 650,
+          "y": 360,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p9",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 400,
+          "y": 360,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p10",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 340,
+          "y": 440,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p11",
+          "partId": "sources/ground",
+          "refdes": "GND3",
+          "x": 300,
+          "y": 600,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p12",
+          "partId": "sources/ground",
+          "refdes": "GND4",
+          "x": 650,
+          "y": 410,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p32",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 740,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "timebase": "500m",
+            "A.scale": "2",
+            "B.scale": "5",
+            "trig.source": "B",
+            "trig.level": "4"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w13",
+          "points": [
+            {
+              "x": 390,
+              "y": 160
+            },
+            {
+              "x": 480,
+              "y": 160
+            }
+          ]
+        },
+        {
+          "id": "w14",
+          "points": [
+            {
+              "x": 390,
+              "y": 260
+            },
+            {
+              "x": 390,
+              "y": 160
+            }
+          ]
+        },
+        {
+          "id": "w15",
+          "points": [
+            {
+              "x": 410,
+              "y": 260
+            },
+            {
+              "x": 410,
+              "y": 160
+            }
+          ]
+        },
+        {
+          "id": "w16",
+          "points": [
+            {
+              "x": 480,
+              "y": 190
+            },
+            {
+              "x": 480,
+              "y": 160
+            }
+          ]
+        },
+        {
+          "id": "w17",
+          "points": [
+            {
+              "x": 480,
+              "y": 250
+            },
+            {
+              "x": 480,
+              "y": 340
+            }
+          ]
+        },
+        {
+          "id": "w18",
+          "points": [
+            {
+              "x": 450,
+              "y": 310
+            },
+            {
+              "x": 480,
+              "y": 310
+            }
+          ]
+        },
+        {
+          "id": "w19",
+          "points": [
+            {
+              "x": 300,
+              "y": 280
+            },
+            {
+              "x": 300,
+              "y": 520
+            }
+          ]
+        },
+        {
+          "id": "w20",
+          "points": [
+            {
+              "x": 350,
+              "y": 280
+            },
+            {
+              "x": 300,
+              "y": 280
+            }
+          ]
+        },
+        {
+          "id": "w21",
+          "points": [
+            {
+              "x": 350,
+              "y": 300
+            },
+            {
+              "x": 300,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w22",
+          "points": [
+            {
+              "x": 480,
+              "y": 400
+            },
+            {
+              "x": 480,
+              "y": 500
+            },
+            {
+              "x": 300,
+              "y": 500
+            }
+          ]
+        },
+        {
+          "id": "w23",
+          "points": [
+            {
+              "x": 300,
+              "y": 580
+            },
+            {
+              "x": 300,
+              "y": 600
+            }
+          ]
+        },
+        {
+          "id": "w24",
+          "points": [
+            {
+              "x": 350,
+              "y": 320
+            },
+            {
+              "x": 340,
+              "y": 320
+            },
+            {
+              "x": 340,
+              "y": 360
+            }
+          ]
+        },
+        {
+          "id": "w25",
+          "points": [
+            {
+              "x": 340,
+              "y": 420
+            },
+            {
+              "x": 340,
+              "y": 440
+            }
+          ]
+        },
+        {
+          "id": "w26",
+          "points": [
+            {
+              "x": 400,
+              "y": 340
+            },
+            {
+              "x": 400,
+              "y": 360
+            }
+          ]
+        },
+        {
+          "id": "w29",
+          "points": [
+            {
+              "x": 650,
+              "y": 300
+            },
+            {
+              "x": 650,
+              "y": 330
+            }
+          ]
+        },
+        {
+          "id": "w30",
+          "points": [
+            {
+              "x": 650,
+              "y": 390
+            },
+            {
+              "x": 650,
+              "y": 410
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l27",
+          "x": 450,
+          "y": 290,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l28",
+          "x": 590,
+          "y": 300,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l31",
+          "x": 300,
+          "y": 400,
+          "name": "THR",
+          "rotation": 0
+        },
+        {
+          "id": "l33",
+          "x": 690,
+          "y": 190,
+          "name": "THR",
+          "rotation": 0
+        },
+        {
+          "id": "l34",
+          "x": 730,
+          "y": 190,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 660,
+          "text": "f = 1.44/((R1 + 2·R2)·C1) ≈ 0.99 Hz;  tH = 0.693(R1+R2)C1 ≈ 0.54 s, tL = 0.693·R2·C1 ≈ 0.47 s.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.001,
+        "tstop": 4
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "IC 555 dao động đa hài: f = 1,44/((R1+2·R2)·C1) = 1,44/(146k·10µ) ≈ 0,99 Hz — LED1 nhấp nháy khoảng 1 lần mỗi giây khi chạy mô phỏng. 555 astable: f = 1.44/((R1+2R2)C1) ≈ 0.99 Hz, LED1 blinks about once per second while the simulation runs."
+}

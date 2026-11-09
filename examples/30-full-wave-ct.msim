@@ -1,0 +1,335 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Full-wave rectifier with center-tapped transformer",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "325",
+            "freq": "50",
+            "acmag": "0"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/transformer-ct",
+          "refdes": "T1",
+          "x": 250,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "turns": "10"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p7",
+          "partId": "diodes/1n4007",
+          "refdes": "D1",
+          "x": 380,
+          "y": 230,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p8",
+          "partId": "diodes/1n4007",
+          "refdes": "D2",
+          "x": 380,
+          "y": 330,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p12",
+          "partId": "basic/electrolytic",
+          "refdes": "C1",
+          "x": 500,
+          "y": 280,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "470u"
+          }
+        },
+        {
+          "id": "p13",
+          "partId": "basic/resistor",
+          "refdes": "RL",
+          "x": 580,
+          "y": 280,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p19",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 500,
+          "y": 380,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p21",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 720,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "A",
+            "trig.level": "10",
+            "timebase": "10m",
+            "A.scale": "5"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 100,
+              "y": 220
+            },
+            {
+              "x": 100,
+              "y": 200
+            },
+            {
+              "x": 210,
+              "y": 200
+            },
+            {
+              "x": 210,
+              "y": 230
+            }
+          ]
+        },
+        {
+          "id": "w4",
+          "points": [
+            {
+              "x": 100,
+              "y": 280
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 100,
+              "y": 300
+            },
+            {
+              "x": 210,
+              "y": 300
+            },
+            {
+              "x": 210,
+              "y": 270
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 290,
+              "y": 230
+            },
+            {
+              "x": 350,
+              "y": 230
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 290,
+              "y": 270
+            },
+            {
+              "x": 320,
+              "y": 270
+            },
+            {
+              "x": 320,
+              "y": 330
+            },
+            {
+              "x": 350,
+              "y": 330
+            }
+          ]
+        },
+        {
+          "id": "w14",
+          "points": [
+            {
+              "x": 410,
+              "y": 230
+            },
+            {
+              "x": 500,
+              "y": 230
+            },
+            {
+              "x": 500,
+              "y": 250
+            }
+          ]
+        },
+        {
+          "id": "w15",
+          "points": [
+            {
+              "x": 410,
+              "y": 330
+            },
+            {
+              "x": 460,
+              "y": 330
+            },
+            {
+              "x": 460,
+              "y": 230
+            }
+          ]
+        },
+        {
+          "id": "w16",
+          "points": [
+            {
+              "x": 500,
+              "y": 230
+            },
+            {
+              "x": 580,
+              "y": 230
+            },
+            {
+              "x": 580,
+              "y": 250
+            }
+          ]
+        },
+        {
+          "id": "w17",
+          "points": [
+            {
+              "x": 500,
+              "y": 310
+            },
+            {
+              "x": 500,
+              "y": 380
+            }
+          ]
+        },
+        {
+          "id": "w18",
+          "points": [
+            {
+              "x": 580,
+              "y": 310
+            },
+            {
+              "x": 580,
+              "y": 380
+            },
+            {
+              "x": 500,
+              "y": 380
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l11",
+          "x": 290,
+          "y": 250,
+          "name": "GND",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 540,
+          "y": 230,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 670,
+          "y": 280,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 440,
+          "text": "Mỗi nửa cuộn thứ cấp ≈ 16 V đỉnh; ra ≈ 16 − 0,8 ≈ 15 V; gợn ≈ 15 mA/(2·50 Hz·470 µF) ≈ 0,3 V ở 100 Hz.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.0001,
+        "tstop": 0.2
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Biến áp có điểm giữa và hai diode chỉnh lưu cả hai nửa chu kỳ; tụ 470 µF lọc còn gợn 100 Hz ≈ I/(2·f·C). A center-tapped transformer and two diodes rectify both half-cycles; the 470 µF capacitor leaves a 100 Hz ripple ≈ I/(2·f·C)."
+}

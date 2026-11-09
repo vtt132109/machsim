@@ -1,0 +1,20 @@
+RC filter family with .meas
+* .step param runs the RC low-pass for R = 1k, 2k and 5k; .meas measures each run:
+* the -3 dB frequency (theory 1/(2*pi*R*C) = 1.59 kHz, 796 Hz, 318 Hz), the gain at 1 kHz,
+* and in the transient the 10-90 % rise time (theory R*C*ln 9 = 0.22, 0.44, 1.10 ms).
+* Ho mach loc RC voi .step param; .meas do tan so -3 dB va thoi gian len cua tung lan chay.
+.param rv=1k
+VIN in 0 DC 0 AC 1 PULSE(0 1 0 1u 1u 10m 20m)
+R1 in out {rv}
+C1 out 0 100n
+* a 5th-order Chebyshev low-pass (1 dB ripple, 1 kHz pass edge) on the same input for comparison
+ECH cheb 0 CHEBYSHEV {V(in)} = LP 1k 2k 1dB 40dB
+.ac dec 50 10 100k
+.tran 10u 6m
+.step param rv list 1k 2k 5k
+.meas AC dc0 FIND vdb(out) AT=10
+.meas AC f3db WHEN vdb(out)=dc0-3.0103 FALL=1
+.meas AC g1k FIND vdb(out) AT=1k
+.meas AC cheb2k FIND vdb(cheb) AT=2k
+.meas TRAN trise TRIG V(out) VAL=0.1 RISE=1 TARG V(out) VAL=0.9 RISE=1
+.end

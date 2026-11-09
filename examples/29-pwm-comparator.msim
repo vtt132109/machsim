@@ -1,0 +1,273 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "PWM from a triangle and a comparator",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/triangle-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "low": "0",
+            "high": "5",
+            "freq": "1k"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/dc-voltage",
+          "refdes": "V2",
+          "x": 200,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "2"
+          }
+        },
+        {
+          "id": "p8",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 330,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p9",
+          "partId": "mixed/comparator-logic",
+          "refdes": "U1",
+          "x": 380,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "vhigh": "5"
+          }
+        },
+        {
+          "id": "p13",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 520,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p14",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 600,
+          "y": 300,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "1u"
+          }
+        },
+        {
+          "id": "p18",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 600,
+          "y": 350,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p20",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 760,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "A",
+            "trig.level": "2.5",
+            "timebase": "500u",
+            "A.scale": "2",
+            "B.scale": "5"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 100,
+              "y": 290
+            },
+            {
+              "x": 100,
+              "y": 330
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 100,
+              "y": 330
+            },
+            {
+              "x": 200,
+              "y": 330
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 200,
+              "y": 290
+            },
+            {
+              "x": 200,
+              "y": 330
+            }
+          ]
+        },
+        {
+          "id": "w16",
+          "points": [
+            {
+              "x": 550,
+              "y": 250
+            },
+            {
+              "x": 600,
+              "y": 250
+            },
+            {
+              "x": 600,
+              "y": 270
+            }
+          ]
+        },
+        {
+          "id": "w17",
+          "points": [
+            {
+              "x": 600,
+              "y": 330
+            },
+            {
+              "x": 600,
+              "y": 350
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l3",
+          "x": 100,
+          "y": 230,
+          "name": "TRI",
+          "rotation": 0
+        },
+        {
+          "id": "l4",
+          "x": 200,
+          "y": 230,
+          "name": "LEVEL",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 340,
+          "y": 240,
+          "name": "LEVEL",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 340,
+          "y": 260,
+          "name": "TRI",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 420,
+          "y": 250,
+          "name": "PWM",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 490,
+          "y": 250,
+          "name": "PWM",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 580,
+          "y": 250,
+          "name": "AVG",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 710,
+          "y": 280,
+          "name": "TRI",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 750,
+          "y": 280,
+          "name": "PWM",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 420,
+          "text": "Đầu ra cao khi TRI < LEVEL: độ rộng xung = 2 V / 5 V = 40 %; trung bình ≈ 0,4 · 5 V = 2 V (τ = R1·C1 = 10 ms).",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.000002,
+        "tstop": 0.04
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "So sánh sóng tam giác 0…5 V với mức DC 2 V tạo xung PWM có độ rộng 40 %; mạch RC lọc lấy giá trị trung bình ≈ 2 V. Comparing a 0…5 V triangle with a 2 V DC level gives 40 % PWM; the RC filter recovers the average ≈ 2 V."
+}

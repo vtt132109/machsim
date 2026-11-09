@@ -1,0 +1,436 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Half-wave and bridge rectifiers",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "10",
+            "freq": "50",
+            "acmag": "0"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "diodes/1n4007",
+          "refdes": "D1",
+          "x": 200,
+          "y": 140,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p3",
+          "partId": "basic/electrolytic",
+          "refdes": "C1",
+          "x": 300,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100u"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/resistor",
+          "refdes": "RL1",
+          "x": 400,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p13",
+          "partId": "sources/ac-voltage",
+          "refdes": "V2",
+          "x": 560,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "10",
+            "freq": "50",
+            "acmag": "0"
+          }
+        },
+        {
+          "id": "p14",
+          "partId": "diodes/bridge-rectifier",
+          "refdes": "D2",
+          "x": 680,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p15",
+          "partId": "basic/electrolytic",
+          "refdes": "C2",
+          "x": 820,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100u"
+          }
+        },
+        {
+          "id": "p16",
+          "partId": "basic/resistor",
+          "refdes": "RL2",
+          "x": 900,
+          "y": 220,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p17",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 680,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p18",
+          "partId": "sources/ground",
+          "refdes": "GND3",
+          "x": 820,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p19",
+          "partId": "sources/ground",
+          "refdes": "GND4",
+          "x": 900,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p28",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 480,
+          "y": 420,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "timebase": "10m",
+            "A.scale": "5",
+            "B.scale": "5",
+            "trig.source": "A",
+            "trig.level": "5"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 100,
+              "y": 170
+            },
+            {
+              "x": 100,
+              "y": 140
+            },
+            {
+              "x": 170,
+              "y": 140
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 230,
+              "y": 140
+            },
+            {
+              "x": 400,
+              "y": 140
+            },
+            {
+              "x": 400,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 300,
+              "y": 140
+            },
+            {
+              "x": 300,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 100,
+              "y": 230
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 400,
+              "y": 250
+            },
+            {
+              "x": 400,
+              "y": 300
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w11",
+          "points": [
+            {
+              "x": 300,
+              "y": 250
+            },
+            {
+              "x": 300,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w20",
+          "points": [
+            {
+              "x": 560,
+              "y": 190
+            },
+            {
+              "x": 560,
+              "y": 160
+            },
+            {
+              "x": 620,
+              "y": 160
+            },
+            {
+              "x": 620,
+              "y": 220
+            },
+            {
+              "x": 640,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w21",
+          "points": [
+            {
+              "x": 560,
+              "y": 250
+            },
+            {
+              "x": 560,
+              "y": 340
+            },
+            {
+              "x": 760,
+              "y": 340
+            },
+            {
+              "x": 760,
+              "y": 220
+            },
+            {
+              "x": 720,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w22",
+          "points": [
+            {
+              "x": 680,
+              "y": 180
+            },
+            {
+              "x": 680,
+              "y": 150
+            },
+            {
+              "x": 900,
+              "y": 150
+            },
+            {
+              "x": 900,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w23",
+          "points": [
+            {
+              "x": 820,
+              "y": 150
+            },
+            {
+              "x": 820,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w24",
+          "points": [
+            {
+              "x": 680,
+              "y": 260
+            },
+            {
+              "x": 680,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w25",
+          "points": [
+            {
+              "x": 900,
+              "y": 250
+            },
+            {
+              "x": 900,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w26",
+          "points": [
+            {
+              "x": 820,
+              "y": 250
+            },
+            {
+              "x": 820,
+              "y": 300
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l12",
+          "x": 360,
+          "y": 140,
+          "name": "HALF",
+          "rotation": 0
+        },
+        {
+          "id": "l27",
+          "x": 860,
+          "y": 150,
+          "name": "BRIDGE",
+          "rotation": 0
+        },
+        {
+          "id": "l29",
+          "x": 430,
+          "y": 450,
+          "name": "HALF",
+          "rotation": 0
+        },
+        {
+          "id": "l30",
+          "x": 470,
+          "y": 450,
+          "name": "BRIDGE",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 540,
+          "text": "Nửa chu kỳ: gợn ≈ Vp/(f·R·C) ≈ 1.8 V @ 50 Hz.  Cầu: gợn ≈ Vp/(2f·R·C) ≈ 0.8 V @ 100 Hz.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.0001,
+        "tstop": 0.2
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Chỉnh lưu nửa chu kỳ (D1) và cầu (D2) từ nguồn xoay chiều 10 V đỉnh, 50 Hz, lọc bằng tụ 100 µF, tải 1 kΩ. Gợn sóng cầu chỉnh lưu nhỏ hơn và có tần số 100 Hz. Half-wave (D1) and bridge (D2) rectifiers, 10 V peak 50 Hz, 100 µF filter, 1 kΩ load."
+}

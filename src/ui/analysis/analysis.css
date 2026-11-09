@@ -1,0 +1,169 @@
+/* Analysis setup dialog. Prefix: msa-. Uses shared tokens from src/ui/theme.css. */
+
+.msa-dialog .ms-dialog-body { padding: 0; overflow: hidden; display: flex; min-height: 0; }
+.msa-dialog { max-height: 92vh; display: flex; flex-direction: column; }
+
+.msa-layout {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  min-height: min(560px, 75vh);
+  max-height: 78vh;
+  width: 100%;
+}
+
+/* ---- analysis list --------------------------------------------------------- */
+.msa-nav {
+  border-right: 1px solid var(--border);
+  background: var(--panel-2);
+  overflow: auto;
+  padding: 6px 0;
+}
+.msa-nav-group + .msa-nav-group { margin-top: 6px; }
+.msa-nav-title { padding: 2px 12px; font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.msa-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 4px 10px 4px 6px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font: 13px var(--font);
+  text-align: left;
+  cursor: pointer;
+}
+.msa-nav-item:hover { background: var(--hover, var(--accent-weak)); }
+.msa-nav-active { background: var(--accent-weak); font-weight: 600; }
+.msa-nav-marker { width: 12px; font-size: 9px; color: var(--accent); flex: none; }
+.msa-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--danger); margin-left: auto; flex: none; }
+
+/* ---- main ------------------------------------------------------------------ */
+.msa-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.msa-head { padding: 10px 14px 4px; }
+.msa-head h3 { margin: 0; font-size: 15px; }
+.msa-head p { margin: 2px 0 0; color: var(--text-dim); font-size: 12px; }
+.msa-tabs { display: flex; gap: 2px; padding: 6px 12px 0; border-bottom: 1px solid var(--border); flex: none; overflow-x: auto; }
+.msa-tab {
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: transparent;
+  color: var(--text-dim);
+  padding: 5px 12px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.msa-tab:hover { color: var(--text); }
+.msa-tab-active { background: var(--panel); border-color: var(--border); color: var(--text); margin-bottom: -1px; }
+.msa-tab-bad::after { content: ' ●'; color: var(--danger); }
+.msa-tabpanel { flex: 1; min-height: 0; overflow: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+
+/* ---- fields ---------------------------------------------------------------- */
+.msa-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 14px; }
+.msa-field { display: inline-flex; flex-direction: column; gap: 2px; min-width: 0; }
+.msa-field-wide { display: flex; width: 100%; }
+.msa-label { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.msa-control { display: inline-flex; align-items: center; gap: 4px; }
+.msa-input {
+  font: 13px var(--font);
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--input-bg, var(--panel));
+  color: var(--text);
+  min-width: 0;
+}
+.msa-num, .msa-mono, .msa-listinput { font-family: var(--mono); }
+.msa-listinput { width: 100%; resize: vertical; }
+.msa-select { font-family: var(--font); }
+.msa-input:focus { outline: 2px solid var(--focus-ring, var(--accent)); outline-offset: 0; }
+.msa-field-error .msa-input { border-color: var(--danger); }
+.msa-unit { color: var(--text-dim); font-size: 12px; }
+.msa-issues { display: flex; flex-direction: column; font-size: 11px; max-width: 260px; }
+.msa-field-wide .msa-issues { max-width: none; }
+.msa-error { color: var(--danger); }
+.msa-warning { color: var(--warn); }
+.msa-hint { color: var(--text-dim); font-size: 11px; }
+.msa-note { margin: 0; color: var(--text-dim); }
+.msa-check { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+
+.msa-group { margin: 0; padding: 8px 10px 10px; border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; gap: 8px; min-width: 0; position: relative; }
+.msa-group > legend { padding: 0 4px; font-size: 12px; font-weight: 600; }
+.msa-group-actions { position: absolute; right: 8px; top: -2px; }
+.msa-nested { border-left: 3px solid var(--accent-weak); padding-left: 10px; display: flex; flex-direction: column; gap: 8px; }
+.msa-generator { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 10px; padding: 6px; background: var(--panel-2); border-radius: var(--radius); }
+.msa-tolerance { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 10px; padding: 6px 0; border-bottom: 1px dashed var(--border); }
+.msa-tolerance:last-child { border-bottom: none; }
+.msa-outputs { display: flex; flex-wrap: wrap; gap: 4px 14px; max-height: 160px; overflow: auto; }
+
+/* ---- buttons --------------------------------------------------------------- */
+.msa-btn {
+  font: 13px var(--font);
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.msa-btn:hover:not(:disabled) { border-color: var(--accent); }
+.msa-btn:disabled { opacity: 0.5; cursor: default; }
+.msa-btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.msa-btn-icon { padding: 2px 7px; font-size: 12px; line-height: 1.2; }
+.msa-link { border: none; background: none; color: var(--accent); font: inherit; cursor: pointer; padding: 0; font-weight: 600; }
+.msa-btn:focus-visible, .msa-tab:focus-visible, .msa-nav-item:focus-visible, .msa-link:focus-visible { outline: 2px solid var(--focus-ring, var(--accent)); outline-offset: -1px; }
+
+/* ---- batch ----------------------------------------------------------------- */
+.msa-batch { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.msa-batch-item { border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 8px; display: flex; flex-direction: column; gap: 6px; }
+.msa-batch-bad { border-color: var(--danger); }
+.msa-batch-head { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.msa-batch-summary { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-dim); font-size: 12px; }
+
+/* ---- options / output / summary -------------------------------------------- */
+.msa-options { display: flex; flex-direction: column; gap: 10px; }
+.msa-options-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px 14px; }
+.msa-outputsel { display: flex; flex-direction: column; gap: 8px; }
+.msa-dual { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.msa-dual-col { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.msa-dual-col select { width: 100%; min-height: 220px; }
+.msa-dual-buttons { display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+.msa-summary h4 { margin: 4px 0; font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.msa-summary pre { margin: 0 0 6px; padding: 8px; background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius); font: 12px/1.5 var(--mono); white-space: pre-wrap; }
+.msa-problems { margin: 0; padding-left: 18px; }
+.msa-problems code { font-family: var(--mono); font-size: 11px; }
+
+.msa-footer { display: flex; align-items: center; gap: 8px; width: 100%; }
+.msa-status { flex: 1; font-size: 12px; color: var(--text-dim); }
+.msa-status.msa-error { color: var(--danger); }
+.msa-status.msa-warning { color: var(--warn); }
+
+@media (max-width: 720px) {
+  .msa-layout { grid-template-columns: 1fr; max-height: none; }
+  .msa-nav { border-right: none; border-bottom: 1px solid var(--border); max-height: 160px; }
+  .msa-dual { grid-template-columns: 1fr; }
+  .msa-dual-buttons { flex-direction: row; flex-wrap: wrap; }
+}
+
+/* ---- simulation tools: Output tab, profiles, user-defined analysis, dialogs ---------------- */
+.msa-kinds { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.msa-check { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; white-space: nowrap; }
+.msa-exprs { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--border); padding-top: 8px; }
+.msa-expr-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.msa-expr-list li { display: flex; align-items: center; gap: 6px; }
+.msa-expr-list code { font-family: var(--mono); font-size: 12px; }
+.msa-error-text { color: var(--danger); font-size: 12px; }
+.msa-profiles { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; padding: 6px 14px; border-bottom: 1px solid var(--border); background: var(--panel-2); }
+.msa-profiles .msa-select { max-width: 220px; }
+.msa-btn-small { padding: 2px 8px; font-size: 12px; }
+.msa-user-text { width: 100%; resize: vertical; min-height: 9em; }
+.msa-snippets { align-items: center; }
+.msa-sim-dialog { display: flex; flex-direction: column; gap: 10px; }
+.msa-sim-dialog h4 { margin: 4px 0 0; font-size: 13px; }
+.msa-assist-error { display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-left: 3px solid var(--danger); background: var(--panel-2); }
+.msa-assist-error code { font-family: var(--mono); font-size: 12px; white-space: pre-wrap; word-break: break-word; }
+.msa-assist-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 3px; }
+.msa-assist-list .msa-ok { color: var(--ok, #2b8a3e); }
+.msa-assist-list .msa-bad { color: var(--text-dim); text-decoration: line-through; }

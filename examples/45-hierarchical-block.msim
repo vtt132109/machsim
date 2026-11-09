@@ -1,0 +1,421 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Hierarchical amplifier block with a parameter",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p12",
+          "partId": "sources/ac-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "amplitude": "100m",
+            "freq": "1k",
+            "acmag": "1"
+          }
+        },
+        {
+          "id": "p15",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p16",
+          "partId": "hier:child1",
+          "refdes": "HB1",
+          "x": 300,
+          "y": 180,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "RF": "100k"
+          }
+        },
+        {
+          "id": "p17",
+          "partId": "hier:child1",
+          "refdes": "HB2",
+          "x": 300,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "RF": "47k"
+          }
+        },
+        {
+          "id": "p22",
+          "partId": "basic/resistor",
+          "refdes": "RL1",
+          "x": 480,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p25",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 480,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p26",
+          "partId": "basic/resistor",
+          "refdes": "RL2",
+          "x": 560,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p29",
+          "partId": "sources/ground",
+          "refdes": "GND3",
+          "x": 560,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p30",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 720,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "A",
+            "trig.level": "0",
+            "timebase": "500u",
+            "A.scale": "1",
+            "B.scale": "1"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w14",
+          "points": [
+            {
+              "x": 100,
+              "y": 280
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w24",
+          "points": [
+            {
+              "x": 480,
+              "y": 280
+            },
+            {
+              "x": 480,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w28",
+          "points": [
+            {
+              "x": 560,
+              "y": 280
+            },
+            {
+              "x": 560,
+              "y": 320
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l13",
+          "x": 100,
+          "y": 220,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 290,
+          "y": 200,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 290,
+          "y": 340,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 390,
+          "y": 200,
+          "name": "OUT1",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 390,
+          "y": 340,
+          "name": "OUT2",
+          "rotation": 0
+        },
+        {
+          "id": "l23",
+          "x": 480,
+          "y": 220,
+          "name": "OUT1",
+          "rotation": 0
+        },
+        {
+          "id": "l27",
+          "x": 560,
+          "y": 220,
+          "name": "OUT2",
+          "rotation": 0
+        },
+        {
+          "id": "l31",
+          "x": 670,
+          "y": 280,
+          "name": "OUT1",
+          "rotation": 0
+        },
+        {
+          "id": "l32",
+          "x": 710,
+          "y": 280,
+          "name": "OUT2",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 400,
+          "text": "Cùng một khối, hai bộ tham số: MachSim tạo hai mạch con trong netlist (Báo cáo > Netlist). Nhấp đúp khối để mở.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.000005,
+        "tstop": 0.005
+      },
+      "ac": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 10,
+        "fstart": 10,
+        "fstop": 100000
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Khối phân cấp “AMP” (khuếch đại đảo dùng op-amp lý tưởng) có tham số RF; HB1 dùng RF = 100k (Av = −10), HB2 dùng RF = 47k (Av = −4,7) cho cùng tín hiệu vào. The hierarchical block “AMP” (inverting amplifier with an ideal op-amp) has a parameter RF; HB1 uses RF = 100k (Av = −10), HB2 RF = 47k (Av = −4.7) on the same input.",
+  "children": [
+    {
+      "id": "child1",
+      "kind": "hierarchical",
+      "name": "AMP",
+      "sheets": [
+        {
+          "id": "child1_sheet1",
+          "name": "Sheet 1",
+          "parts": [
+            {
+              "id": "p1",
+              "partId": "analog/opamp-ideal-3",
+              "refdes": "U1",
+              "x": 300,
+              "y": 250,
+              "rotation": 0,
+              "mirror": false,
+              "params": {}
+            },
+            {
+              "id": "p2",
+              "partId": "basic/resistor",
+              "refdes": "R1",
+              "x": 200,
+              "y": 240,
+              "rotation": 0,
+              "mirror": false,
+              "params": {
+                "value": "10k"
+              }
+            },
+            {
+              "id": "p3",
+              "partId": "basic/resistor",
+              "refdes": "R2",
+              "x": 300,
+              "y": 160,
+              "rotation": 0,
+              "mirror": false,
+              "params": {
+                "value": "{RF}"
+              }
+            },
+            {
+              "id": "p8",
+              "partId": "sources/ground",
+              "refdes": "GND1",
+              "x": 250,
+              "y": 320,
+              "rotation": 0,
+              "mirror": false,
+              "params": {}
+            }
+          ],
+          "wires": [
+            {
+              "id": "w4",
+              "points": [
+                {
+                  "x": 230,
+                  "y": 240
+                },
+                {
+                  "x": 260,
+                  "y": 240
+                }
+              ]
+            },
+            {
+              "id": "w5",
+              "points": [
+                {
+                  "x": 240,
+                  "y": 240
+                },
+                {
+                  "x": 240,
+                  "y": 160
+                },
+                {
+                  "x": 270,
+                  "y": 160
+                }
+              ]
+            },
+            {
+              "id": "w6",
+              "points": [
+                {
+                  "x": 330,
+                  "y": 160
+                },
+                {
+                  "x": 360,
+                  "y": 160
+                },
+                {
+                  "x": 360,
+                  "y": 250
+                }
+              ]
+            },
+            {
+              "id": "w7",
+              "points": [
+                {
+                  "x": 260,
+                  "y": 260
+                },
+                {
+                  "x": 250,
+                  "y": 260
+                },
+                {
+                  "x": 250,
+                  "y": 320
+                }
+              ]
+            },
+            {
+              "id": "w10",
+              "points": [
+                {
+                  "x": 340,
+                  "y": 250
+                },
+                {
+                  "x": 400,
+                  "y": 250
+                }
+              ]
+            }
+          ],
+          "labels": [
+            {
+              "id": "l9",
+              "x": 170,
+              "y": 240,
+              "name": "IN",
+              "rotation": 0,
+              "kind": "hier"
+            },
+            {
+              "id": "l11",
+              "x": 400,
+              "y": 250,
+              "name": "OUT",
+              "rotation": 0,
+              "kind": "hier"
+            }
+          ],
+          "probes": [],
+          "notes": []
+        }
+      ],
+      "variables": {
+        "RF": "100k"
+      }
+    }
+  ]
+}

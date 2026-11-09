@@ -1,0 +1,164 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Blink an LED with an 8051",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "5"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 340,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "misc-digital/mcu-8051-p1",
+          "refdes": "U1",
+          "x": 360,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "program": "; Nhay LED o chan P1.0\n        ORG  0\nMAIN:   CPL  P1.0          ; dao trang thai chan\n        ACALL DELAY\n        SJMP MAIN\n\nDELAY:  MOV  R7,#200       ; 200 x 503 chu ky may = 100600 us\nD1:     MOV  R6,#250\nD2:     DJNZ R6,D2\n        DJNZ R7,D1\n        RET\n        END",
+            "fosc": "12M"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 560,
+          "y": 180,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p7",
+          "partId": "diodes/led-red",
+          "refdes": "LED1",
+          "x": 660,
+          "y": 240,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 100,
+              "y": 290
+            },
+            {
+              "x": 100,
+              "y": 340
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l4",
+          "x": 100,
+          "y": 230,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 530,
+          "y": 180,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 590,
+          "y": 180,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 660,
+          "y": 210,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 660,
+          "y": 270,
+          "name": "P1_0",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 430,
+          "y": 190,
+          "name": "P1_0",
+          "rotation": 0
+        }
+      ],
+      "probes": [
+        {
+          "id": "pr13",
+          "kind": "voltage",
+          "x": 430,
+          "y": 190,
+          "name": "P1.0",
+          "color": "#e53935"
+        }
+      ],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 400,
+          "text": "Chân P1.0 ở mức 0 thì LED sáng: dòng đi từ +5 V qua 330 Ω và LED vào chân. Mở Trình soạn mã (nhấp đúp vào U1) để sửa chương trình, chạy từng lệnh và xem thanh ghi.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.001,
+        "tstop": 1
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Vi điều khiển 8051 nháy LED ở chân P1.0 bằng vòng lặp trễ. Chu kỳ máy 1 µs (thạch anh 12 MHz); vòng trễ mất 200 × 503 = 100 600 chu kỳ ≈ 100,6 ms, nên LED đổi trạng thái mỗi ≈ 100,6 ms (chu kỳ ≈ 201 ms, ≈ 4,97 Hz). LED nối từ +5 V qua 330 Ω xuống chân, vì chân 8051 hút dòng tốt nhưng đẩy dòng rất kém. Bấm Chạy (F5); nhấp đúp vào U1 để mở Trình soạn mã. An 8051 blinks an LED on P1.0 with a delay loop. The machine cycle is 1 µs (12 MHz crystal); the delay takes 200 x 503 = 100,600 cycles ~ 100.6 ms, so the LED changes every ~100.6 ms (period ~201 ms, ~4.97 Hz). The LED hangs from +5 V through 330 Ω to the pin, because an 8051 pin sinks current well but sources very little. Press Run (F5); double-click U1 to open the code editor."
+}

@@ -1,0 +1,27 @@
+/* Circuit wizard dialogs. Prefix: msw-. Uses shared tokens from src/ui/theme.css. */
+.msw-body { display: flex; gap: 14px; align-items: flex-start; }
+.msw-form { flex: 0 0 300px; display: flex; flex-direction: column; gap: 6px; max-height: 70vh; overflow: auto; padding-right: 4px; }
+.msw-output { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 8px; max-height: 70vh; overflow: auto; }
+.msw-results { display: flex; flex-direction: column; gap: 8px; }
+.msw-preview { border: 1px solid var(--border); border-radius: 4px; background: #fff; padding: 4px; max-height: 300px; overflow: auto; }
+.msw-preview img { display: block; width: 100%; height: auto; }
+.msw-tables { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+.msw-table { border-collapse: collapse; font-size: var(--font-size-small); }
+.msw-table caption { text-align: left; font-weight: 600; padding-bottom: 2px; }
+.msw-table th, .msw-table td { padding: 2px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+.msw-num { font-family: var(--mono); white-space: nowrap; }
+.msw-explain { margin: 0; padding-left: 20px; font-size: var(--font-size-small); line-height: 1.5; }
+.msw-warnings { margin: 0; padding: 6px 10px 6px 24px; border-radius: 4px; background: var(--warning-bg, #fff4e5); color: var(--warning-text, #8a4b00); font-size: var(--font-size-small); }
+.msw-error { margin: 0; padding: 6px 10px; border-radius: 4px; background: var(--error-bg, #fdecea); color: var(--error-text, #a1261b); }
+.msw-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.msw-chips .is-on { outline: 2px solid var(--accent); }
+.msw-solve { margin: 4px 0; font-family: var(--mono); }
+.msw-xsect { width: 100%; max-width: 360px; height: auto; }
+.msw-xs-dielectric { fill: #c8d7a6; stroke: #8fa36a; stroke-width: 0.5; }
+.msw-xs-cover { fill: #d9e4bf; }
+.msw-xs-copper { fill: #c87533; }
+.msw-xs-label { font: 10px var(--font); fill: var(--text); }
+@media (max-width: 900px) {
+  .msw-body { flex-direction: column; }
+  .msw-form { flex: 1 1 auto; max-height: none; width: 100%; }
+}

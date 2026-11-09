@@ -1,0 +1,372 @@
+/* Virtual breadboard view. Uses the MachSim design tokens (src/ui/theme.css) with fallbacks. */
+.mbb {
+  --mbb-bg: var(--bg, #eef0f3);
+  --mbb-panel: var(--panel, #ffffff);
+  --mbb-panel-2: var(--panel-2, #f6f7f9);
+  --mbb-border: var(--border, #d5d9e0);
+  --mbb-text: var(--text, #1d2330);
+  --mbb-dim: var(--text-dim, #5b6475);
+  --mbb-accent: var(--accent, #1f6feb);
+  --mbb-accent-weak: var(--accent-weak, #dbe8fd);
+  --mbb-danger: var(--danger, #c62828);
+  --mbb-warn: var(--warn, #b26a00);
+  --mbb-ok: var(--ok, #2e7d32);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+  min-height: 420px;
+  background: var(--mbb-bg);
+  color: var(--mbb-text);
+  font-family: var(--font, 'Segoe UI', system-ui, sans-serif);
+  font-size: 13px;
+  overflow: hidden;
+}
+.mbb button,
+.mbb select {
+  font: inherit;
+  color: inherit;
+}
+.mbb-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: var(--mbb-panel);
+  border-bottom: 1px solid var(--mbb-border);
+}
+.mbb-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 0 4px;
+  background: var(--mbb-border);
+}
+.mbb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border: 1px solid var(--mbb-border);
+  border-radius: var(--radius, 4px);
+  background: var(--mbb-panel-2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mbb-btn:hover:not(:disabled) {
+  border-color: var(--mbb-accent);
+}
+.mbb-btn:focus-visible,
+.mbb-swatch:focus-visible,
+.mbb-item:focus-visible,
+.mbb-stage:focus-visible {
+  outline: 2px solid var(--mbb-accent);
+  outline-offset: 1px;
+}
+.mbb-btn[aria-pressed='true'] {
+  background: var(--mbb-accent-weak);
+  border-color: var(--mbb-accent);
+  color: var(--mbb-accent);
+}
+.mbb-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.mbb-btn.mbb-primary {
+  background: var(--mbb-accent);
+  border-color: var(--mbb-accent);
+  color: #fff;
+}
+.mbb-swatches {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+.mbb-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--mbb-panel);
+  box-shadow: 0 0 0 1px var(--mbb-border);
+  cursor: pointer;
+  padding: 0;
+}
+.mbb-swatch[aria-pressed='true'] {
+  box-shadow: 0 0 0 2px var(--mbb-accent);
+}
+.mbb-color-input {
+  width: 24px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.mbb-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.mbb-badge-ok {
+  background: color-mix(in srgb, var(--mbb-ok) 15%, transparent);
+  color: var(--mbb-ok);
+}
+.mbb-badge-bad {
+  background: color-mix(in srgb, var(--mbb-danger) 15%, transparent);
+  color: var(--mbb-danger);
+}
+.mbb-badge-run {
+  background: color-mix(in srgb, var(--mbb-accent) 15%, transparent);
+  color: var(--mbb-accent);
+}
+.mbb-main {
+  display: grid;
+  grid-template-columns: clamp(150px, 20%, 220px) 1fr auto;
+  min-height: 0;
+  position: relative;
+}
+.mbb {
+  container-type: inline-size;
+}
+/* narrow host (e.g. a 1024 px window with side panels): the check / guide panel floats over the
+   3D stage instead of taking a column, so the stage keeps most of the width */
+@container (max-width: 820px) {
+  .mbb-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(300px, 62cqw);
+    z-index: 5;
+    box-shadow: -6px 0 18px rgba(0, 0, 0, 0.25);
+  }
+}
+@container (max-width: 560px) {
+  .mbb-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(64px, 26%) 1fr;
+  }
+  .mbb-side {
+    border-right: 0;
+    border-bottom: 1px solid var(--mbb-border);
+  }
+}
+.mbb-side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+  background: var(--mbb-panel);
+  border-right: 1px solid var(--mbb-border);
+}
+.mbb-panel {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--mbb-panel);
+  border-left: 1px solid var(--mbb-border);
+}
+.mbb-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--mbb-border);
+}
+.mbb-panel-head h2,
+.mbb-side h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.mbb-side h2 {
+  padding: 8px 10px 4px;
+}
+.mbb-scroll {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  padding: 6px;
+}
+.mbb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mbb-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 8px;
+  border: 1px solid var(--mbb-border);
+  border-radius: var(--radius, 4px);
+  background: var(--mbb-panel-2);
+  cursor: pointer;
+}
+.mbb-item[aria-pressed='true'],
+.mbb-item[aria-current='step'] {
+  border-color: var(--mbb-accent);
+  background: var(--mbb-accent-weak);
+}
+.mbb-item small {
+  display: block;
+  color: var(--mbb-dim);
+  margin-top: 2px;
+}
+.mbb-pins {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 4px;
+}
+.mbb-pin {
+  padding: 1px 7px;
+  font-size: 12px;
+}
+.mbb-empty {
+  padding: 4px 10px 10px;
+  color: var(--mbb-dim);
+}
+.mbb-stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  outline: none;
+  background: #dfe4ea;
+}
+.mbb-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background: rgba(20, 24, 32, 0.55);
+  color: #fff;
+  font-size: 14px;
+  pointer-events: none;
+}
+.mbb-hover {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  max-width: min(460px, calc(100% - 16px));
+  padding: 6px 9px;
+  border-radius: var(--radius, 4px);
+  background: rgba(255, 255, 255, 0.92);
+  color: #1d2330;
+  box-shadow: var(--shadow, 0 2px 10px rgba(16, 24, 40, 0.15));
+  font-size: 12px;
+  line-height: 1.45;
+  pointer-events: none;
+}
+.mbb-hover b {
+  font-weight: 600;
+}
+.mbb-status {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 4px 10px;
+  border-top: 1px solid var(--mbb-border);
+  background: var(--mbb-panel);
+  color: var(--mbb-dim);
+  min-height: 24px;
+}
+.mbb-status .mbb-msg {
+  color: var(--mbb-warn);
+  font-weight: 600;
+}
+.mbb-issue {
+  border-left: 4px solid var(--mbb-danger);
+}
+.mbb-issue.mbb-warning {
+  border-left-color: var(--mbb-warn);
+}
+.mbb-issue.mbb-info {
+  border-left-color: var(--mbb-accent);
+}
+.mbb-issue b {
+  display: block;
+  margin-bottom: 2px;
+}
+.mbb-issue p {
+  margin: 2px 0;
+  line-height: 1.45;
+}
+.mbb-issue .mbb-fix {
+  color: var(--mbb-ok);
+}
+.mbb-section-title {
+  margin: 10px 4px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mbb-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.mbb-guide-nav {
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-top: 1px solid var(--mbb-border);
+}
+.mbb-step-text {
+  line-height: 1.5;
+  margin: 2px 0 0;
+}
+.mbb-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.mbb-field select {
+  padding: 3px 4px;
+  border: 1px solid var(--mbb-border);
+  border-radius: var(--radius, 4px);
+  background: var(--mbb-panel-2);
+}
+.mbb-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .mbb-main {
+    grid-template-columns: 170px 1fr auto;
+  }
+  .mbb-panel {
+    width: 260px;
+  }
+}
+
+/* narrow host: toolbar buttons show only their symbol (the text stays as tooltip and for screen
+   readers), so the toolbar takes one or two rows and the 3D stage keeps the height */
+@container (max-width: 900px) {
+  .mbb-btn-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .mbb-toolbar {
+    padding: 4px 6px;
+    gap: 3px;
+  }
+  .mbb-btn {
+    padding: 3px 7px;
+  }
+}

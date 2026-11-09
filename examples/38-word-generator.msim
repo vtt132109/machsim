@@ -1,0 +1,163 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Word generator and logic analyzer",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "instruments/word-generator",
+          "refdes": "XWG1",
+          "x": 150,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "freq": "1k",
+            "bits": "4"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "instruments/logic-analyzer",
+          "refdes": "XLA1",
+          "x": 520,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "clockrate": "10k",
+            "pre": "20",
+            "post": "180"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "indicators/hex-display",
+          "refdes": "U1",
+          "x": 340,
+          "y": 420,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [],
+      "labels": [
+        {
+          "id": "l4",
+          "x": 190,
+          "y": 170,
+          "name": "B0",
+          "rotation": 0
+        },
+        {
+          "id": "l5",
+          "x": 480,
+          "y": 170,
+          "name": "B0",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 300,
+          "y": 390,
+          "name": "B0",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 190,
+          "y": 180,
+          "name": "B1",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 480,
+          "y": 180,
+          "name": "B1",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 300,
+          "y": 410,
+          "name": "B1",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 190,
+          "y": 190,
+          "name": "B2",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 480,
+          "y": 190,
+          "name": "B2",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 300,
+          "y": 430,
+          "name": "B2",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 190,
+          "y": 200,
+          "name": "B3",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 480,
+          "y": 200,
+          "name": "B3",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 300,
+          "y": 450,
+          "name": "B3",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 520,
+          "text": "Mỗi bit là một đường trên XLA1: b0 đổi mỗi 1 ms, b1 mỗi 2 ms … (mã nhị phân của 0…F). Mở XWG1 để sửa dãy từ.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.00001,
+        "tstop": 0.02
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Máy phát từ XWG1 phát dãy 0…F (4 bit) ở 1 kHz; máy phân tích logic XLA1 vẽ giản đồ thời gian, màn hình hex hiện từng từ. Word generator XWG1 outputs 0…F (4 bits) at 1 kHz; logic analyzer XLA1 draws the timing diagram and the hex display shows each word."
+}

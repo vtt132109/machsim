@@ -1,0 +1,166 @@
+/* MachSim design tokens (shared by all UI modules). Light + dark. */
+:root {
+  --bg: #eef0f3;
+  --panel: #ffffff;
+  --panel-2: #f6f7f9;
+  --border: #d5d9e0;
+  --text: #1d2330;
+  --text-dim: #5b6475;
+  --accent: #1f6feb;
+  --accent-weak: #dbe8fd;
+  --danger: #c62828;
+  --warn: #b26a00;
+  --ok: #2e7d32;
+  --canvas: #ffffff;
+  --grid: #d9dde4;
+  --wire: #1a4fd6;
+  --wire-selected: #e8590c;
+  --part: #1d2330;
+  --part-selected: #e8590c;
+  --pin: #c62828;
+  --junction: #1a4fd6;
+  --label: #6a1b9a;
+  --plot-bg: #0f1420;
+  --plot-grid: #2a3245;
+  --plot-text: #c9d1e3;
+  --trace-1: #ffd43b;
+  --trace-2: #4dabf7;
+  --trace-3: #ff6b6b;
+  --trace-4: #69db7c;
+  --trace-5: #da77f2;
+  --trace-6: #ffa94d;
+  --trace-7: #3bc9db;
+  --trace-8: #f783ac;
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: 'Cascadia Mono', Consolas, 'Courier New', monospace;
+  --radius: 4px;
+  --shadow: 0 2px 10px rgba(16, 24, 40, 0.15);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #161a22;
+    --panel: #1e232d;
+    --panel-2: #252b37;
+    --border: #353d4c;
+    --text: #e3e7ef;
+    --text-dim: #9aa3b5;
+    --accent: #4c8dff;
+    --accent-weak: #22324f;
+    --canvas: #12161d;
+    --grid: #262d3a;
+    --wire: #6ea8ff;
+    --part: #dfe5f0;
+    --pin: #ff6b6b;
+    --junction: #6ea8ff;
+    --label: #d0a2f7;
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --bg: #161a22;
+  --panel: #1e232d;
+  --panel-2: #252b37;
+  --border: #353d4c;
+  --text: #e3e7ef;
+  --text-dim: #9aa3b5;
+  --accent: #4c8dff;
+  --accent-weak: #22324f;
+  --canvas: #12161d;
+  --grid: #262d3a;
+  --wire: #6ea8ff;
+  --part: #dfe5f0;
+  --pin: #ff6b6b;
+  --junction: #6ea8ff;
+  --label: #d0a2f7;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--text); font: 13px/1.4 var(--font); }
+
+/* ------------------------------------------------------------------------
+ * Shell / editor tokens (added by the editor team; existing tokens unchanged)
+ * ---------------------------------------------------------------------- */
+:root {
+  --hover: rgba(29, 35, 48, 0.07);
+  --pressed: rgba(29, 35, 48, 0.13);
+  --focus-ring: #1f6feb;
+  --input-bg: #ffffff;
+  --chrome: #e4e7ec;
+  --chrome-text: #1d2330;
+  --menu-bg: #ffffff;
+  --statusbar: #1f3a5f;
+  --statusbar-text: #e8eef8;
+  --selection-fill: rgba(232, 89, 12, 0.08);
+  --band-inside: rgba(31, 111, 235, 0.12);
+  --band-crossing: rgba(46, 125, 50, 0.12);
+  --ghost: #1f6feb;
+  --pin-hover: #e8590c;
+  --note-text: #3b4456;
+  --erc-error: #c62828;
+  --erc-warning: #b26a00;
+  --glow: #ffd43b;
+  --row-alt: #f8f9fb;
+  --font-size-small: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --hover: rgba(227, 231, 239, 0.08);
+    --pressed: rgba(227, 231, 239, 0.15);
+    --focus-ring: #6ea8ff;
+    --input-bg: #161a22;
+    --chrome: #1a1f28;
+    --chrome-text: #e3e7ef;
+    --menu-bg: #252b37;
+    --statusbar: #14263f;
+    --statusbar-text: #cfdcf0;
+    --selection-fill: rgba(255, 146, 77, 0.1);
+    --band-inside: rgba(76, 141, 255, 0.16);
+    --band-crossing: rgba(105, 219, 124, 0.14);
+    --ghost: #6ea8ff;
+    --pin-hover: #ff922b;
+    --note-text: #c3cad8;
+    --erc-error: #ff6b6b;
+    --erc-warning: #ffa94d;
+    --row-alt: #212733;
+  }
+}
+:root[data-theme='dark'] {
+  --hover: rgba(227, 231, 239, 0.08);
+  --pressed: rgba(227, 231, 239, 0.15);
+  --focus-ring: #6ea8ff;
+  --input-bg: #161a22;
+  --chrome: #1a1f28;
+  --chrome-text: #e3e7ef;
+  --menu-bg: #252b37;
+  --statusbar: #14263f;
+  --statusbar-text: #cfdcf0;
+  --selection-fill: rgba(255, 146, 77, 0.1);
+  --band-inside: rgba(76, 141, 255, 0.16);
+  --band-crossing: rgba(105, 219, 124, 0.14);
+  --ghost: #6ea8ff;
+  --pin-hover: #ff922b;
+  --note-text: #c3cad8;
+  --erc-error: #ff6b6b;
+  --erc-warning: #ffa94d;
+  --row-alt: #212733;
+}
+:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+
+/* Grid dot tokens (editor; added — existing tokens unchanged) */
+:root {
+  --grid-dot: #b4bbc7;
+  --grid-dot-major: #8d96a6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --grid-dot: #3b4456;
+    --grid-dot-major: #5a6579;
+  }
+}
+:root[data-theme='dark'] {
+  --grid-dot: #3b4456;
+  --grid-dot-major: #5a6579;
+}

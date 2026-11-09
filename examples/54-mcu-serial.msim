@@ -1,0 +1,140 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "8051 sends Hello on the serial port",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "5"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 340,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "misc-digital/mcu-8051-p1",
+          "refdes": "U1",
+          "x": 380,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "program": "; Gui \"Hello MachSim\" roi phat lai nhung gi nhan duoc, 9600 baud\n        ORG  0\n        MOV  TMOD,#20h      ; Timer 1 che do 2 (tu nap lai)\n        MOV  TH1,#0FDh      ; 9600 baud voi thach anh 11,0592 MHz\n        MOV  TL1,#0FDh\n        SETB TR1\n        MOV  SCON,#50h      ; UART 8 bit, cho phep nhan\n        MOV  DPTR,#MSG\nSEND:   CLR  A\n        MOVC A,@A+DPTR\n        JZ   ECHO           ; ket thuc chuoi\n        ACALL PUTC\n        INC  DPTR\n        SJMP SEND\n\nECHO:   JNB  RI,ECHO        ; cho mot byte tu cua so noi tiep\n        CLR  RI\n        MOV  A,SBUF\n        ACALL PUTC\n        SJMP ECHO\n\nPUTC:   MOV  SBUF,A\nTXW:    JNB  TI,TXW\n        CLR  TI\n        RET\n\nMSG:    DB   'Hello MachSim',0Dh,0Ah,0\n        END",
+            "fosc": "11.0592M"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 620,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "4.7k"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 100,
+              "y": 290
+            },
+            {
+              "x": 100,
+              "y": 340
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l4",
+          "x": 100,
+          "y": 230,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 310,
+          "y": 250,
+          "name": "TXD",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 590,
+          "y": 220,
+          "name": "TXD",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 650,
+          "y": 220,
+          "name": "VCC",
+          "rotation": 0
+        }
+      ],
+      "probes": [
+        {
+          "id": "pr10",
+          "kind": "voltage",
+          "x": 310,
+          "y": 250,
+          "name": "TXD",
+          "color": "#e53935"
+        }
+      ],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 400,
+          "text": "Điện trở 4,7 kΩ treo chân TXD lên +5 V (chân 8051 chỉ hút dòng) và là tải để xem dạng sóng trên chân TXD bằng đầu dò. Cửa sổ nối tiếp của Trình soạn mã đọc trực tiếp thanh ghi SBUF, nên không cần nối dây gì thêm.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.00005,
+        "tstop": 0.02
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Vi điều khiển 8051 gửi chữ \"Hello MachSim\" ra cổng nối tiếp ở 9600 baud, rồi lặp lại sau mỗi lần nhấn. Thạch anh 11,0592 MHz với TH1 = 0FDh (Timer 1 chế độ 2) cho đúng 9600 baud: thời gian một bit = 32 × 3 = 96 chu kỳ máy = 104,2 µs. Mở Trình soạn mã (nhấp đúp vào U1), chọn thẻ Cửa sổ nối tiếp rồi bấm Chạy: chữ hiện dần ra. Gõ vào ô dưới và bấm Gửi để gửi ký tự về vi điều khiển — chương trình phát lại (echo) những gì nhận được. An 8051 sends \"Hello MachSim\" on the serial port at 9600 baud and then echoes whatever it receives. An 11.0592 MHz crystal with TH1 = 0FDh (timer 1 in mode 2) gives exactly 9600 baud: one bit lasts 32 x 3 = 96 machine cycles = 104.2 us. Open the code editor (double-click U1), choose the Serial terminal tab and press Run: the text appears. Type in the box and press Send to send characters back — the program echoes them."
+}

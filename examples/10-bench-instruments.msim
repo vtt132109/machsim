@@ -1,0 +1,287 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Bench instruments",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "instruments/bench-generator",
+          "refdes": "XAG1",
+          "x": 160,
+          "y": 160,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "waveform": "sine",
+            "freq": "1k",
+            "amplitude": "2"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 160,
+          "y": 190,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 380,
+          "y": 140,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 460,
+          "y": 200,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100n"
+          }
+        },
+        {
+          "id": "p7",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 460,
+          "y": 230,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p11",
+          "partId": "instruments/bench-generator",
+          "refdes": "XAG2",
+          "x": 160,
+          "y": 360,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "waveform": "square",
+            "freq": "2k",
+            "amplitude": "5",
+            "offset": "2.5"
+          }
+        },
+        {
+          "id": "p13",
+          "partId": "sources/ground",
+          "refdes": "GND3",
+          "x": 160,
+          "y": 390,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p14",
+          "partId": "instruments/bench-scope",
+          "refdes": "XDS1",
+          "x": 720,
+          "y": 140,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "timebase": "500u",
+            "A.scale": "500m",
+            "B.scale": "500m"
+          }
+        },
+        {
+          "id": "p17",
+          "partId": "instruments/bench-multimeter",
+          "refdes": "XDM1",
+          "x": 720,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "function": "acv",
+            "math": "stats"
+          }
+        },
+        {
+          "id": "p19",
+          "partId": "sources/ground",
+          "refdes": "GND4",
+          "x": 720,
+          "y": 350,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p20",
+          "partId": "instruments/mixed-signal-scope",
+          "refdes": "XMS1",
+          "x": 1020,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "timebase": "500u",
+            "A.scale": "1",
+            "B.scale": "2",
+            "trig.source": "B",
+            "trig.level": "2.5"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 410,
+              "y": 140
+            },
+            {
+              "x": 460,
+              "y": 140
+            },
+            {
+              "x": 460,
+              "y": 170
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l2",
+          "x": 140,
+          "y": 190,
+          "name": "SIG",
+          "rotation": 0
+        },
+        {
+          "id": "l3",
+          "x": 180,
+          "y": 190,
+          "name": "SYNC",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 350,
+          "y": 140,
+          "name": "SIG",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 440,
+          "y": 140,
+          "name": "FILT",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 140,
+          "y": 390,
+          "name": "CLK",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 670,
+          "y": 170,
+          "name": "SIG",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 690,
+          "y": 170,
+          "name": "FILT",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 700,
+          "y": 350,
+          "name": "FILT",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 990,
+          "y": 400,
+          "name": "FILT",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 1010,
+          "y": 400,
+          "name": "CLK",
+          "rotation": 0
+        },
+        {
+          "id": "l23",
+          "x": 970,
+          "y": 220,
+          "name": "CLK",
+          "rotation": 0
+        },
+        {
+          "id": "l24",
+          "x": 970,
+          "y": 230,
+          "name": "SYNC",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 470,
+          "text": "RC: fc = 1/(2π·1k·100n) ≈ 1,59 kHz → ở 1 kHz ra ≈ 0,85 × vào. Ngõ ra máy phát có 50 Ω nên đỉnh-đỉnh ở SIG hơi dưới 2 V khi có tải (giống máy thật). Thử: bấm “Tự động cài đặt”, chọn FFT, hoặc đổi “Tải” của XAG1 sang 50 Ω.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.000005,
+        "tstop": 0.01
+      },
+      "ac": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 20,
+        "fstart": 10,
+        "fstop": 1000000
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Máy phát sóng XAG1 (sin 1 kHz, 2 Vpp) cấp cho mạch lọc RC; dao động ký số XDS1 so sánh vào / ra và tự đo tần số, đỉnh-đỉnh, RMS; đồng hồ 6½ chữ số XDM1 đo điện áp AC ngõ ra kèm thống kê; dao động ký hỗn hợp XMS1 xem cùng lúc tín hiệu tương tự và hai đường logic (xung nhịp XAG2 và ngõ SYNC). Generator XAG1 (1 kHz sine, 2 Vpp) drives an RC filter; the storage scope XDS1 compares input and output and measures frequency, peak-to-peak and RMS; the 6½-digit multimeter XDM1 reads the AC output with statistics; the mixed-signal scope XMS1 shows analog signals and two logic lines (clock XAG2 and the SYNC output) together."
+}

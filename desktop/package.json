@@ -1,0 +1,63 @@
+{
+  "name": "machsim-desktop",
+  "productName": "MachSim",
+  "version": "0.1.0",
+  "description": "MachSim - phần mềm thiết kế và mô phỏng mạch điện tử (desktop)",
+  "author": "MachSim",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.cjs",
+  "scripts": {
+    "sync": "node scripts/sync-app.cjs",
+    "start": "npm run sync && node scripts/run-local.cjs",
+    "dev": "node scripts/run-local.cjs --dev",
+    "dist": "npm run sync && electron-builder --win nsis portable",
+    "dist:dir": "npm run sync && electron-builder --win dir",
+    "smoke": "node scripts/run-local.cjs --smoke"
+  },
+  "devDependencies": {
+    "electron": "44.9.2",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "app.machsim.desktop",
+    "productName": "MachSim",
+    "copyright": "MachSim",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "app/**/*",
+      "package.json"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "msim",
+        "name": "MachSim Design",
+        "description": "MachSim circuit design",
+        "role": "Editor"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MachSim"
+    },
+    "portable": {
+      "artifactName": "MachSim-${version}-portable.exe"
+    }
+  }
+}

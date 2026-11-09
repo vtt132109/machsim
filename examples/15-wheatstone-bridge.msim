@@ -1,0 +1,282 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Wheatstone bridge",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 250,
+          "y": 200,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 250,
+          "y": 300,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/resistor",
+          "refdes": "R3",
+          "x": 400,
+          "y": 200,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "1k"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "basic/resistor",
+          "refdes": "R4",
+          "x": 400,
+          "y": 300,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "1.2k"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "indicators/voltmeter",
+          "refdes": "U1",
+          "x": 325,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p7",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 350,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 100,
+              "y": 220
+            },
+            {
+              "x": 100,
+              "y": 150
+            },
+            {
+              "x": 250,
+              "y": 150
+            },
+            {
+              "x": 250,
+              "y": 170
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 250,
+              "y": 150
+            },
+            {
+              "x": 400,
+              "y": 150
+            },
+            {
+              "x": 400,
+              "y": 170
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 250,
+              "y": 230
+            },
+            {
+              "x": 250,
+              "y": 270
+            }
+          ]
+        },
+        {
+          "id": "w11",
+          "points": [
+            {
+              "x": 400,
+              "y": 230
+            },
+            {
+              "x": 400,
+              "y": 270
+            }
+          ]
+        },
+        {
+          "id": "w12",
+          "points": [
+            {
+              "x": 250,
+              "y": 330
+            },
+            {
+              "x": 250,
+              "y": 350
+            },
+            {
+              "x": 100,
+              "y": 350
+            }
+          ]
+        },
+        {
+          "id": "w13",
+          "points": [
+            {
+              "x": 400,
+              "y": 330
+            },
+            {
+              "x": 400,
+              "y": 350
+            },
+            {
+              "x": 250,
+              "y": 350
+            }
+          ]
+        },
+        {
+          "id": "w14",
+          "points": [
+            {
+              "x": 100,
+              "y": 280
+            },
+            {
+              "x": 100,
+              "y": 350
+            }
+          ]
+        },
+        {
+          "id": "w15",
+          "points": [
+            {
+              "x": 250,
+              "y": 250
+            },
+            {
+              "x": 295,
+              "y": 250
+            }
+          ]
+        },
+        {
+          "id": "w16",
+          "points": [
+            {
+              "x": 355,
+              "y": 250
+            },
+            {
+              "x": 400,
+              "y": 250
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l17",
+          "x": 250,
+          "y": 250,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 400,
+          "y": 250,
+          "name": "B",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 410,
+          "text": "Thử đổi R4 thành 1k: vôn kế U1 chỉ 0 V (cầu cân bằng). Cầu dùng để đo điện trở chưa biết chính xác.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "op",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "paramsweep": {
+        "type": "paramsweep",
+        "target": "R4",
+        "param": "value",
+        "values": [
+          800,
+          1000,
+          1200
+        ],
+        "base": {
+          "type": "op"
+        }
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Cầu Wheatstone: khi R1/R2 = R3/R4 cầu cân bằng (0 V). Với R4 = 1,2k: V(A,B) = 10·(1,2/2,2 − 0,5) ≈ −0,455 V. Wheatstone bridge: balanced (0 V) when R1/R2 = R3/R4; with R4 = 1.2k, V(A,B) ≈ −0.455 V."
+}

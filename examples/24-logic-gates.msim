@@ -1,0 +1,224 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Basic logic gates",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/logic-switch",
+          "refdes": "S1",
+          "x": 100,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "state": "true",
+            "key": "A"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/logic-switch",
+          "refdes": "S2",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "state": "false",
+            "key": "B"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "misc-digital/and2",
+          "refdes": "U1",
+          "x": 300,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p8",
+          "partId": "indicators/probe-red",
+          "refdes": "X1",
+          "x": 400,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p10",
+          "partId": "misc-digital/or2",
+          "refdes": "U2",
+          "x": 300,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p13",
+          "partId": "indicators/probe-red",
+          "refdes": "X2",
+          "x": 400,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p15",
+          "partId": "misc-digital/xor2",
+          "refdes": "U3",
+          "x": 300,
+          "y": 350,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p18",
+          "partId": "indicators/probe-red",
+          "refdes": "X3",
+          "x": 400,
+          "y": 350,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 330,
+              "y": 150
+            },
+            {
+              "x": 400,
+              "y": 150
+            }
+          ]
+        },
+        {
+          "id": "w14",
+          "points": [
+            {
+              "x": 330,
+              "y": 250
+            },
+            {
+              "x": 400,
+              "y": 250
+            }
+          ]
+        },
+        {
+          "id": "w19",
+          "points": [
+            {
+              "x": 330,
+              "y": 350
+            },
+            {
+              "x": 400,
+              "y": 350
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l3",
+          "x": 140,
+          "y": 150,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l4",
+          "x": 140,
+          "y": 300,
+          "name": "B",
+          "rotation": 0
+        },
+        {
+          "id": "l6",
+          "x": 270,
+          "y": 140,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 270,
+          "y": 160,
+          "name": "B",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 270,
+          "y": 240,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 270,
+          "y": 260,
+          "name": "B",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 270,
+          "y": 340,
+          "name": "A",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 270,
+          "y": 360,
+          "name": "B",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 430,
+          "text": "AND: 1 khi cả A và B là 1. OR: 1 khi ít nhất một đầu vào là 1. XOR: 1 khi A khác B.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.000001,
+        "tstop": 0.001
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Hai công tắc logic A, B (phím A, B) điều khiển cổng AND, OR, XOR; đèn cho biết đầu ra 1 hay 0. Nhấn Chạy rồi bấm phím A / B. Two logic switches A and B (keys A, B) drive AND, OR and XOR gates; the lights show whether each output is 1 or 0. Press Run, then the A / B keys."
+}

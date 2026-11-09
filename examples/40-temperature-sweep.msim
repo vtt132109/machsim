@@ -1,0 +1,176 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Temperature sweep of a diode",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "5"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 200,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "4.7k"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "diodes/1n4148",
+          "refdes": "D1",
+          "x": 300,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p8",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w4",
+          "points": [
+            {
+              "x": 100,
+              "y": 220
+            },
+            {
+              "x": 100,
+              "y": 200
+            },
+            {
+              "x": 170,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w5",
+          "points": [
+            {
+              "x": 230,
+              "y": 200
+            },
+            {
+              "x": 300,
+              "y": 200
+            },
+            {
+              "x": 300,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 100,
+              "y": 280
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 100,
+              "y": 320
+            },
+            {
+              "x": 300,
+              "y": 320
+            },
+            {
+              "x": 300,
+              "y": 280
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l9",
+          "x": 260,
+          "y": 200,
+          "name": "VD",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 380,
+          "text": "Ở cùng dòng ≈ 1 mA, V(VD) thấp hơn khoảng 0,2 V khi nóng thêm 100 °C: diode dùng được làm cảm biến nhiệt.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tempsweep",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "dc": {
+        "type": "dc",
+        "src": "V1",
+        "start": 0,
+        "stop": 5,
+        "step": 0.05
+      },
+      "tempsweep": {
+        "type": "tempsweep",
+        "temps": [
+          -25,
+          25,
+          75,
+          125
+        ],
+        "base": {
+          "type": "dc",
+          "src": "V1",
+          "start": 0,
+          "stop": 5,
+          "step": 0.05
+        }
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Quét nhiệt độ: điện áp thuận của diode 1N4148 giảm khoảng 2 mV mỗi °C; đặc tuyến DC được vẽ ở −25, 25, 75 và 125 °C. Temperature sweep: the forward voltage of a 1N4148 drops about 2 mV per °C; the DC curve is drawn at −25, 25, 75 and 125 °C."
+}

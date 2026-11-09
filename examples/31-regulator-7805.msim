@@ -1,0 +1,256 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "7805 linear voltage regulator",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "12"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "power/7805",
+          "refdes": "U1",
+          "x": 300,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p3",
+          "partId": "basic/capacitor",
+          "refdes": "C1",
+          "x": 200,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "330n"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/capacitor",
+          "refdes": "C2",
+          "x": 400,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100n"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "basic/resistor",
+          "refdes": "RL",
+          "x": 480,
+          "y": 250,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100"
+          }
+        },
+        {
+          "id": "p15",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w6",
+          "points": [
+            {
+              "x": 100,
+              "y": 220
+            },
+            {
+              "x": 100,
+              "y": 200
+            },
+            {
+              "x": 260,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 200,
+              "y": 200
+            },
+            {
+              "x": 200,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 340,
+              "y": 200
+            },
+            {
+              "x": 480,
+              "y": 200
+            },
+            {
+              "x": 480,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 400,
+              "y": 200
+            },
+            {
+              "x": 400,
+              "y": 220
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 100,
+              "y": 280
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w11",
+          "points": [
+            {
+              "x": 100,
+              "y": 320
+            },
+            {
+              "x": 480,
+              "y": 320
+            },
+            {
+              "x": 480,
+              "y": 280
+            }
+          ]
+        },
+        {
+          "id": "w12",
+          "points": [
+            {
+              "x": 200,
+              "y": 280
+            },
+            {
+              "x": 200,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w13",
+          "points": [
+            {
+              "x": 400,
+              "y": 280
+            },
+            {
+              "x": 400,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w14",
+          "points": [
+            {
+              "x": 300,
+              "y": 230
+            },
+            {
+              "x": 300,
+              "y": 320
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l16",
+          "x": 150,
+          "y": 200,
+          "name": "VIN",
+          "rotation": 0
+        },
+        {
+          "id": "l17",
+          "x": 440,
+          "y": 200,
+          "name": "VOUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 380,
+          "text": "Công suất tiêu tán trên 7805 = (12 V − 5 V) · 50 mA = 0,35 W. Dưới ≈ 7 V đầu vào, đầu ra tụt theo (mất ổn áp).",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "dc",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "dc": {
+        "type": "dc",
+        "src": "V1",
+        "start": 0,
+        "stop": 15,
+        "step": 0.1
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "IC ổn áp 7805 giữ 5 V ra khi điện áp vào lớn hơn khoảng 7 V (điện áp rơi tối thiểu ≈ 2 V); tải 100 Ω lấy 50 mA. Quét DC V1 từ 0 đến 15 V. The 7805 holds 5 V out once the input exceeds about 7 V (≈ 2 V dropout); the 100 Ω load draws 50 mA. DC sweep of V1 from 0 to 15 V."
+}

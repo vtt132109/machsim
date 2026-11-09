@@ -1,0 +1,248 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "CMOS inverter",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/vdd",
+          "refdes": "VDD1",
+          "x": 410,
+          "y": 150,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "5"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "transistors/pmos",
+          "refdes": "M1",
+          "x": 400,
+          "y": 200,
+          "rotation": 180,
+          "mirror": true,
+          "params": {}
+        },
+        {
+          "id": "p3",
+          "partId": "transistors/nmos",
+          "refdes": "M2",
+          "x": 400,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p4",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 260,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "2.5"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 260,
+          "y": 380,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p6",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 410,
+          "y": 380,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        }
+      ],
+      "wires": [
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 410,
+              "y": 150
+            },
+            {
+              "x": 410,
+              "y": 170
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 410,
+              "y": 230
+            },
+            {
+              "x": 410,
+              "y": 290
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 370,
+              "y": 200
+            },
+            {
+              "x": 340,
+              "y": 200
+            },
+            {
+              "x": 340,
+              "y": 320
+            },
+            {
+              "x": 370,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 340,
+              "y": 260
+            },
+            {
+              "x": 260,
+              "y": 260
+            },
+            {
+              "x": 260,
+              "y": 290
+            }
+          ]
+        },
+        {
+          "id": "w11",
+          "points": [
+            {
+              "x": 260,
+              "y": 350
+            },
+            {
+              "x": 260,
+              "y": 380
+            }
+          ]
+        },
+        {
+          "id": "w12",
+          "points": [
+            {
+              "x": 410,
+              "y": 350
+            },
+            {
+              "x": 410,
+              "y": 380
+            }
+          ]
+        },
+        {
+          "id": "w13",
+          "points": [
+            {
+              "x": 410,
+              "y": 260
+            },
+            {
+              "x": 480,
+              "y": 260
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l14",
+          "x": 300,
+          "y": 260,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 480,
+          "y": 260,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [
+        {
+          "id": "pr16",
+          "kind": "voltage",
+          "x": 300,
+          "y": 260,
+          "name": "Vin",
+          "color": "#e53935"
+        },
+        {
+          "id": "pr17",
+          "kind": "voltage",
+          "x": 480,
+          "y": 260,
+          "name": "Vout",
+          "color": "#e53935"
+        }
+      ],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 450,
+          "text": "Simulate > DC sweep (V1: 0 → 5 V): Vout chuyển từ 5 V xuống 0 V quanh Vin ≈ 2.5 V.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "dc",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "dc": {
+        "type": "dc",
+        "src": "V1",
+        "start": 0,
+        "stop": 5,
+        "step": 0.01
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.00001,
+        "tstop": 0.001
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Cổng đảo CMOS gồm PMOS (trên) và NMOS (dưới) đối xứng, VDD = 5 V. Quét DC V1 từ 0 đến 5 V cho đặc tuyến truyền đạt; ngưỡng chuyển mạch ≈ VDD/2. Symmetric CMOS inverter, VDD = 5 V: the DC sweep of V1 gives the voltage transfer curve, switching threshold ≈ VDD/2."
+}

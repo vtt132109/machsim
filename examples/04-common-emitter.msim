@@ -1,0 +1,516 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "BJT common-emitter amplifier",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/vcc",
+          "refdes": "VCC1",
+          "x": 300,
+          "y": 140,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "12"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/vcc",
+          "refdes": "VCC2",
+          "x": 410,
+          "y": 140,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "12"
+          }
+        },
+        {
+          "id": "p3",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 300,
+          "y": 200,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "47k"
+          }
+        },
+        {
+          "id": "p4",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 300,
+          "y": 400,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "basic/resistor",
+          "refdes": "RC",
+          "x": 410,
+          "y": 200,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "4.7k"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "transistors/2n3904",
+          "refdes": "Q1",
+          "x": 400,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p7",
+          "partId": "basic/resistor",
+          "refdes": "RE1",
+          "x": 410,
+          "y": 390,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100"
+          }
+        },
+        {
+          "id": "p8",
+          "partId": "basic/resistor",
+          "refdes": "RE2",
+          "x": 410,
+          "y": 490,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "820"
+          }
+        },
+        {
+          "id": "p9",
+          "partId": "basic/electrolytic",
+          "refdes": "CE",
+          "x": 480,
+          "y": 490,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "100u"
+          }
+        },
+        {
+          "id": "p10",
+          "partId": "basic/electrolytic",
+          "refdes": "CIN",
+          "x": 230,
+          "y": 300,
+          "rotation": 0,
+          "mirror": true,
+          "params": {
+            "value": "10u"
+          }
+        },
+        {
+          "id": "p11",
+          "partId": "basic/electrolytic",
+          "refdes": "COUT",
+          "x": 520,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "10u"
+          }
+        },
+        {
+          "id": "p12",
+          "partId": "basic/resistor",
+          "refdes": "RL",
+          "x": 600,
+          "y": 320,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "value": "10k"
+          }
+        },
+        {
+          "id": "p13",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 300,
+          "y": 560,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p14",
+          "partId": "instruments/function-generator",
+          "refdes": "XFG1",
+          "x": 120,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "waveform": "sine",
+            "freq": "1k",
+            "amplitude": "50m"
+          }
+        },
+        {
+          "id": "p15",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 120,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p36",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 760,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "timebase": "500u",
+            "A.scale": "50m",
+            "B.scale": "1",
+            "trig.source": "A",
+            "trig.level": "0"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w16",
+          "points": [
+            {
+              "x": 300,
+              "y": 140
+            },
+            {
+              "x": 300,
+              "y": 170
+            }
+          ]
+        },
+        {
+          "id": "w17",
+          "points": [
+            {
+              "x": 410,
+              "y": 140
+            },
+            {
+              "x": 410,
+              "y": 170
+            }
+          ]
+        },
+        {
+          "id": "w18",
+          "points": [
+            {
+              "x": 300,
+              "y": 230
+            },
+            {
+              "x": 300,
+              "y": 370
+            }
+          ]
+        },
+        {
+          "id": "w19",
+          "points": [
+            {
+              "x": 260,
+              "y": 300
+            },
+            {
+              "x": 300,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w20",
+          "points": [
+            {
+              "x": 300,
+              "y": 300
+            },
+            {
+              "x": 370,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w21",
+          "points": [
+            {
+              "x": 410,
+              "y": 230
+            },
+            {
+              "x": 410,
+              "y": 270
+            }
+          ]
+        },
+        {
+          "id": "w22",
+          "points": [
+            {
+              "x": 410,
+              "y": 330
+            },
+            {
+              "x": 410,
+              "y": 360
+            }
+          ]
+        },
+        {
+          "id": "w23",
+          "points": [
+            {
+              "x": 410,
+              "y": 420
+            },
+            {
+              "x": 410,
+              "y": 460
+            }
+          ]
+        },
+        {
+          "id": "w24",
+          "points": [
+            {
+              "x": 410,
+              "y": 440
+            },
+            {
+              "x": 480,
+              "y": 440
+            },
+            {
+              "x": 480,
+              "y": 460
+            }
+          ]
+        },
+        {
+          "id": "w25",
+          "points": [
+            {
+              "x": 300,
+              "y": 430
+            },
+            {
+              "x": 300,
+              "y": 560
+            }
+          ]
+        },
+        {
+          "id": "w26",
+          "points": [
+            {
+              "x": 300,
+              "y": 560
+            },
+            {
+              "x": 600,
+              "y": 560
+            }
+          ]
+        },
+        {
+          "id": "w27",
+          "points": [
+            {
+              "x": 410,
+              "y": 520
+            },
+            {
+              "x": 410,
+              "y": 560
+            }
+          ]
+        },
+        {
+          "id": "w28",
+          "points": [
+            {
+              "x": 480,
+              "y": 520
+            },
+            {
+              "x": 480,
+              "y": 560
+            }
+          ]
+        },
+        {
+          "id": "w29",
+          "points": [
+            {
+              "x": 410,
+              "y": 250
+            },
+            {
+              "x": 490,
+              "y": 250
+            }
+          ]
+        },
+        {
+          "id": "w30",
+          "points": [
+            {
+              "x": 550,
+              "y": 250
+            },
+            {
+              "x": 600,
+              "y": 250
+            },
+            {
+              "x": 600,
+              "y": 290
+            }
+          ]
+        },
+        {
+          "id": "w31",
+          "points": [
+            {
+              "x": 600,
+              "y": 350
+            },
+            {
+              "x": 600,
+              "y": 560
+            }
+          ]
+        },
+        {
+          "id": "w32",
+          "points": [
+            {
+              "x": 100,
+              "y": 230
+            },
+            {
+              "x": 100,
+              "y": 300
+            },
+            {
+              "x": 200,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w33",
+          "points": [
+            {
+              "x": 120,
+              "y": 230
+            },
+            {
+              "x": 120,
+              "y": 250
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l34",
+          "x": 150,
+          "y": 300,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l35",
+          "x": 600,
+          "y": 270,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l37",
+          "x": 710,
+          "y": 230,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l38",
+          "x": 750,
+          "y": 230,
+          "name": "OUT",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 610,
+          "text": "IC ≈ (VB − 0.65)/(RE1+RE2) ≈ 1.5 mA, re = 26 mV/IE ≈ 17 Ω, Av ≈ −(4.7k‖10k)/(17 + 100) ≈ −27.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.000005,
+        "tstop": 0.005
+      },
+      "ac": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 20,
+        "fstart": 1,
+        "fstop": 100000000
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Khuếch đại E chung dùng 2N3904, phân cực cầu chia áp 47k/10k, RE = 100 Ω (không thoát) + 820 Ω (thoát bởi CE). Hệ số khuếch đại ≈ −(RC‖RL)/(re + RE1) ≈ −27. Common-emitter 2N3904 amplifier, gain ≈ −(RC‖RL)/(re + RE1) ≈ −27."
+}

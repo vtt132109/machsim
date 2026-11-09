@@ -1,0 +1,247 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Block-diagram control loop with .meas",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/pulse-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 220,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "v1": "0",
+            "v2": "1",
+            "delay": "1m",
+            "rise": "1u",
+            "fall": "1u",
+            "width": "10m",
+            "period": "20m"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 100,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p4",
+          "partId": "analog/summer-2",
+          "refdes": "A1",
+          "x": 260,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "ka": "1",
+            "kb": "-1"
+          }
+        },
+        {
+          "id": "p5",
+          "partId": "analog/integrator-reset",
+          "refdes": "A2",
+          "x": 400,
+          "y": 210,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "k": "1k",
+            "ic": "0"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "analog/transfer-function",
+          "refdes": "A3",
+          "x": 400,
+          "y": 340,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "num": "1",
+            "den": "1m 1"
+          }
+        },
+        {
+          "id": "p14",
+          "partId": "instruments/scope",
+          "refdes": "XSC1",
+          "x": 640,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "trig.source": "A",
+            "trig.level": "0.5",
+            "timebase": "1m",
+            "A.scale": "500m",
+            "B.scale": "500m"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 100,
+              "y": 250
+            },
+            {
+              "x": 100,
+              "y": 300
+            }
+          ]
+        },
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 100,
+              "y": 190
+            },
+            {
+              "x": 220,
+              "y": 190
+            }
+          ]
+        },
+        {
+          "id": "w8",
+          "points": [
+            {
+              "x": 300,
+              "y": 200
+            },
+            {
+              "x": 370,
+              "y": 200
+            }
+          ]
+        },
+        {
+          "id": "w9",
+          "points": [
+            {
+              "x": 430,
+              "y": 210
+            },
+            {
+              "x": 460,
+              "y": 210
+            },
+            {
+              "x": 460,
+              "y": 260
+            },
+            {
+              "x": 200,
+              "y": 260
+            },
+            {
+              "x": 200,
+              "y": 210
+            },
+            {
+              "x": 220,
+              "y": 210
+            }
+          ]
+        },
+        {
+          "id": "w10",
+          "points": [
+            {
+              "x": 160,
+              "y": 190
+            },
+            {
+              "x": 160,
+              "y": 340
+            },
+            {
+              "x": 370,
+              "y": 340
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l11",
+          "x": 130,
+          "y": 190,
+          "name": "IN",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 450,
+          "y": 210,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 430,
+          "y": 340,
+          "name": "TF",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 590,
+          "y": 290,
+          "name": "OUT",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 630,
+          "y": 290,
+          "name": "TF",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 420,
+          "text": "Bậc thang 1 V lúc 1 ms: OUT và TF tăng theo 1 − e^(−(t − 1 ms)/1 ms) và đạt 63 % lúc 2 ms (t63 = tf63 = 2 ms). Thử đổi k của A2 thành 2k: vòng kín nhanh gấp đôi.",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.00001,
+        "tstop": 0.006
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Vòng điều khiển vẽ bằng khối: bộ cộng tạo sai số e = IN − OUT, bộ tích phân k = 1000 /s; hàm truyền vòng kín OUT/IN = k/(s + k) = 1/(1 + s·1 ms), trùng với khối H(s) = 1/(1 + s·1m) ở dưới. Phép đo .meas (văn bản SPICE riêng của thiết kế) đo thời điểm đạt 63 %. A control loop drawn with blocks: the summer forms e = IN − OUT, the integrator has k = 1000 /s; the closed loop OUT/IN = k/(s + k) = 1/(1 + s·1 ms) equals the H(s) = 1/(1 + s·1m) block below. The .meas cards (the design’s custom SPICE text) measure when 63 % is reached.",
+  "customSpice": "* Phép đo tự động: kết quả ở bảng \"Phép đo (.meas)\" dưới đồ thị Grapher\n.meas TRAN t63 WHEN V(OUT)=0.632120559\n.meas TRAN tf63 WHEN V(TF)=0.632120559\n.meas TRAN e2ms FIND V(IN)-V(OUT) AT=2m\n"
+}

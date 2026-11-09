@@ -1,0 +1,96 @@
+/* Component tools: wizard, symbol editor, database manager, SPICE import. */
+.ms-wiz-spacer { flex: 1; }
+.ms-wiz { display: flex; flex-direction: column; gap: 8px; min-height: 420px; }
+.ms-wiz-steps { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.ms-wiz-step { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border); background: var(--panel); color: var(--text-dim); border-radius: 14px; padding: 2px 10px; cursor: pointer; font: inherit; }
+.ms-wiz-step:disabled { opacity: 0.55; cursor: default; }
+.ms-wiz-step-done { color: var(--text); }
+.ms-wiz-step-active { border-color: var(--accent); background: var(--accent-weak); color: var(--text); font-weight: 600; }
+.ms-wiz-step-n { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--border); font-size: 11px; }
+.ms-wiz-step-active .ms-wiz-step-n { background: var(--accent); color: #fff; }
+.ms-wiz-body { display: flex; flex-direction: column; gap: 8px; max-height: min(62vh, 560px); overflow: auto; padding-right: 4px; }
+.ms-wiz-intro { margin: 0; }
+.ms-wiz-form { display: flex; flex-direction: column; gap: 6px; max-width: 560px; }
+.ms-wiz-row .ms-cfield-label { min-width: 170px; }
+.ms-wiz-short { max-width: 90px; }
+.ms-wiz-issues { margin: 4px 0; padding-left: 18px; color: var(--danger); }
+.ms-wiz-error { color: var(--danger); }
+.ms-wiz-ok { color: var(--ok); font-weight: 600; }
+.ms-wiz-bad { border-color: var(--danger); }
+.ms-wiz-notes { margin: 4px 0; padding-left: 18px; }
+.ms-wiz-note-warn { color: var(--warn); }
+.ms-wiz-symbol, .ms-wiz-pins, .ms-wiz-mapping, .ms-wiz-save { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.ms-wiz-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; flex: 1 1 420px; }
+.ms-wiz-tile { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--canvas); color: var(--text); padding: 4px; cursor: pointer; font: inherit; font-size: 11px; }
+.ms-wiz-tile-on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-weak); }
+.ms-wiz-tile-svg { width: 72px; height: 48px; }
+.ms-wiz-symbol-side, .ms-wiz-pins-side { display: flex; flex-direction: column; gap: 8px; flex: 0 0 220px; }
+.ms-wiz-big-preview { width: 200px; height: 150px; background: var(--canvas); border: 1px solid var(--border); border-radius: var(--radius); }
+.ms-wiz-table { border-collapse: collapse; }
+.ms-wiz-table th, .ms-wiz-table td { padding: 2px 6px; text-align: left; }
+.ms-wiz-sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px; }
+.ms-wiz-source { display: grid; grid-template-columns: auto 1fr; gap: 2px 6px; border: 1px solid var(--border); border-radius: var(--radius); padding: 6px; cursor: pointer; }
+.ms-wiz-source .ms-hint { grid-column: 2; font-size: 11px; }
+.ms-wiz-source-on { border-color: var(--accent); background: var(--accent-weak); }
+.ms-wiz-source-name { font-weight: 600; }
+.ms-wiz-list { list-style: none; margin: 4px 0; padding: 0; max-height: 180px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+.ms-wiz-list button, .ms-db-families button { display: block; width: 100%; text-align: left; border: 0; background: none; color: var(--text); padding: 2px 6px; cursor: pointer; font: inherit; }
+.ms-wiz-list button:hover, .ms-db-families button:hover { background: var(--accent-weak); }
+.ms-wiz-list-on { background: var(--accent-weak) !important; font-weight: 600; }
+.ms-wiz-code { font-family: var(--mono); font-size: 12px; width: 100%; box-sizing: border-box; white-space: pre; }
+.ms-wiz-spice-bar, .ms-wiz-maker-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0; }
+.ms-wiz-missing code { font-family: var(--mono); }
+.ms-wiz-advanced summary { cursor: pointer; color: var(--accent); margin: 4px 0; }
+.ms-wiz-checks .ms-wiz-pass td:last-child { color: var(--ok); font-weight: 700; }
+.ms-wiz-checks .ms-wiz-fail td:last-child { color: var(--danger); font-weight: 700; }
+.ms-wiz-summary { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; }
+.ms-wiz-summary dt { color: var(--text-dim); }
+.ms-wiz-summary dd { margin: 0; }
+
+.ms-symed { display: flex; flex-direction: column; gap: 6px; outline: none; }
+.ms-symed-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.ms-symed-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+.ms-symed-inline { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+.ms-symed-main { display: flex; gap: 8px; min-height: 380px; }
+.ms-symed-canvas { flex: 1; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--canvas); max-height: 60vh; }
+.ms-symed-svg { display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+.ms-symed-tool-select { cursor: default; }
+.ms-symed-svg:not(.ms-symed-tool-select) { cursor: crosshair; }
+.ms-symed-grid line { stroke: var(--grid); stroke-width: 0.3; }
+.ms-symed-grid .ms-symed-axis { stroke: var(--text-dim); stroke-width: 0.4; stroke-dasharray: 2 2; }
+.ms-symed-pin circle { fill: var(--pin); }
+.ms-symed-pin text { fill: var(--text-dim); font-family: var(--font); }
+.ms-symed-pin-sel circle { stroke: var(--part-selected); stroke-width: 1.2; }
+.ms-symed-pin-bad circle { fill: var(--warn); }
+.ms-symed-selbox { fill: none; stroke: var(--part-selected); stroke-width: 0.6; stroke-dasharray: 2 1; }
+.ms-symed-handle { fill: var(--canvas, #fff); stroke: var(--part-selected); stroke-width: 0.5; }
+.ms-symed-band { fill: var(--accent-weak, rgba(46, 125, 50, 0.12)); stroke: var(--part-selected); stroke-width: 0.4; stroke-dasharray: 2 1; }
+.ms-symed-svg.ms-symed-tool-arc { cursor: crosshair; }
+.ms-symed-side { width: 230px; display: flex; flex-direction: column; gap: 4px; }
+.ms-symed-side h4 { margin: 6px 0 2px; }
+.ms-symed-props { display: flex; flex-direction: column; gap: 4px; }
+.ms-symed-props .ms-cfield-label { min-width: 70px; }
+
+.ms-db { display: flex; gap: 10px; min-height: 440px; }
+.ms-db-side { width: 240px; display: flex; flex-direction: column; gap: 6px; }
+.ms-db-views { display: flex; flex-direction: column; gap: 2px; }
+.ms-db-view { display: flex; align-items: center; gap: 6px; padding: 3px 6px; border-radius: var(--radius); cursor: pointer; }
+.ms-db-view-on { background: var(--accent-weak); font-weight: 600; }
+.ms-db-families { list-style: none; margin: 0; padding: 0; overflow: auto; max-height: 300px; border: 1px solid var(--border); border-radius: var(--radius); }
+.ms-db-buttons { display: flex; flex-wrap: wrap; gap: 4px; }
+.ms-db-main { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ms-db-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ms-db-table-wrap { flex: 1; overflow: auto; max-height: 46vh; border: 1px solid var(--border); border-radius: var(--radius); }
+.ms-db-table { width: 100%; border-collapse: collapse; }
+.ms-db-table th { position: sticky; top: 0; background: var(--panel); text-align: left; padding: 3px 6px; }
+.ms-db-table td { padding: 2px 6px; border-top: 1px solid var(--border); cursor: default; }
+.ms-db-row-on td { background: var(--accent-weak); }
+.ms-db-cell { width: 100%; min-width: 70px; box-sizing: border-box; }
+.ms-db-desc { max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-db-detail { display: flex; gap: 10px; align-items: flex-start; }
+
+@media (max-width: 900px) {
+  .ms-db, .ms-symed-main { flex-direction: column; }
+  .ms-db-side, .ms-symed-side { width: auto; }
+  .ms-wiz-row .ms-cfield-label { min-width: 120px; }
+}

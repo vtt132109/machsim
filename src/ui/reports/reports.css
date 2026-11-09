@@ -1,0 +1,15 @@
+/* Reports, PCB transfer and SPICE-import dialogs */
+.ms-report-dialog .ms-dialog-body { padding: 0; }
+.ms-report-body { display: grid; grid-template-columns: 200px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); height: min(600px, 68vh); }
+.ms-report-nav { border-right: 1px solid var(--border); padding: 8px 6px; overflow: auto; display: flex; flex-direction: column; gap: 2px; min-height: 0; }
+.ms-report-nav-item { text-align: left; background: none; border: 1px solid transparent; border-radius: var(--radius); padding: 6px 8px; color: inherit; font: inherit; cursor: pointer; }
+.ms-report-nav-item:hover { background: var(--hover); }
+.ms-report-nav-item.is-active { background: var(--accent-weak); border-color: var(--accent); }
+.ms-report-main { overflow: auto; padding: 8px 14px 14px; min-height: 0; }
+.ms-report-main h3 { margin: 4px 0; font-size: 15px; }
+.ms-report-table h4 { margin: 12px 0 2px; font-size: 13px; }
+.ms-report-table td.ms-num { text-align: right; font-variant-numeric: tabular-nums; }
+.ms-pcb-list { max-height: 260px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 8px; margin: 6px 0; font-size: 12px; }
+.ms-pcb-list li { margin: 1px 0; }
+.ms-pcb-warn { color: var(--warn); font-size: 12px; }
+@media (max-width: 700px) { .ms-report-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); } .ms-report-nav { flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--border); } }

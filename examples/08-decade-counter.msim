@@ -1,0 +1,554 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Decade counter with 7-segment display",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/digital-clock",
+          "refdes": "V1",
+          "x": 150,
+          "y": 240,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "freq": "2",
+            "vhigh": "5"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "ttl/7490",
+          "refdes": "U1",
+          "x": 300,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p3",
+          "partId": "ttl/7447",
+          "refdes": "U2",
+          "x": 500,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p4",
+          "partId": "indicators/seven-seg-ca",
+          "refdes": "U3",
+          "x": 820,
+          "y": 300,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "sources/vcc",
+          "refdes": "VCC1",
+          "x": 820,
+          "y": 210,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "voltage": "5"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "sources/ground",
+          "refdes": "GND1",
+          "x": 230,
+          "y": 380,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p25",
+          "partId": "basic/resistor",
+          "refdes": "R1",
+          "x": 630,
+          "y": 230,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p29",
+          "partId": "basic/resistor",
+          "refdes": "R2",
+          "x": 630,
+          "y": 250,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p33",
+          "partId": "basic/resistor",
+          "refdes": "R3",
+          "x": 630,
+          "y": 270,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p37",
+          "partId": "basic/resistor",
+          "refdes": "R4",
+          "x": 630,
+          "y": 290,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p41",
+          "partId": "basic/resistor",
+          "refdes": "R5",
+          "x": 630,
+          "y": 310,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p45",
+          "partId": "basic/resistor",
+          "refdes": "R6",
+          "x": 630,
+          "y": 330,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        },
+        {
+          "id": "p49",
+          "partId": "basic/resistor",
+          "refdes": "R7",
+          "x": 630,
+          "y": 350,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "330"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w7",
+          "points": [
+            {
+              "x": 190,
+              "y": 240
+            },
+            {
+              "x": 250,
+              "y": 240
+            }
+          ]
+        },
+        {
+          "id": "w14",
+          "points": [
+            {
+              "x": 250,
+              "y": 300
+            },
+            {
+              "x": 230,
+              "y": 300
+            },
+            {
+              "x": 230,
+              "y": 380
+            }
+          ]
+        },
+        {
+          "id": "w15",
+          "points": [
+            {
+              "x": 250,
+              "y": 320
+            },
+            {
+              "x": 230,
+              "y": 320
+            }
+          ]
+        },
+        {
+          "id": "w16",
+          "points": [
+            {
+              "x": 250,
+              "y": 340
+            },
+            {
+              "x": 230,
+              "y": 340
+            }
+          ]
+        },
+        {
+          "id": "w17",
+          "points": [
+            {
+              "x": 250,
+              "y": 360
+            },
+            {
+              "x": 230,
+              "y": 360
+            }
+          ]
+        },
+        {
+          "id": "w26",
+          "points": [
+            {
+              "x": 550,
+              "y": 230
+            },
+            {
+              "x": 600,
+              "y": 230
+            }
+          ]
+        },
+        {
+          "id": "w30",
+          "points": [
+            {
+              "x": 550,
+              "y": 250
+            },
+            {
+              "x": 600,
+              "y": 250
+            }
+          ]
+        },
+        {
+          "id": "w34",
+          "points": [
+            {
+              "x": 550,
+              "y": 270
+            },
+            {
+              "x": 600,
+              "y": 270
+            }
+          ]
+        },
+        {
+          "id": "w38",
+          "points": [
+            {
+              "x": 550,
+              "y": 290
+            },
+            {
+              "x": 600,
+              "y": 290
+            }
+          ]
+        },
+        {
+          "id": "w42",
+          "points": [
+            {
+              "x": 550,
+              "y": 310
+            },
+            {
+              "x": 600,
+              "y": 310
+            }
+          ]
+        },
+        {
+          "id": "w46",
+          "points": [
+            {
+              "x": 550,
+              "y": 330
+            },
+            {
+              "x": 600,
+              "y": 330
+            }
+          ]
+        },
+        {
+          "id": "w50",
+          "points": [
+            {
+              "x": 550,
+              "y": 350
+            },
+            {
+              "x": 600,
+              "y": 350
+            }
+          ]
+        },
+        {
+          "id": "w53",
+          "points": [
+            {
+              "x": 820,
+              "y": 210
+            },
+            {
+              "x": 820,
+              "y": 230
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l8",
+          "x": 220,
+          "y": 240,
+          "name": "CLK",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 350,
+          "y": 240,
+          "name": "QA",
+          "rotation": 0
+        },
+        {
+          "id": "l10",
+          "x": 250,
+          "y": 260,
+          "name": "QA",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 350,
+          "y": 260,
+          "name": "QB",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 350,
+          "y": 280,
+          "name": "QC",
+          "rotation": 0
+        },
+        {
+          "id": "l13",
+          "x": 350,
+          "y": 300,
+          "name": "QD",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 450,
+          "y": 230,
+          "name": "QA",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 450,
+          "y": 250,
+          "name": "QB",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 450,
+          "y": 270,
+          "name": "QC",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 450,
+          "y": 290,
+          "name": "QD",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 450,
+          "y": 330,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l23",
+          "x": 450,
+          "y": 350,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l24",
+          "x": 450,
+          "y": 370,
+          "name": "VCC",
+          "rotation": 0
+        },
+        {
+          "id": "l27",
+          "x": 660,
+          "y": 230,
+          "name": "SA",
+          "rotation": 0
+        },
+        {
+          "id": "l28",
+          "x": 780,
+          "y": 270,
+          "name": "SA",
+          "rotation": 0
+        },
+        {
+          "id": "l31",
+          "x": 660,
+          "y": 250,
+          "name": "SB",
+          "rotation": 0
+        },
+        {
+          "id": "l32",
+          "x": 780,
+          "y": 290,
+          "name": "SB",
+          "rotation": 0
+        },
+        {
+          "id": "l35",
+          "x": 660,
+          "y": 270,
+          "name": "SC",
+          "rotation": 0
+        },
+        {
+          "id": "l36",
+          "x": 780,
+          "y": 310,
+          "name": "SC",
+          "rotation": 0
+        },
+        {
+          "id": "l39",
+          "x": 660,
+          "y": 290,
+          "name": "SD",
+          "rotation": 0
+        },
+        {
+          "id": "l40",
+          "x": 780,
+          "y": 330,
+          "name": "SD",
+          "rotation": 0
+        },
+        {
+          "id": "l43",
+          "x": 660,
+          "y": 310,
+          "name": "SE",
+          "rotation": 0
+        },
+        {
+          "id": "l44",
+          "x": 860,
+          "y": 270,
+          "name": "SE",
+          "rotation": 0
+        },
+        {
+          "id": "l47",
+          "x": 660,
+          "y": 330,
+          "name": "SF",
+          "rotation": 0
+        },
+        {
+          "id": "l48",
+          "x": 860,
+          "y": 290,
+          "name": "SF",
+          "rotation": 0
+        },
+        {
+          "id": "l51",
+          "x": 660,
+          "y": 350,
+          "name": "SG",
+          "rotation": 0
+        },
+        {
+          "id": "l52",
+          "x": 860,
+          "y": 310,
+          "name": "SG",
+          "rotation": 0
+        }
+      ],
+      "probes": [],
+      "notes": [
+        {
+          "id": "n1",
+          "x": 60,
+          "y": 440,
+          "text": "7490: đếm sườn xuống của CKA; QA→CKB tạo mã BCD 0…9. 7447 giải mã BCD → 7 đoạn (mức thấp tích cực).",
+          "size": 11
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.001,
+        "tstop": 6
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Bộ đếm thập phân 7490 (QA nối CKB → đếm BCD 0–9) nhận xung 2 Hz, giải mã 7447 điều khiển LED 7 đoạn anode chung qua điện trở 330 Ω. 7490 decade counter clocked at 2 Hz, 7447 decoder driving a common-anode 7-segment display through 330 Ω resistors."
+}

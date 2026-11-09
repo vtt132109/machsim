@@ -1,0 +1,73 @@
+(edif bjtswitch
+  (edifVersion 2 0 0)
+  (edifLevel 0)
+  (keywordMap (keywordLevel 0))
+  (status
+    (written
+      (timeStamp 2026 11 9 10 0 0)
+      (program "hand-written for MachSim tests")
+      (comment "NPN switch: 12 V supply, 1 k collector resistor, 100 k base resistor, 5 V drive")))
+  (library parts
+    (edifLevel 0)
+    (technology (numberDefinition (scale 1 (e 254 -6) (unit distance))))
+    (cell RES
+      (cellType GENERIC)
+      (view netlist
+        (viewType NETLIST)
+        (interface
+          (port (rename &1 "1") (direction INOUT))
+          (port (rename &2 "2") (direction INOUT)))))
+    (cell VDC
+      (cellType GENERIC)
+      (view netlist
+        (viewType NETLIST)
+        (interface
+          (port (rename P "+") (direction INOUT))
+          (port (rename N "-") (direction INOUT)))))
+    (cell Q2N3904
+      (cellType GENERIC)
+      (view netlist
+        (viewType NETLIST)
+        (interface
+          (port C (direction INOUT))
+          (port B (direction INOUT))
+          (port E (direction INOUT)))))
+    (cell CONN2
+      (cellType GENERIC)
+      (view netlist
+        (viewType NETLIST)
+        (interface
+          (port (rename &1 "1") (direction INOUT))
+          (port (rename &2 "2") (direction INOUT))))))
+  (library work
+    (edifLevel 0)
+    (technology (numberDefinition))
+    (cell top
+      (cellType GENERIC)
+      (view netlist
+        (viewType NETLIST)
+        (interface)
+        (contents
+          (instance VCC1 (viewRef netlist (cellRef VDC (libraryRef parts)))
+            (property VALUE (string "12")))
+          (instance VIN (viewRef netlist (cellRef VDC (libraryRef parts)))
+            (property VALUE (string "DC 5")))
+          (instance RC (viewRef netlist (cellRef RES (libraryRef parts)))
+            (property VALUE (string "1k")))
+          (instance (rename RB_1 "RB") (viewRef netlist (cellRef RES (libraryRef parts)))
+            (property (rename VALUE "Value") (string "100k")))
+          (instance Q1 (viewRef netlist (cellRef Q2N3904 (libraryRef parts)))
+            (property VALUE (string "2N3904")))
+          (instance J1 (viewRef netlist (cellRef CONN2 (libraryRef parts)))
+            (property VALUE (string "Screw%32%terminal")))
+          (net VSUP
+            (joined (portRef P (instanceRef VCC1)) (portRef &1 (instanceRef RC)) (portRef &1 (instanceRef J1))))
+          (net OUT
+            (joined (portRef &2 (instanceRef RC)) (portRef C (instanceRef Q1)) (portRef &2 (instanceRef J1))))
+          (net N00012
+            (joined (portRef &2 (instanceRef RB_1)) (portRef B (instanceRef Q1))))
+          (net DRIVE
+            (joined (portRef P (instanceRef VIN)) (portRef &1 (instanceRef RB_1))))
+          (net GND
+            (joined (portRef N (instanceRef VCC1)) (portRef N (instanceRef VIN)) (portRef E (instanceRef Q1))))))))
+  (design bjtswitch (cellRef top (libraryRef work))))

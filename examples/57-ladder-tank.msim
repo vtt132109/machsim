@@ -1,0 +1,388 @@
+{
+  "format": "machsim-design",
+  "version": 2,
+  "title": "Tank filling control with a ladder diagram",
+  "sheets": [
+    {
+      "id": "sheet1",
+      "name": "Sheet 1",
+      "parts": [
+        {
+          "id": "p1",
+          "partId": "sources/dc-voltage",
+          "refdes": "V1",
+          "x": 100,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "value": "24"
+          }
+        },
+        {
+          "id": "p2",
+          "partId": "sources/ground",
+          "refdes": "GND2",
+          "x": 100,
+          "y": 320,
+          "rotation": 0,
+          "mirror": false,
+          "params": {}
+        },
+        {
+          "id": "p5",
+          "partId": "misc-digital/plc-controller",
+          "refdes": "PLC1",
+          "x": 260,
+          "y": 460,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "scan": "20m"
+          }
+        },
+        {
+          "id": "p6",
+          "partId": "misc-digital/plc-input-8",
+          "refdes": "PLCI1",
+          "x": 340,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "byte": "0"
+          }
+        },
+        {
+          "id": "p10",
+          "partId": "misc-digital/plc-analog-in-2",
+          "refdes": "PLCA1",
+          "x": 340,
+          "y": 400,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "chan": "0"
+          }
+        },
+        {
+          "id": "p13",
+          "partId": "misc-digital/plc-output-8",
+          "refdes": "PLCQ1",
+          "x": 620,
+          "y": 200,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "byte": "0"
+          }
+        },
+        {
+          "id": "p17",
+          "partId": "misc/water-tank",
+          "refdes": "TK1",
+          "x": 900,
+          "y": 260,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "volume": "10",
+            "qin": "500m",
+            "qout": "350m",
+            "low": "20",
+            "high": "80",
+            "start": "0"
+          }
+        },
+        {
+          "id": "p24",
+          "partId": "basic/switch-spst",
+          "refdes": "S1",
+          "x": 640,
+          "y": 420,
+          "rotation": 0,
+          "mirror": false,
+          "params": {
+            "key": "V"
+          }
+        },
+        {
+          "id": "p27",
+          "partId": "indicators/lamp",
+          "refdes": "X1",
+          "x": 760,
+          "y": 120,
+          "rotation": 90,
+          "mirror": false,
+          "params": {
+            "vrated": "24",
+            "prated": "5"
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w3",
+          "points": [
+            {
+              "x": 100,
+              "y": 230
+            },
+            {
+              "x": 100,
+              "y": 320
+            }
+          ]
+        }
+      ],
+      "labels": [
+        {
+          "id": "l4",
+          "x": 100,
+          "y": 170,
+          "name": "P24",
+          "rotation": 0
+        },
+        {
+          "id": "l7",
+          "x": 280,
+          "y": 130,
+          "name": "LOW",
+          "rotation": 0
+        },
+        {
+          "id": "l8",
+          "x": 280,
+          "y": 150,
+          "name": "HIGH",
+          "rotation": 0
+        },
+        {
+          "id": "l9",
+          "x": 340,
+          "y": 300,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l11",
+          "x": 275,
+          "y": 390,
+          "name": "LVL",
+          "rotation": 0
+        },
+        {
+          "id": "l12",
+          "x": 340,
+          "y": 440,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l14",
+          "x": 680,
+          "y": 130,
+          "name": "PUMP",
+          "rotation": 0
+        },
+        {
+          "id": "l15",
+          "x": 680,
+          "y": 170,
+          "name": "ALARM",
+          "rotation": 0
+        },
+        {
+          "id": "l16",
+          "x": 620,
+          "y": 300,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l18",
+          "x": 820,
+          "y": 250,
+          "name": "PUMP",
+          "rotation": 0
+        },
+        {
+          "id": "l19",
+          "x": 820,
+          "y": 270,
+          "name": "DRAIN",
+          "rotation": 0
+        },
+        {
+          "id": "l20",
+          "x": 980,
+          "y": 240,
+          "name": "LOW",
+          "rotation": 0
+        },
+        {
+          "id": "l21",
+          "x": 980,
+          "y": 260,
+          "name": "HIGH",
+          "rotation": 0
+        },
+        {
+          "id": "l22",
+          "x": 980,
+          "y": 280,
+          "name": "LVL",
+          "rotation": 0
+        },
+        {
+          "id": "l23",
+          "x": 900,
+          "y": 320,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l25",
+          "x": 610,
+          "y": 420,
+          "name": "P24",
+          "rotation": 0
+        },
+        {
+          "id": "l26",
+          "x": 670,
+          "y": 420,
+          "name": "DRAIN",
+          "rotation": 0
+        },
+        {
+          "id": "l28",
+          "x": 760,
+          "y": 90,
+          "name": "ALARM",
+          "rotation": 0
+        },
+        {
+          "id": "l29",
+          "x": 760,
+          "y": 150,
+          "name": "0",
+          "rotation": 0
+        },
+        {
+          "id": "l31",
+          "x": 740,
+          "y": 200,
+          "name": "PUMP",
+          "rotation": 0
+        }
+      ],
+      "probes": [
+        {
+          "id": "pr30",
+          "kind": "digital",
+          "x": 740,
+          "y": 200,
+          "name": "PUMP",
+          "color": "#e53935"
+        },
+        {
+          "id": "pr32",
+          "kind": "voltage",
+          "x": 275,
+          "y": 390,
+          "name": "LVL",
+          "color": "#e53935"
+        }
+      ],
+      "notes": [
+        {
+          "id": "note1_sheet1",
+          "x": 100,
+          "y": 540,
+          "text": "Mức nước vẽ ngay trong hình bồn và cũng là biến kết quả V(TK1.percent) — vẽ được trong Grapher. Van xả chảy theo √mức, nên bồn đầy cạn hết sau 2 · 10 L / 0,35 L/s ≈ 57 s.",
+          "size": 11
+        }
+      ]
+    },
+    {
+      "id": "sheet2",
+      "name": "Ladder 1",
+      "parts": [],
+      "wires": [],
+      "labels": [],
+      "probes": [],
+      "notes": [],
+      "kind": "ladder",
+      "ladder": [
+        {
+          "id": "rung1",
+          "comment": "Bơm: chạy khi nước dưới mức thấp, tự giữ tới khi tới mức cao",
+          "outputs": [
+            {
+              "kind": "coil",
+              "address": "Q0.0"
+            }
+          ],
+          "logic": {
+            "kind": "series",
+            "items": [
+              {
+                "kind": "contact",
+                "type": "nc",
+                "address": "I0.1"
+              },
+              {
+                "kind": "parallel",
+                "items": [
+                  {
+                    "kind": "contact",
+                    "type": "nc",
+                    "address": "I0.0"
+                  },
+                  {
+                    "kind": "contact",
+                    "type": "no",
+                    "address": "Q0.0"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "rung2",
+          "comment": "Báo động gần tràn: cảm biến mức trên 9,5 V",
+          "outputs": [
+            {
+              "kind": "coil",
+              "address": "Q0.2"
+            }
+          ],
+          "logic": {
+            "kind": "compare",
+            "op": "gt",
+            "left": "AI0",
+            "right": "9.5"
+          }
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "active": "tran",
+    "specs": {
+      "op": {
+        "type": "op"
+      },
+      "tran": {
+        "type": "tran",
+        "tstep": 0.1,
+        "tstop": 25
+      }
+    }
+  },
+  "options": {},
+  "variables": {},
+  "description": "Điều khiển mức nước hai điểm. Bậc 1 lại là một mạch tự giữ, nhưng “nút khởi động” là công tắc phao mức thấp: bơm chạy khi nước xuống dưới mức thấp và chỉ nghỉ khi nước lên tới mức cao. Bậc 2 dùng tiếp điểm SO SÁNH trên kênh tương tự: cảm biến mức cho 0 V khi cạn và 10 V khi đầy, nên AI0 > 9,5 nghĩa là gần tràn và bật đèn báo. Bồn bắt đầu cạn: bơm 0,5 L/s nên 10 L đầy 80 % sau 16 s rồi bơm nghỉ. Nhấp công tắc S1 (hoặc phím V) để mở van xả và xem bơm tự chạy lại. Two-point level control. Rung 1 is a self-holding circuit again, but the “start button” is the low float switch: the pump runs when the level falls below it and only rests when the level reaches the high switch. Rung 2 uses a COMPARISON contact on the analog channel: the level transmitter gives 0 V when empty and 10 V when full, so AI0 > 9.5 means nearly overflowing and lights the alarm. The tank starts empty: at 0.5 L/s the 10 L tank is 80 % full after 16 s and the pump rests. Click switch S1 (key V) to open the drain valve and watch the pump start again."
+}
