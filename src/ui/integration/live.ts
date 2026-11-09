@@ -20,6 +20,7 @@ import { t } from '../../i18n';
 import { getPart } from '../../library';
 import { lcdChar } from '../editor/displayGlyphs';
 import { variantView } from '../../model/variants';
+import { liveKey } from '../../model/hierarchy';
 
 export { signalValue } from '../../breadboard/indicators';
 
@@ -43,7 +44,7 @@ export function readSignal(ref: SignalRef, values: Map<string, number>): number 
  * Vectors the interactive run must record: every instrument channel, probe and indicator
  * signal. An empty list means "record everything" (nothing live in the design).
  */
-export function neededVectors(build: Pick<NetlistBuildEx, 'instruments' | 'probes' | 'indicators' | 'ratings' | 'mcus' | 'ladder'>): string[] {
+export function neededVectors(build: Pick<NetlistBuildEx, 'instruments' | 'probes' | 'indicators' | 'ratings' | 'mcus' | 'ladder' | 'ladders'>): string[] {
   const out = new Map<string, string>();
   const add = (ref: SignalRef | undefined) => {
     if (!ref) return;
@@ -66,28 +67,46 @@ export function neededVectors(build: Pick<NetlistBuildEx, 'instruments' | 'probe
     for (const n of mcuVectorNames(m.element)) if (!out.has(n.toLowerCase())) out.set(n.toLowerCase(), n);
   }
   // ladder diagram: the images, timers, counters and element states the ladder editor lights up
-  if (build.ladder?.debug) {
-    for (const n of ladderVectorNames(build.ladder.element, build.ladder.ir)) if (!out.has(n.toLowerCase())) out.set(n.toLowerCase(), n);
+  for (const lad of [build.ladder, ...(build.ladders ?? [])]) {
+    if (!lad?.debug) continue;
+    for (const n of ladderVectorNames(lad.element, lad.ir)) if (!out.has(n.toLowerCase())) out.set(n.toLowerCase(), n);
   }
   return [...out.values()];
 }
 
-/** True when some placed part is interactive (switch, potentiometer, key-operated part). */
+/**
+ * True when some placed part is interactive (switch, potentiometer, key-operated part), at the top
+ * level or inside a block that is placed somewhere.
+ */
 export function hasInteractiveParts(design: Design, lookup: PartLookup): boolean {
-  return variantView(design).sheets.some((s) => s.parts.some((p) => !p.excludeFromSim && !!lookup(p.partId)?.interactive));
+  const view = variantView(design);
+  const any = (sheets: Design['sheets']) => sheets.some((s) => s.parts.some((p) => !p.excludeFromSim && !!lookup(p.partId)?.interactive));
+  if (any(view.sheets)) return true;
+  return (view.children ?? []).some((c) => any(c.sheets));
+}
+
+/** Key of an indicator in the live-level maps: the part's refdes, or `X2/LED1` for a part inside a block copy. */
+export function indicatorKey(b: Pick<IndicatorBinding, 'refdes' | 'scope'>): string {
+  return b.scope ? liveKey(b.scope.path, b.scope.local) : b.refdes;
+}
+
+/** Key of a probe in `probeValues`: its id, or `X2/<id>` for a probe inside a block copy. */
+export function probeKey(p: Pick<ProbeBinding, 'probeId' | 'path'>): string {
+  return liveKey(p.path, p.probeId);
 }
 
 /**
  * Whether Run should start the streaming (interactive) transient instead of a one-shot
  * analysis: instruments, indicators, rated parts (burn-out) or interactive parts need live values.
  */
-export function needsStreaming(build: Pick<NetlistBuildEx, 'instruments' | 'indicators' | 'ratings' | 'mcus' | 'ladder'>, design: Design, lookup: PartLookup): boolean {
+export function needsStreaming(build: Pick<NetlistBuildEx, 'instruments' | 'indicators' | 'ratings' | 'mcus' | 'ladder' | 'ladders'>, design: Design, lookup: PartLookup): boolean {
   return (
     build.instruments.length > 0 ||
     build.indicators.length > 0 ||
     (build.ratings?.length ?? 0) > 0 ||
     (build.mcus?.length ?? 0) > 0 ||
     build.ladder !== undefined ||
+    (build.ladders?.length ?? 0) > 0 ||
     hasInteractiveParts(design, lookup)
   );
 }
@@ -281,24 +300,26 @@ export function liveLevels(indicators: readonly IndicatorBinding[], values: Reco
   const schematic: Record<string, number> = {};
   const breadboard: Record<string, number> = {};
   const lower = lowerValues(values);
-  const analogue = indicators.filter((b) => b.kind === 'led' || b.kind === 'lamp' || b.kind === 'buzzer' || b.kind === 'probe');
+  // a part inside a block copy is keyed by its path (`X2/LED1`), so two copies glow on their own
+  const analogue = indicators.filter((b) => b.kind === 'led' || b.kind === 'lamp' || b.kind === 'buzzer' || b.kind === 'probe').map((b) => ({ ...b, refdes: indicatorKey(b) }));
   for (const [k, v] of Object.entries(indicatorLevels(analogue, values))) {
     schematic[k] = v;
     breadboard[k] = v;
   }
   for (const b of indicators) {
+    const key = indicatorKey(b);
     if (b.kind === 'lcd' || b.kind === 'matrix' || b.kind === 'mecha') {
       let any = false;
       (b.signals ?? [b.signal]).forEach((ref, k) => {
         const v = readSignal(ref, lower);
         if (v === undefined) return;
         // a machine's values are continuous (level, position, item places): keep them as they are
-        schematic[`${b.refdes}#${k}`] = b.kind === 'mecha' ? v : Math.round(v);
+        schematic[`${key}#${k}`] = b.kind === 'mecha' ? v : Math.round(v);
         any = true;
       });
       if (any) {
-        schematic[b.refdes] = 1;
-        breadboard[b.refdes] = 1;
+        schematic[key] = 1;
+        breadboard[key] = 1;
       }
       continue;
     }
@@ -306,10 +327,10 @@ export function liveLevels(indicators: readonly IndicatorBinding[], values: Reco
     const s = readSignal(b.signal, lower);
     if (s === undefined) continue;
     const mask = Math.max(0, Math.round(s));
-    schematic[b.refdes] = mask;
-    breadboard[b.refdes] = mask > 0 ? 1 : 0;
-    if (b.kind === 'seven-seg') SEGMENT_NAMES.forEach((seg, i) => (breadboard[`${b.refdes}.${seg}`] = (mask >> i) & 1));
-    else for (let k = 1; k <= 24; k++) breadboard[`${b.refdes}.${k}`] = Math.floor(mask / 2 ** (k - 1)) % 2;
+    schematic[key] = mask;
+    breadboard[key] = mask > 0 ? 1 : 0;
+    if (b.kind === 'seven-seg') SEGMENT_NAMES.forEach((seg, i) => (breadboard[`${key}.${seg}`] = (mask >> i) & 1));
+    else for (let k = 1; k <= 24; k++) breadboard[`${key}.${k}`] = Math.floor(mask / 2 ** (k - 1)) % 2;
   }
   return { schematic, breadboard };
 }

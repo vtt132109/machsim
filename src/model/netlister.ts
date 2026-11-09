@@ -74,6 +74,7 @@ import {
 import type { PartDef, SpiceFragment } from '../library/types';
 import { emptyNetlist, isGroundNode, type ElementIR, type ModelCard, type Netlist, type SubcktDef } from '../sim/netlist';
 import { parseSpice } from '../sim/spice/parser';
+import { blankStepCards } from '../sim/spice/stepcards';
 import { GLOBAL_NODES_KEY } from '../sim/spice/params';
 import { parseUserNumber } from '../util/units';
 import { computeConnectivity, pinKey, type BusIssue, type ConnNet, type ConnPinRef, type ConnectivityResult, type CutRequest, type PlacedPartInfo } from './connectivity';
@@ -91,8 +92,8 @@ import {
 import { checkPinTypes, checkUndrivenInputs, hiddenPowerMode, isNcPin, normalizePinType, type ErcNetPins, type ErcPinEntry } from './ercMatrix';
 import { groupIndex, packageGroups, packageOf, sectionIssues, sectionLabel, type PackageGroup } from './sections';
 import { instancePins } from './geometry';
-import { childIdOfPart, childInstanceCounts, childPorts, cyclicChildren, designPartLookup, getChild, isBlockPartDef, type BlockPort } from './hierarchy';
-import type { ChildDesign, Design, ErcDetail, ErcMessage, InstrumentBinding, NetInfo, NetlistBuild, PartInstance, ProbeBinding, Sheet, SignalRef } from './types';
+import { childIdOfPart, childInstanceCounts, childOverrides, childPorts, cyclicChildren, designPartLookup, getChild, isBlockPartDef, overridesKey, type BlockPort } from './hierarchy';
+import type { ChildDesign, Design, ErcDetail, ErcMessage, InstrumentBinding, LiveScope, NetInfo, NetlistBuild, PartInstance, ProbeBinding, Sheet, SignalRef } from './types';
 import { childVariableScope, resolveDesignVariables, substituteVariables, variableParamValue, type VariableScope } from './variables';
 import { faultInsert } from './faults';
 import { applyModelOverride } from './modelOverride';
@@ -104,7 +105,10 @@ export type IndicatorKind = NonNullable<PartDef['indicator']>['kind'];
 
 /** Signals of an indicator part (LED glow, lamp, meters, probe light, buzzer, motor). */
 export interface IndicatorBinding {
+  /** refdes of the part; inside a block the dotted path of the placed copy ("X2.LED1", see `scope`) */
   refdes: string;
+  /** set when the indicator sits inside a block (one binding per placed copy of the block) */
+  scope?: LiveScope;
   partId: string;
   kind: IndicatorKind;
   params: Record<string, string>;
@@ -187,6 +191,8 @@ export interface NetlistBuildEx extends NetlistBuild {
   mechas?: MechaBinding[];
   /** the ladder program of the top level and the element that runs it (src/ladder) */
   ladder?: LadderBinding;
+  /** ladder programs inside placed blocks, one per placed copy (`scope` names the copy) */
+  ladders?: LadderBinding[];
 }
 
 /** One placed block in the expanded hierarchy. */
@@ -713,6 +719,16 @@ interface EmittedChild {
   probes: LocalProbe[];
   /** part refdes -> pin -> local node */
   partNets: Record<string, Record<string, string>>;
+  /** instruments and indicators of the child with child-local names (expanded per placed copy) */
+  live: LiveBindings;
+}
+
+/** Instrument and indicator bindings of one design level. */
+interface LiveBindings {
+  instruments: InstrumentBinding[];
+  indicators: IndicatorBinding[];
+  /** the ladder program of a block level (child-local element name) */
+  ladder?: LadderBinding;
 }
 
 interface LocalProbe {
@@ -729,11 +745,17 @@ interface EmitResult {
   ratings: RatingBinding[];
   mcus: McuBinding[];
   mechas: MechaBinding[];
-  /** the ladder program of the level and the element that runs it (top level only) */
+  /** the ladder program of the top level and the element that runs it */
   ladder?: LadderBinding;
+  /** instruments and indicators of the level (child-local names inside a block) */
+  live: LiveBindings;
 }
 
-function emitLevel(a: LevelAnalysis, scope: VariableScope, shared: Shared, set: ElementSet, once: boolean, customElements: ElementIR[] = []): EmitResult {
+/**
+ * `overrides`: parameter values of this level's parts that belong to the placed copy being emitted
+ * (PartInstance.inner of the block above), keyed by refdes ("S1") or refdes path ("X2/S1").
+ */
+function emitLevel(a: LevelAnalysis, scope: VariableScope, shared: Shared, set: ElementSet, once: boolean, customElements: ElementIR[] = [], overrides?: Record<string, Record<string, string>>): EmitResult {
   const prefix = a.child ? `${a.child.name}: ` : '';
   const isChild = a.child !== undefined;
   const failed = new Set<number>();
@@ -743,7 +765,7 @@ function emitLevel(a: LevelAnalysis, scope: VariableScope, shared: Shared, set: 
   const mcus: McuBinding[] = [];
   const mechas: MechaBinding[] = [];
   const push = (m: ErcMessage) => pushErc(shared, m, once);
-  const partParams = (def: PartDef, inst: PartInstance) => substituteVariables(def, { ...defaultParams(def), ...inst.params }, scope);
+  const partParams = (def: PartDef, inst: PartInstance) => substituteVariables(def, { ...defaultParams(def), ...inst.params, ...(overrides?.[inst.refdes] ?? {}) }, scope);
   const netIdOf = (part: PlacedPartInfo, pin: string): number | undefined => a.conn.pinNet.get(pinKey(part.index, pin));
   const nodeOf = (part: PlacedPartInfo, pin: string): string | undefined => {
     const id = netIdOf(part, pin);
@@ -808,7 +830,7 @@ function emitLevel(a: LevelAnalysis, scope: VariableScope, shared: Shared, set: 
         failed.add(part.index);
         continue;
       }
-      const emitted = emitChild(shared, childId, cscope);
+      const emitted = emitChild(shared, childId, cscope, childOverrides(refdes, part.inst.inner, overrides));
       if (!emitted) {
         failed.add(part.index);
         continue;
@@ -1058,7 +1080,43 @@ function emitLevel(a: LevelAnalysis, scope: VariableScope, shared: Shared, set: 
       probes.push({ probeId: pr.id, name: pr.name, kind: pr.kind, color: pr.color, signal: { kind: 'voltage', pos: a.netName[id], neg }, ...(pr.show ? { show: pr.show } : {}), ...(refName ? { refName } : {}) });
     }
   }
-  return { set, failed, partElements, blocks, probes, partNets, ratings, mcus, mechas, ...(ladder && !isChild ? { ladder } : {}) };
+
+  // ---- instruments and indicators of the level (inside a block: child-local names, expanded per copy)
+  const live: LiveBindings = { instruments: [], indicators: [] };
+  for (const part of a.placed) {
+    const def = part.def;
+    if (!def || part.inst.excludeFromSim || failed.has(part.index) || (!def.instrument && !def.indicator)) continue;
+    const lib = asLibraryPart(def);
+    const refdes = part.inst.refdes;
+    const params = partParams(def, part.inst).params;
+    const bctx: InstrumentBindContext = {
+      refdes,
+      params,
+      net: (pin) => {
+        const id = netIdOf(part, pin);
+        if (id === undefined || a.floating.has(id)) return null;
+        return a.netName[id];
+      },
+      name: (type, suffix) => elementName(type, refdes, suffix),
+      elements: partElements.get(part.index) ?? [],
+    };
+    const loc: ErcLocation = { refdes, sheetId: part.sheetId, x: part.inst.x, y: part.inst.y };
+    try {
+      if (def.instrument) {
+        const b = lib.bindInstrument ? lib.bindInstrument(bctx) : { channels: {}, drives: [] };
+        live.instruments.push({ refdes, partId: def.id, kind: def.instrument, params, channels: b.channels, drives: b.drives });
+      }
+      if (def.indicator) {
+        const b = lib.bindIndicator ? lib.bindIndicator(bctx) : defaultIndicator(def, bctx);
+        if (b) live.indicators.push({ refdes, partId: def.id, kind: def.indicator.kind, params, signal: b.signal, ...(b.current ? { current: b.current } : {}), ...(b.signals?.length ? { signals: b.signals } : {}) });
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      push({ severity: 'error', code: 'other', message: `${prefix}${refdes}: ${message}`, detail: { id: 'partError', params: { refdes, message } }, ...loc });
+    }
+  }
+  if (ladder && isChild) live.ladder = ladder;
+  return { set, failed, partElements, blocks, probes, partNets, ratings, mcus, mechas, live, ...(ladder && !isChild ? { ladder } : {}) };
 }
 
 /** Connectivity ERC of a level (floating pins, single-pin nets, dangling wires, ...). */
@@ -1218,22 +1276,7 @@ function hierarchyErc(a: LevelAnalysis, shared: Shared, globalNamesAll: Set<stri
     if ((a.ports ?? []).length === 0) {
       pushErc(shared, { severity: 'warning', code: 'other', message: `${prefix}The block has no hierarchical connectors, so nothing outside can connect to it`, detail: { id: 'blockNoPorts', params: { block: a.child.name } }, ...(a.sheets[0] ? { sheetId: a.sheets[0].id } : {}) }, true);
     }
-    for (const sheet of a.sheets) {
-      for (const p of sheet.parts) {
-        const def = shared.lookup(p.partId);
-        if (def?.instrument) pushErc(shared, { severity: 'warning', code: 'other', message: `${prefix}Instrument ${p.refdes} inside a block is not connected to a panel; place instruments on the top-level sheets`, detail: { id: 'instrumentInBlock', params: { refdes: p.refdes, block: a.child.name } }, sheetId: sheet.id, refdes: p.refdes, x: p.x, y: p.y }, true);
-        // LEDs, displays, lamps, probes and keyboard-operated parts are only live on the top level:
-        // inside a block they simulate, but nothing lights up and their key does nothing
-        else if (def?.indicator || def?.interactive) {
-          const what = def.indicator ? 'indicator' : 'interactive';
-          const message = def.indicator
-            ? `${prefix}${p.refdes} inside a block simulates but does not light up or show a value; place indicators on the top-level sheets`
-            : `${prefix}${p.refdes} inside a block keeps its saved setting; its key and slider only work on the top-level sheets`;
-          pushErc(shared, { severity: 'warning', code: 'other', message, detail: { id: what === 'indicator' ? 'indicatorInBlock' : 'interactiveInBlock', params: { refdes: p.refdes, block: a.child.name } }, sheetId: sheet.id, refdes: p.refdes, x: p.x, y: p.y }, true);
-        }
-      }
-    }
-  } else {
+    } else {
     // hierarchical connectors on the top level have nothing outside to connect to
     for (const sheet of a.sheets) for (const l of sheet.labels) {
       if (l.kind === 'hier') pushErc(shared, { severity: 'warning', code: 'other', message: `Hierarchical connector '${l.name}' is on a top-level sheet; it only becomes a port inside a subcircuit or hierarchical block`, detail: { id: 'hierOnRoot', params: { name: l.name } }, sheetId: sheet.id, x: l.x, y: l.y }, true);
@@ -1259,14 +1302,15 @@ function portLoc(a: LevelAnalysis, line: string): ErcLocation {
 }
 
 /** Emit (or reuse) the subcircuit of a child for one set of parameter values. */
-function emitChild(shared: Shared, childId: string, scope: VariableScope): EmittedChild | null {
+function emitChild(shared: Shared, childId: string, scope: VariableScope, overrides?: Record<string, Record<string, string>>): EmittedChild | null {
   const a = shared.childAnalyses.get(childId) ?? childAnalysis(shared, childId);
   if (!a || !a.child) return null;
   const child = a.child;
   const values = Object.keys(child.variables)
     .map((k) => [k.toLowerCase(), scope.values.get(k.toLowerCase())] as const)
     .sort((x, y) => (x[0] < y[0] ? -1 : 1));
-  const key = `${childId}\u0000${JSON.stringify(values)}`;
+  // copies whose parts hold different live state (a closed and an open switch) get their own subcircuit
+  const key = `${childId}\u0000${JSON.stringify(values)}\u0000${overridesKey(overrides)}`;
   const known = shared.variants.get(key);
   if (known) return known;
   const n = (shared.variantCount.get(childId) ?? 0) + 1;
@@ -1278,13 +1322,14 @@ function emitChild(shared: Shared, childId: string, scope: VariableScope): Emitt
   const set = new ElementSet(shared.erc);
   // reserve the entry before emitting nested levels (cycles were rejected up front)
   const def: SubcktDef = { name, ports: (a.portLines ?? []).filter((l) => l.node !== undefined).map((l) => l.node!), params: {}, elements: set.elements, models: {}, subckts: {} };
-  const emitted: EmittedChild = { name, childId, def, analysis: a, owners: set.owners, blocks: new Map(), probes: [], partNets: {} };
+  const emitted: EmittedChild = { name, childId, def, analysis: a, owners: set.owners, blocks: new Map(), probes: [], partNets: {}, live: { instruments: [], indicators: [] } };
   shared.variants.set(key, emitted);
   if (first) {
     for (const m of a.ercParts) pushErc(shared, m, true);
     for (const m of a.ercNames) pushErc(shared, m, true);
   }
-  const res = emitLevel(a, scope, shared, set, true);
+  const res = emitLevel(a, scope, shared, set, true, [], overrides);
+  emitted.live = res.live;
   emitted.blocks = res.blocks;
   emitted.probes = res.probes.map((binding) => ({ binding }));
   emitted.partNets = res.partNets;
@@ -1380,7 +1425,8 @@ export function buildNetlist(input: Design, options: BuildNetlistOptions = {}): 
   let customNodeset: Record<string, number> = {};
   let customMeasures: Netlist['measures'];
   if (design.customSpice && design.customSpice.trim() !== '') {
-    const res = parseSpice(design.customSpice, { hasTitle: false, fileName: 'custom SPICE' });
+    // (.step cards belong to the analysis that runs, see steps.ts; they are blanked, not parsed here)
+    const res = parseSpice(blankStepCards(design.customSpice), { hasTitle: false, fileName: 'custom SPICE' });
     for (const e of res.errors) erc.push({ severity: 'error', code: 'other', message: `Custom SPICE line ${e.line}: ${e.message}`, detail: { id: 'customSpiceLine', params: { line: e.line, message: e.message } } });
     for (const c of Object.values(res.netlist.models)) addModel(shared, c, 'custom SPICE', true, {});
     for (const s of Object.values(res.netlist.subckts)) addSubckt(shared, s, 'custom SPICE', true, {});
@@ -1399,40 +1445,10 @@ export function buildNetlist(input: Design, options: BuildNetlistOptions = {}): 
   const netName = root.netName;
   const nets = root.conn.nets;
 
-  // ---- 7. instruments and indicators (top level) --------------------------------------------
-  const instruments: InstrumentBinding[] = [];
-  const indicators: IndicatorBinding[] = [];
-  for (const part of root.placed) {
-    const def = part.def;
-    if (!def || part.inst.excludeFromSim || rootRes.failed.has(part.index) || (!def.instrument && !def.indicator)) continue;
-    const lib = asLibraryPart(def);
-    const refdes = part.inst.refdes;
-    const params = substituteVariables(def, { ...defaultParams(def), ...part.inst.params }, scope).params;
-    const bctx: InstrumentBindContext = {
-      refdes,
-      params,
-      net: (pin) => {
-        const id = root.conn.pinNet.get(pinKey(part.index, pin));
-        if (id === undefined || root.floating.has(id)) return null;
-        return netName[id];
-      },
-      name: (type, suffix) => elementName(type, refdes, suffix),
-      elements: rootRes.partElements.get(part.index) ?? [],
-    };
-    const loc: ErcLocation = { refdes, sheetId: part.sheetId, x: part.inst.x, y: part.inst.y };
-    try {
-      if (def.instrument) {
-        const b = lib.bindInstrument ? lib.bindInstrument(bctx) : { channels: {}, drives: [] };
-        instruments.push({ refdes, partId: def.id, kind: def.instrument, params, channels: b.channels, drives: b.drives });
-      }
-      if (def.indicator) {
-        const b = lib.bindIndicator ? lib.bindIndicator(bctx) : defaultIndicator(def, bctx);
-        if (b) indicators.push({ refdes, partId: def.id, kind: def.indicator.kind, params, signal: b.signal, ...(b.current ? { current: b.current } : {}), ...(b.signals?.length ? { signals: b.signals } : {}) });
-      }
-    } catch (e) {
-      erc.push({ severity: 'error', code: 'other', message: `${refdes}: ${e instanceof Error ? e.message : String(e)}`, detail: { id: 'partError', params: { refdes, message: e instanceof Error ? e.message : String(e) } }, ...loc });
-    }
-  }
+  // ---- 7. instruments and indicators (top level; blocks add one binding per placed copy) ----
+  const instruments: InstrumentBinding[] = [...rootRes.live.instruments];
+  const indicators: IndicatorBinding[] = [...rootRes.live.indicators];
+  const ladders: LadderBinding[] = [];
 
   // ---- 8. ERC on connectivity and topology -----------------------------------------------
   connectivityErc(root, shared, false);
@@ -1445,13 +1461,7 @@ export function buildNetlist(input: Design, options: BuildNetlistOptions = {}): 
       const a = shared.childAnalyses.get(c.id);
       if (a) hierarchyErc(a, shared, allGlobals);
     }
-    expandInstances(shared, rootRes.blocks, probes, partNets, instancesOut);
-    const counts = childInstanceCounts(design);
-    for (const c of design.children ?? []) {
-      if ((counts.get(c.id) ?? 0) > 1 && c.sheets.some((s) => s.probes.length)) {
-        erc.push({ severity: 'warning', code: 'other', message: `${c.name}: probes inside a block that is used ${counts.get(c.id)} times show the first instance only`, detail: { id: 'probeFirstInstance', params: { block: c.name, count: counts.get(c.id) ?? 0 } }, sheetId: c.sheets.find((s) => s.probes.length)!.id });
-      }
-    }
+    expandInstances(shared, rootRes.blocks, probes, partNets, instancesOut, instruments, indicators, ladders);
   } else {
     for (const sheet of design.sheets) for (const l of sheet.labels) {
       if (l.kind === 'hier') erc.push({ severity: 'warning', code: 'other', message: `Hierarchical connector '${l.name}' is on a top-level sheet; it only becomes a port inside a subcircuit or hierarchical block`, detail: { id: 'hierOnRoot', params: { name: l.name } }, sheetId: sheet.id, x: l.x, y: l.y });
@@ -1608,6 +1618,7 @@ export function buildNetlist(input: Design, options: BuildNetlistOptions = {}): 
     ...(rootRes.mcus.length ? { mcus: rootRes.mcus } : {}),
     ...(rootRes.mechas.length ? { mechas: rootRes.mechas } : {}),
     ...(rootRes.ladder ? { ladder: rootRes.ladder } : {}),
+    ...(ladders.length ? { ladders } : {}),
   };
 }
 
@@ -1660,10 +1671,23 @@ function walkInstances(shared: Shared, topBlocks: Map<string, { subckt: string; 
   recurse(topBlocks, shared.top.elements, null, 0);
 }
 
-/** Instance list, child-part nets by path and probes of child sheets (first instance). */
-function expandInstances(shared: Shared, topBlocks: Map<string, { subckt: string; refdes: string }>, probes: ProbeBinding[], partNets: Record<string, Record<string, string>>, out: BlockInstanceInfo[]): void {
+/**
+ * Instance list, child-part nets by path, and the probes, instruments and indicators of child
+ * sheets: one binding per placed copy, with the nodes and element names of that copy and its path
+ * (a probe measures the copy it sits in; "X2.XMM1" is the multimeter of block X2).
+ */
+function expandInstances(
+  shared: Shared,
+  topBlocks: Map<string, { subckt: string; refdes: string }>,
+  probes: ProbeBinding[],
+  partNets: Record<string, Record<string, string>>,
+  out: BlockInstanceInfo[],
+  instruments: InstrumentBinding[],
+  indicators: IndicatorBinding[],
+  ladders: LadderBinding[],
+): void {
   const globals = new Set([...(shared.globalNames?.values() ?? [])].map((n) => n.toLowerCase()));
-  const probed = new Set<string>();
+  const counts = childInstanceCounts(shared.design);
   walkInstances(shared, topBlocks, (frame) => {
     out.push({ path: frame.path, xpath: frame.xpath, childId: frame.emitted.childId, subckt: frame.emitted.name });
     for (const [refdes, pins] of Object.entries(frame.emitted.partNets)) {
@@ -1671,14 +1695,27 @@ function expandInstances(shared: Shared, topBlocks: Map<string, { subckt: string
       for (const [pin, node] of Object.entries(pins)) m[pin] = mapInstanceNode(frame, node, globals);
       partNets[`${frame.path}/${refdes}`] = m;
     }
-    if (probed.has(frame.emitted.childId)) return;
-    probed.add(frame.emitted.childId);
+    const path = frame.path.split('/');
     const mapSig = (s: SignalRef): SignalRef =>
-      s.kind === 'voltage' ? { kind: 'voltage', pos: mapInstanceNode(frame, s.pos, globals), neg: mapInstanceNode(frame, s.neg, globals) } : { kind: 'current', element: `V.${frame.xpath}.${s.element}` };
+      s.kind === 'voltage' ? { kind: 'voltage', pos: mapInstanceNode(frame, s.pos, globals), neg: mapInstanceNode(frame, s.neg, globals) } : { kind: 'current', element: mapElementName(frame, s.element) };
+    const multi = (counts.get(frame.emitted.childId) ?? 0) > 1;
     for (const { binding } of frame.emitted.probes) {
-      probes.push({ ...binding, signal: mapSig(binding.signal), ...(binding.current ? { current: mapSig(binding.current) } : {}) });
+      probes.push({ ...binding, path, ...(multi && binding.name ? { name: `${path.join('.')}.${binding.name}` } : {}), signal: mapSig(binding.signal), ...(binding.current ? { current: mapSig(binding.current) } : {}) });
+    }
+    for (const b of frame.emitted.live.instruments) {
+      instruments.push({ ...b, refdes: [...path, b.refdes].join('.'), scope: { path, local: b.refdes, childId: frame.emitted.childId }, channels: Object.fromEntries(Object.entries(b.channels).map(([k, v]) => [k, mapSig(v)])), drives: b.drives.map((d) => mapElementName(frame, d)) });
+    }
+    const lad = frame.emitted.live.ladder;
+    if (lad) ladders.push({ ...lad, element: mapElementName(frame, lad.element), scope: { path, childId: frame.emitted.childId } });
+    for (const b of frame.emitted.live.indicators) {
+      indicators.push({ ...b, refdes: [...path, b.refdes].join('.'), scope: { path, local: b.refdes, childId: frame.emitted.childId }, signal: mapSig(b.signal), ...(b.current ? { current: mapSig(b.current) } : {}), ...(b.signals ? { signals: b.signals.map(mapSig) } : {}) });
     }
   });
+}
+
+/** Name an element of a block copy gets after flattening ("V_XFG1_p" in "XHB1" -> "V.XHB1.V_XFG1_p"). */
+function mapElementName(frame: InstanceFrame, element: string): string {
+  return `${element.charAt(0).toUpperCase()}.${frame.xpath}.${element}`;
 }
 
 /**

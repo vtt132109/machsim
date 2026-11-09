@@ -74,7 +74,12 @@ export function circuitElements(build: BuildInfo): AnalysisElementInfo[] {
   return out;
 }
 
+/** Global parameters a Parameter sweep can step: the design variables and `.param`s of the netlist. */
+export function circuitVariables(build: Pick<NetlistBuild, 'netlist'>): string[] {
+  return Object.keys(build.netlist.params).filter((k) => !k.includes('(') && /^[A-Za-z_][A-Za-z0-9_]*$/.test(k));
+}
+
 /** SpecContext for defaultSpec / validateSpec. */
 export function specContext(build: Pick<NetlistBuild, 'netlist' | 'nets'> & { tolerances?: readonly ElementTolerance[] }): SpecContext {
-  return { outputs: circuitOutputs(build), sources: circuitSources(build), elements: circuitElements(build) };
+  return { outputs: circuitOutputs(build), sources: circuitSources(build), elements: circuitElements(build), variables: circuitVariables(build) };
 }

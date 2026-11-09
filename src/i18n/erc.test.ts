@@ -72,16 +72,11 @@ describe('simulation error explanations', () => {
 
 describe('explanations of the round-2 ERC checks', () => {
   afterEach(() => setLang('vi'));
-  it('unread number text, indicators and interactive parts inside a block are explained in Vietnamese', () => {
+  it('unread number text is explained in Vietnamese', () => {
     setLang('vi');
     const unread = explainErc({ severity: 'error', code: 'bad-param', message: 'x', detail: { id: 'paramUnreadText', params: { refdes: 'R1', label: 'Điện trở', text: '4.7.3k', rest: '.3k', value: '4.7 Ω' } } });
     expect(unread.title).toContain('.3k');
     expect(unread.why).toContain('4.7 Ω');
     expect(unread.fix).toContain('4,7k');
-    const led = explainErc({ severity: 'warning', code: 'other', message: 'x', detail: { id: 'indicatorInBlock', params: { refdes: 'LED1', block: 'SC_LIGHT' } } });
-    expect(led.title).toBe('LED1 nằm trong khối SC_LIGHT nên sẽ không sáng');
-    const sw = explainErc({ severity: 'warning', code: 'other', message: 'x', detail: { id: 'interactiveInBlock', params: { refdes: 'S1', block: 'B' } } });
-    expect(sw.title).toContain('S1');
-    expect(sw.fix.length).toBeGreaterThan(10);
   });
 });

@@ -12,10 +12,11 @@ import { memo, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncEx
 import { defaultParams, libraryVersion, subscribeLibrary } from '../../library';
 import type { PartInstance, Point } from '../../model/types';
 import { GRID } from '../../model/types';
-import { findSheet } from '../../model/hierarchy';
+import { findSheet, scopedLive } from '../../model/hierarchy';
 import { sheetColorVars } from '../../model/paper';
 import { actions, getState, partLookup, setCursor, useEditor } from '../store';
 import { computeConnectivity } from '../store/connectivity';
+import { activeViewPath } from '../store/editorStore';
 import { getSheet, sheetPins } from '../store/designOps';
 import { partBox, probeLayout, rectFromPoints } from '../store/shapes';
 import type { ToolState } from '../store/types';
@@ -154,9 +155,13 @@ export function SchematicCanvas() {
   const showGrid = useEditor((s) => s.showGrid);
   const showErc = useEditor((s) => s.showErc);
   const ercMarkers = useEditor((s) => s.ercMarkers);
-  const indicatorLevels = useEditor((s) => s.indicatorLevels);
+  const allLevels = useEditor((s) => s.indicatorLevels);
   const ratingStates = useEditor((s) => s.ratingStates);
-  const probeValues = useEditor((s) => s.probeValues);
+  const allProbeValues = useEditor((s) => s.probeValues);
+  // the placed copy of the open block whose live values are drawn (src/ui/store/editorStore.ts)
+  const viewKey = useEditor((s) => activeViewPath(s).join('/'));
+  const indicatorLevels = useMemo(() => scopedLive(allLevels, viewKey ? viewKey.split('/') : []), [allLevels, viewKey]);
+  const probeValues = useMemo(() => scopedLive(allProbeValues, viewKey ? viewKey.split('/') : []), [allProbeValues, viewKey]);
   const size = useEditor((s) => s.viewportSize);
   const overlay = useSyncExternalStore(interaction.overlay.subscribe, interaction.overlay.getState, interaction.overlay.getState);
   // a catalogue pack that finished loading (a part of the design waited for it) redraws the sheet

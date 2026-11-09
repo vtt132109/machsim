@@ -6,7 +6,7 @@
  */
 import { useMemo } from 'react';
 import { actions, getState, useEditor } from '../store';
-import { levelPath, levelSheetsOf } from '../store/editorStore';
+import { activeViewPath, levelPath, levelSheetsOf } from '../store/editorStore';
 import { Icon } from '../common/icons';
 import { openContextMenu } from '../common/Menu';
 import { Tabs } from '../common/Tabs';
@@ -18,6 +18,9 @@ function Breadcrumb() {
   const activeId = useEditor((s) => s.activeSheetId);
   // levelPath builds new arrays: derive it from the (stable) design and sheet id
   const path = useMemo(() => levelPath({ ...getState(), design, activeSheetId: activeId }), [design, activeId]);
+  // the placed copy that is open: its refdes names each block on the way down ("X2 · Amp")
+  const viewKey = useEditor((s) => activeViewPath(s).join('/'));
+  const view = viewKey ? viewKey.split('/') : [];
   const title = design.title;
   if (path.length < 2) return null;
   return (
@@ -35,10 +38,12 @@ function Breadcrumb() {
             aria-current={i === path.length - 1 ? 'location' : undefined}
             onClick={() => {
               const target = n.sheets[0];
-              if (target) actions.setActiveSheet(target.id);
+              if (!target) return;
+              actions.setActiveSheet(target.id);
+              actions.setViewPath(view.slice(0, i));
             }}
           >
-            {n.child ? `${n.block?.inst.refdes ?? ''} · ${n.child.name}` : title}
+            {n.child ? `${view[i - 1] ?? n.block?.inst.refdes ?? ''} · ${n.child.name}` : title}
           </button>
         </span>
       ))}

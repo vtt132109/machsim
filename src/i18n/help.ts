@@ -688,7 +688,7 @@ export const ANALYSIS_HELP: Record<AnalysisType, HelpEntry> = {
   paramsweep: {
     what: L('Chạy lại một phép phân tích với nhiều giá trị của một tham số linh kiện.', 'Repeats an analysis for several values of one component parameter.'),
     use: L('Xem ảnh hưởng của R hay C lên đáp ứng, chọn giá trị tốt nhất.', 'See how R or C changes the response, pick the best value.'),
-    read: L('Mỗi giá trị cho một đường cong trong Grapher.', 'One curve per value in the Grapher.'),
+    read: L('Mỗi giá trị cho một đường cong trong Grapher, chú giải ghi giá trị (ví dụ Rx=2000). Quét được cả tham số toàn cục (biến) của mạch.', 'One curve per value in the Grapher, the legend names the value (for example Rx=2000). A global parameter (variable) of the circuit can be swept too.'),
   },
   tempsweep: {
     what: L('Chạy lại một phép phân tích ở nhiều nhiệt độ.', 'Repeats an analysis at several temperatures.'),

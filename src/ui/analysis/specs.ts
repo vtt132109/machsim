@@ -152,6 +152,8 @@ export interface SpecContext {
   sources?: readonly string[];
   /** components and models that can be swept or toleranced */
   elements?: readonly (string | AnalysisElementInfo)[];
+  /** global parameters (design variables, `.param`s) a Parameter sweep may step */
+  variables?: readonly string[];
 }
 
 export function normalizeElements(list: SpecContext['elements']): AnalysisElementInfo[] {
@@ -556,7 +558,15 @@ function checkMeasure(is: Issues, path: string, m: MeasureSpec, ctx: SpecContext
   if ((m.func === 'rise_edge' || m.func === 'fall_edge') && !Number.isFinite(m.threshold ?? Number.NaN)) is.error(`${path}.threshold`, t('analysis.specs.enterTheCrossingThreshold'));
 }
 
-function checkSweepTarget(is: Issues, path: string, tg: { target: string; param: string; model?: boolean; values: number[] }, ctx: SpecContext): void {
+function checkSweepTarget(is: Issues, path: string, tg: { target: string; param: string; model?: boolean; global?: boolean; values: number[] }, ctx: SpecContext): void {
+  if (tg.global) {
+    // a global parameter (design variable): stepped by rebuilding the circuit for every value
+    if (is.required(`${path}target`, tg.target, t('analysis.specs.globalParameter')) && ctx.variables?.length && !ctx.variables.some((v) => v.toLowerCase() === tg.target.trim().toLowerCase())) {
+      is.error(`${path}target`, t('analysis.specs.unknownGlobalParameter', { target: tg.target }));
+    }
+    checkValues(is, `${path}values`, tg.values, 'value');
+    return;
+  }
   if (is.required(`${path}target`, tg.target, tg.model ? t('analysis.specs.model') : t('analysis.specs.component'))) {
     const els = normalizeElements(ctx.elements).filter((e) => !!e.model === !!tg.model);
     if (els.length && !els.some((e) => e.name.toLowerCase() === tg.target.trim().toLowerCase())) is.error(`${path}target`, tg.model ? t('analysis.specs.unknownModel', { target: tg.target }) : t('analysis.specs.unknownComponent', { target: tg.target }));

@@ -95,6 +95,7 @@ export default {
   'integration.reports.untitled': ['Chưa đặt tên', 'Untitled'],
   'integration.reports.counts': ['{elements} phần tử, {nets} net', '{elements} elements, {nets} nets'],
   'integration.panels.spiceNetlist': ['Netlist SPICE', 'SPICE netlist'],
+  'integration.controller.stepFailed': ['Không chạy được các bước quét: {error}', 'Cannot run the steps: {error}'],
   'integration.controller.settingsInvalid': ['Thiết lập {label} chưa hợp lệ: {errors}', '{label} settings: {errors}'],
   'integration.controller.nameFailed': ['{name} thất bại: {error}', '{name} failed: {error}'],
   'integration.commands.spiceLineError': ['{file}, dòng {line}: {message}', '{file} line {line}: {message}'],

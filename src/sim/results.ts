@@ -67,7 +67,7 @@ export interface AnalysisResult {
 export interface MeasurementResult {
   name: string;
   /** analysis the directive applies to */
-  analysis: 'tran' | 'ac' | 'dc';
+  analysis: 'tran' | 'ac' | 'dc' | 'op' | 'noise' | 'tf';
   /** the measured value (NaN when it could not be measured, see `error`) */
   value: number;
   /** x position (time / frequency / sweep value) the value was taken at, when there is one */

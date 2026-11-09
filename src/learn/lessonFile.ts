@@ -13,7 +13,11 @@
  *   connected  a pin of one kind of part sits on the same net as a pin of another (or on ground)
  *   measure    a measured value is within a tolerance of a target (the meter reading, a named
  *              net's voltage, the current through a part): `tolerancePct` of the target, or the
- *              absolute `toleranceAbs` when the step gives one. A target of 0 ("the balanced
+ *              absolute `toleranceAbs` when the step gives one. The step may choose the analysis
+ *              (`analysis`, src/learn/readings.ts): the operating point (the default, and what every
+ *              older file means), a transient read like a `.meas` card (the value at a time, the
+ *              peak, minimum, peak-to-peak, RMS, mean or frequency of a net's or a part's voltage),
+ *              or the AC phasor at one frequency (magnitude, dB, phase). A target of 0 ("the balanced
  *              bridge reads 0 V") is checked against the absolute `ZERO_TOLERANCE` of
  *              src/learn/kit.ts, because a percentage of zero is zero and a real circuit answers
  *              a few nanovolts; write `toleranceAbs` to widen that band.
@@ -36,7 +40,8 @@ import { parseDesignSafely } from '../model/sanitize';
 import { newDesign, type Design } from '../model/types';
 import type { LessonCircuit, PartMatch, PartRef } from './circuit';
 import { fail, measured, noun, pass, withSim } from './kit';
-import { LESSON_LEVELS, type LessonCheck, type LessonDef, type LessonLevel } from './types';
+import { acReading, AC_READINGS, phasorBetween, readingUnit, TRAN_READINGS, transientReading, type LessonAnalysis } from './readings';
+import { LESSON_LEVELS, type CheckResult, type LessonCheck, type LessonDef, type LessonLevel } from './types';
 import { emptyProgress, type LessonProgress, parseProgress } from './progress';
 
 export const LESSON_FORMAT = 'machsim-lesson';
@@ -79,7 +84,7 @@ export type LessonProbe =
 export type LessonCheckSpec =
   | { kind: 'part'; part: LessonPartSpec; count?: number }
   | { kind: 'connected'; from: LessonEnd; to: LessonEnd }
-  | { kind: 'measure'; probe: LessonProbe; target: number; tolerancePct: number; unit: string; toleranceAbs?: number }
+  | { kind: 'measure'; probe: LessonProbe; target: number; tolerancePct: number; unit: string; toleranceAbs?: number; analysis?: LessonAnalysis }
   | { kind: 'erc' };
 
 export interface LessonFileStep {
@@ -122,7 +127,7 @@ export interface LessonFile {
 export interface LessonFileError {
   /** JSON path, e.g. "steps[2].check.target" */
   path: string;
-  code: 'missing' | 'type' | 'empty' | 'range' | 'duplicate' | 'unknown' | 'format' | 'design';
+  code: 'missing' | 'type' | 'empty' | 'range' | 'duplicate' | 'unknown' | 'format' | 'design' | 'combination';
   /** extra detail (the value found, the design error) */
   detail?: string;
 }
@@ -243,6 +248,53 @@ class Validator {
     }
   }
 
+  /** The analysis of a `measure` step: absent or 'op' (the operating point), a transient or an AC phasor. */
+  analysis(v: unknown, path: string): LessonAnalysis | undefined {
+    if (v === undefined || v === null) return undefined;
+    if (typeof v !== 'object') {
+      this.err(path, 'type');
+      return undefined;
+    }
+    const o = v as Record<string, unknown>;
+    const seconds = (key: string, required: boolean, max = 1000): number | undefined => {
+      if (o[key] === undefined || o[key] === null) {
+        if (required) this.err(`${path}.${key}`, 'missing');
+        return undefined;
+      }
+      const n = Number(o[key]);
+      if (!Number.isFinite(n) || n < 0 || n > max) {
+        this.err(`${path}.${key}`, 'range', String(o[key]));
+        return undefined;
+      }
+      return n;
+    };
+    switch (o.kind) {
+      case 'op':
+        return { kind: 'op' };
+      case 'tran': {
+        const tstop = seconds('tstop', true, 100);
+        if (tstop !== undefined && !(tstop > 0)) this.err(`${path}.tstop`, 'range', String(o.tstop));
+        const reading = TRAN_READINGS.find((r) => r === o.reading);
+        if (!reading) this.err(`${path}.reading`, o.reading === undefined ? 'missing' : 'unknown', String(o.reading));
+        const at = seconds('at', reading === 'at', 100);
+        const from = seconds('from', false, 100);
+        if (tstop !== undefined && at !== undefined && at > tstop) this.err(`${path}.at`, 'range', String(o.at));
+        if (tstop !== undefined && from !== undefined && from >= tstop) this.err(`${path}.from`, 'range', String(o.from));
+        return { kind: 'tran', tstop: tstop !== undefined && tstop > 0 ? tstop : 1e-3, reading: reading ?? 'final', ...(at !== undefined ? { at } : {}), ...(from !== undefined && from > 0 ? { from } : {}) };
+      }
+      case 'ac': {
+        const freq = Number(o.freq);
+        if (!Number.isFinite(freq) || freq <= 0 || freq > 1e12) this.err(`${path}.freq`, o.freq === undefined ? 'missing' : 'range', String(o.freq));
+        const reading = AC_READINGS.find((r) => r === o.reading);
+        if (!reading) this.err(`${path}.reading`, o.reading === undefined ? 'missing' : 'unknown', String(o.reading));
+        return { kind: 'ac', freq: Number.isFinite(freq) && freq > 0 ? freq : 1e3, reading: reading ?? 'mag' };
+      }
+      default:
+        this.err(`${path}.kind`, 'unknown', String(o.kind));
+        return undefined;
+    }
+  }
+
   check(v: unknown, path: string): LessonCheckSpec {
     if (typeof v !== 'object' || v === null) {
       this.err(path, 'missing');
@@ -264,13 +316,19 @@ class Validator {
         if (!Number.isFinite(target)) this.err(`${path}.target`, 'type', String(o.target));
         if (!Number.isFinite(tol) || tol <= 0 || tol > 100) this.err(`${path}.tolerancePct`, 'range', String(o.tolerancePct));
         if (abs !== undefined && (!Number.isFinite(abs) || abs < 0)) this.err(`${path}.toleranceAbs`, 'range', String(o.toleranceAbs));
+        const probe = this.probe(o.probe, `${path}.probe`);
+        const analysis = this.analysis(o.analysis, `${path}.analysis`);
+        // a transient or AC reading is a voltage of a net or across a part: a meter reading and a
+        // part current exist at the operating point only
+        if (analysis && analysis.kind !== 'op' && (probe.kind === 'meter' || probe.kind === 'partCurrent')) this.err(`${path}.analysis`, 'combination', probe.kind);
         return {
           kind: 'measure',
-          probe: this.probe(o.probe, `${path}.probe`),
+          probe,
           target: Number.isFinite(target) ? target : 0,
           tolerancePct: Number.isFinite(tol) && tol > 0 && tol <= 100 ? tol : 5,
           unit: typeof o.unit === 'string' ? o.unit.trim() : '',
           ...(abs !== undefined && Number.isFinite(abs) && abs > 0 ? { toleranceAbs: abs } : {}),
+          ...(analysis && analysis.kind !== 'op' ? { analysis } : {}),
         };
       }
       case 'erc':
@@ -464,7 +522,9 @@ export function compileCheck(spec: LessonCheckSpec): LessonCheck {
         const errs = c.ercErrors();
         return errs.length ? fail('ercError', { erc: JSON.stringify(errs[0]) }) : pass('note:fileErcOk');
       };
-    default:
+    default: {
+      const analysis = spec.analysis;
+      if (analysis && analysis.kind !== 'op') return (c) => withSim(c, () => measureOther(c, spec, analysis));
       return (c) =>
         withSim(c, async () => {
           const op = await c.op();
@@ -484,7 +544,43 @@ export function compileCheck(spec: LessonCheckSpec): LessonCheck {
           const value = p.kind === 'partCurrent' ? c.current(op, ref) : op.vd(...(c.pinNets(ref).slice(0, 2) as [string, string]));
           return measured(value, spec.target, spec.tolerancePct, spec.unit, spec.toleranceAbs);
         });
+    }
   }
+}
+
+/** The two nets a transient / AC step reads between: a named net against ground, or across a part. */
+function readingNets(c: LessonCircuit, p: LessonProbe): { pos: string; neg: string } | CheckResult {
+  if (p.kind === 'net') {
+    const node = c.namedNet(p.net);
+    return node ? { pos: node, neg: '0' } : fail('note:fileNet', { net: p.net });
+  }
+  if (p.kind === 'partVoltage') {
+    const ref = firstPart(c, p.part);
+    if (!ref) return fail('note:filePart', { part: partSpecText(p.part), n: 1, have: 0 });
+    const [pos, neg] = c.pinNets(ref).slice(0, 2);
+    return pos === undefined || neg === undefined ? fail('note:filePart', { part: partSpecText(p.part), n: 1, have: 0 }) : { pos, neg };
+  }
+  return fail('note:fileReadingProbe');
+}
+
+/** A `measure` step that runs a transient or an AC analysis (see src/learn/readings.ts). */
+async function measureOther(c: LessonCircuit, spec: Extract<LessonCheckSpec, { kind: 'measure' }>, analysis: Exclude<LessonAnalysis, { kind: 'op' }>): Promise<CheckResult> {
+  const nets = readingNets(c, spec.probe);
+  if ('ok' in nets) return nets;
+  const unit = spec.unit || readingUnit(analysis);
+  let value: number;
+  if (analysis.kind === 'tran') {
+    const sim = await c.tran(analysis.tstop);
+    const r = transientReading(sim.result, nets.pos, nets.neg, analysis);
+    if (r.error && !Number.isFinite(r.value)) return fail('note:fileReading', { reading: analysis.reading, message: r.error });
+    value = r.value;
+  } else {
+    const sim = await c.acAt(analysis.freq);
+    const phasor = phasorBetween(sim.result, nets.pos, nets.neg);
+    if (!phasor) return fail('note:fileReading', { reading: analysis.reading, message: 'no such signal' });
+    value = acReading(phasor, analysis.reading);
+  }
+  return measured(value, spec.target, spec.tolerancePct, unit, spec.toleranceAbs);
 }
 
 const endText = (end: LessonEnd): string => ('ground' in end ? '0' : `${partSpecText(end.part)}.${end.pin}`);

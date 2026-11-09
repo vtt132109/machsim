@@ -42,7 +42,7 @@ import { annotateDesign } from '../../../src/model/annotate';
 import { findInDesign, replaceInDesign } from '../../../src/model/findReplace';
 import { addVariant, setActiveVariant, setFitted } from '../../../src/model/variants';
 import { packageKey, packageOf } from '../../../src/model/sections';
-import { childIdOfPart, isBlockPartId } from '../../../src/model/hierarchy';
+import { blockInstances, childIdOfPart, getChild, isBlockPartId, resolveLivePart, withLiveParam } from '../../../src/model/hierarchy';
 import { isCustomPartId } from '../../../src/library/custom/types';
 import { getPart } from '../../../src/library';
 import type { Design, PartInstance, Sheet } from '../../../src/model/types';
@@ -240,6 +240,20 @@ const OPS: Op[] = [
         next = setFitted(next, [victim.id], added.id, false);
       }
       return setActiveVariant(next, r() < 0.5 ? added.id : (next.variants?.list[0].id ?? added.id));
+    },
+  },
+  {
+    // round 4 step 3: a part inside one placed copy of a block holds its own state (PartInstance.inner)
+    name: 'block copy state',
+    apply: (d, r) => {
+      const block = pick(r, blockInstances(d).filter((b) => b.scope === undefined));
+      const parts = block ? (getChild(d, block.childId)?.sheets ?? []).flatMap((s) => s.parts).filter((p) => Object.keys(p.params).length > 0) : [];
+      const part = pick(r, parts);
+      if (!block || !part) return d;
+      const ref = resolveLivePart(d, [block.inst.refdes], part.refdes);
+      const key = Object.keys(part.params)[0];
+      // the saved value written as the copy's own: the circuit is unchanged, the state is stored
+      return ref ? withLiveParam(d, ref, key, part.params[key]) : d;
     },
   },
   { name: 'annotate missing', apply: (d) => annotateDesign(d, { mode: 'missing' }).design },

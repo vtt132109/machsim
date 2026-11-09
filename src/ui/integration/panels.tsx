@@ -3,6 +3,7 @@
  * Simulation (speed, instruments, live readings, last results), ERC, Netlist (SPICE text) and BOM.
  */
 import { maskValue, valuesHidden } from '../../model/restrictions';
+import { hierarchyTree, type HierarchyNode } from '../../model/hierarchy';
 import { useDeferredValue, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ErcMessage, InstrumentKind } from '../../model/types';
 import { formatEng } from '../../util/units';
@@ -62,6 +63,20 @@ export function SimulationTab({ ctrl }: { ctrl: SimulationIntegration }) {
         const kind = partKind(p.partId);
         if (kind) out.push({ refdes: p.refdes, kind });
       }
+    }
+    // instruments inside blocks: one entry per placed copy, named by its path ("X2.XMM1")
+    if (design.children?.length) {
+      const walk = (n: HierarchyNode, path: string[]) => {
+        for (const c of n.children) {
+          const here = [...path, c.block?.inst.refdes ?? ''];
+          for (const sh of c.sheets) for (const p of sh.parts) {
+            const kind = partKind(p.partId);
+            if (kind) out.push({ refdes: [...here, p.refdes].join('.'), kind });
+          }
+          if (!c.cyclic) walk(c, here);
+        }
+      };
+      walk(hierarchyTree(design), []);
     }
     return out;
   }, [design]);

@@ -8,6 +8,7 @@
 import type { InstrumentKind } from '../../model/types';
 import { actions, getState, partLookup } from '../store';
 import { findItem } from '../store/designOps';
+import { activeViewPath } from '../store/editorStore';
 import type { HitResult } from '../store/hitTest';
 import type { Design, PartInstance, Wire } from '../../model/types';
 import { promptText } from '../common/dialogs';
@@ -54,7 +55,9 @@ function cmd(id: string, label: string, enabled = true): MenuItem {
 
 /** Open the floating window registered for an instrument kind. */
 export function openInstrumentWindow(refdes: string, kind: InstrumentKind): string {
-  return openFloatingWindow(kind, { refdes });
+  // an instrument inside an opened block is named by the copy the learner looks at ("X2.XMM1")
+  const view = activeViewPath(getState());
+  return openFloatingWindow(kind, { refdes: view.length ? [...view, refdes].join('.') : refdes });
 }
 
 /** Entries of the canvas context menu for what was right-clicked. */

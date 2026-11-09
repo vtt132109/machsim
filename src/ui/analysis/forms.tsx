@@ -166,30 +166,46 @@ interface SweepTargetValue {
   target: string;
   param: string;
   model?: boolean;
+  /** a global parameter (design variable): stepped by rebuilding the circuit per value */
+  global?: boolean;
   values: number[];
 }
 
-function SweepTarget({ value, onChange, ctx, issues, title }: { value: SweepTargetValue; onChange: (v: SweepTargetValue) => void; ctx: FormContext; issues: readonly SpecIssue[]; title: string }) {
+function SweepTarget({ value, onChange, ctx, issues, title, allowVariable = false }: { value: SweepTargetValue; onChange: (v: SweepTargetValue) => void; ctx: FormContext; issues: readonly SpecIssue[]; title: string; allowVariable?: boolean }) {
   const at = (p: string) => issuesAt(issues, p);
   const els = normalizeElements(ctx.elements).filter((e) => !!e.model === !!value.model);
   const el = els.find((e) => e.name.toLowerCase() === value.target.trim().toLowerCase());
   const params = elementParamChoices(el, !!value.model);
-  const unit = sweepUnit(value.target, value.param, value.model);
+  const variables = ctx.variables ?? [];
+  const unit = value.global ? '' : sweepUnit(value.target, value.param, value.model);
+  const kindOf = value.global ? 'variable' : value.model ? 'model' : 'element';
+  const options: (readonly [string, string])[] = [
+    ['element', t('analysis.forms.componentParameter')],
+    ['model', t('analysis.forms.modelParameter')],
+  ];
+  if ((allowVariable && variables.length > 0) || value.global) options.push(['variable', t('analysis.forms.globalParameter')]);
   return (
     <Group title={title}>
       <FieldRow>
         <SelectField
           label={t('analysis.forms.sweepOf')}
-          value={value.model ? 'model' : 'element'}
-          options={[
-            ['element', t('analysis.forms.componentParameter')],
-            ['model', t('analysis.forms.modelParameter')],
-          ]}
-          onChange={(k) => onChange({ ...value, model: k === 'model' ? true : undefined, param: k === 'model' ? '' : 'value' })}
+          value={kindOf}
+          options={options}
+          onChange={(k) => {
+            if (k === 'variable') onChange({ ...value, global: true, model: undefined, target: variables.find((v) => v.toLowerCase() === value.target.toLowerCase()) ?? variables[0] ?? '', param: 'value' });
+            else onChange({ ...value, global: undefined, model: k === 'model' ? true : undefined, param: k === 'model' ? '' : 'value' });
+          }}
         />
-        <TextField label={value.model ? t('analysis.forms.model') : t('analysis.forms.component')} value={value.target} suggestions={els.map((e) => e.name)} onChange={(target) => onChange({ ...value, target, param: paramForTarget(byName(els, target), value.param, !!value.model) })} issues={at('target')} size={10} />
-        <TextField label={t('common.parameter')} value={value.param} suggestions={params} onChange={(param) => onChange({ ...value, param })} issues={at('param')} size={8} />
+        {value.global ? (
+          <TextField label={t('analysis.forms.globalParameterName')} value={value.target} suggestions={variables} onChange={(target) => onChange({ ...value, target })} issues={at('target')} size={12} />
+        ) : (
+          <>
+            <TextField label={value.model ? t('analysis.forms.model') : t('analysis.forms.component')} value={value.target} suggestions={els.map((e) => e.name)} onChange={(target) => onChange({ ...value, target, param: paramForTarget(byName(els, target), value.param, !!value.model) })} issues={at('target')} size={10} />
+            <TextField label={t('common.parameter')} value={value.param} suggestions={params} onChange={(param) => onChange({ ...value, param })} issues={at('param')} size={8} />
+          </>
+        )}
       </FieldRow>
+      {value.global ? <span className="msa-hint">{t('analysis.forms.globalParameterHint')}</span> : null}
       <ListField label={t('common.values')} unit={unit || undefined} values={value.values} onChange={(values) => onChange({ ...value, values })} issues={at('values')} />
       <ValuesGenerator unit={unit} onGenerate={(values) => onChange({ ...value, values })} />
     </Group>
@@ -574,10 +590,19 @@ function NoiseFigureForm({ spec, onChange, ctx, issues }: SpecFormProps<NoiseFig
 // Meta analyses
 // ---------------------------------------------------------------------------
 
+/** The sweep with a new target; `global` is dropped (not left undefined) when it no longer applies. */
+function withSweepTarget(spec: ParamSweepAnalysis, v: SweepTargetValue): ParamSweepAnalysis {
+  const { global: oldGlobal, netlists: built, ...rest } = spec;
+  void oldGlobal;
+  void built;
+  const { global: nowGlobal, ...target } = v;
+  return { ...rest, ...target, ...(nowGlobal ? { global: true } : {}) };
+}
+
 function ParamSweepForm({ spec, onChange, ctx, issues, depth = 0 }: SpecFormProps<ParamSweepAnalysis>) {
   return (
     <>
-      <SweepTarget title={t('analysis.forms.sweepParameter')} value={spec} onChange={(v) => onChange({ ...spec, ...v })} ctx={ctx} issues={issues} />
+      <SweepTarget title={t('analysis.forms.sweepParameter')} value={spec} onChange={(v) => onChange(withSweepTarget(spec, v))} ctx={ctx} issues={issues} allowVariable />
       <BaseEditor base={spec.base} onChange={(base) => onChange({ ...spec, base })} ctx={ctx} issues={issues} depth={depth} />
     </>
   );

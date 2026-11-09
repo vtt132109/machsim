@@ -27,6 +27,7 @@ import {
   type LessonPartSpec,
   type LessonProbe,
 } from '../../learn/lessonFile';
+import { AC_READINGS, TRAN_READINGS, type LessonAnalysis } from '../../learn/readings';
 import { parseUserNumber, formatEng } from '../../util/units';
 import { ZERO_TOLERANCE } from '../../learn/kit';
 import { Dialog } from '../common/Dialog';
@@ -140,8 +141,95 @@ function CheckFields({ check, onChange }: { check: LessonCheckSpec; onChange: (v
   }
   if (check.kind === 'erc') return null;
   const probe = check.probe;
+  const analysis: LessonAnalysis = check.analysis ?? { kind: 'op' };
+  // a meter reading and a part current exist at the operating point only
+  const probeKinds = analysis.kind === 'op' ? PROBE_KINDS : PROBE_KINDS.filter((k) => k === 'net' || k === 'partVoltage');
+  const setAnalysis = (next: LessonAnalysis) => {
+    const rest = { ...check };
+    delete rest.analysis;
+    const probeOk = next.kind === 'op' || probe.kind === 'net' || probe.kind === 'partVoltage';
+    onChange({ ...rest, ...(next.kind === 'op' ? {} : { analysis: next }), ...(probeOk ? {} : { probe: { kind: 'net', net: 'OUT' } satisfies LessonProbe }) });
+  };
+  const secondsInput = (value: number | undefined, tip: string, set: (v: number | undefined) => void) => (
+    <input
+      className="ms-input"
+      title={tip}
+      defaultValue={value === undefined ? '' : formatEng(value, '', 6)}
+      onBlur={(e) => {
+        const raw = e.target.value.trim();
+        const v = parseUserNumber(raw);
+        set(raw === '' || !Number.isFinite(v) || v < 0 ? undefined : v);
+      }}
+    />
+  );
   return (
     <>
+      <label>
+        <span>{lt('ed.analysis')}</span>
+        <select
+          className="ms-select"
+          title={lt('ed.analysisTip')}
+          value={analysis.kind}
+          onChange={(e) => setAnalysis(e.target.value === 'tran' ? { kind: 'tran', tstop: 5e-3, reading: 'final' } : e.target.value === 'ac' ? { kind: 'ac', freq: 1e3, reading: 'mag' } : { kind: 'op' })}
+        >
+          {(['op', 'tran', 'ac'] as const).map((k) => (
+            <option key={k} value={k}>
+              {lt(`ed.analysis.${k}`)}
+            </option>
+          ))}
+        </select>
+      </label>
+      {analysis.kind === 'tran' ? (
+        <div className="ms-ed-row">
+          <label>
+            <span>{lt('ed.tstop')}</span>
+            {secondsInput(analysis.tstop, lt('ed.tstopTip'), (v) => v !== undefined && v > 0 && setAnalysis({ ...analysis, tstop: v }))}
+          </label>
+          <label>
+            <span>{lt('ed.reading')}</span>
+            <select className="ms-select" title={lt('ed.reading')} value={analysis.reading} onChange={(e) => setAnalysis({ ...analysis, reading: e.target.value as (typeof TRAN_READINGS)[number] })}>
+              {TRAN_READINGS.map((r) => (
+                <option key={r} value={r}>
+                  {lt(`ed.reading.${r}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          {analysis.reading === 'at' ? (
+            <label>
+              <span>{lt('ed.atTime')}</span>
+              {secondsInput(analysis.at, lt('ed.tstopTip'), (v) => setAnalysis({ ...analysis, at: v ?? 0 }))}
+            </label>
+          ) : analysis.reading !== 'final' ? (
+            <label>
+              <span>{lt('ed.fromTime')}</span>
+              {secondsInput(analysis.from, lt('ed.fromTimeTip'), (v) => {
+                const { from: _drop, ...rest } = analysis;
+                void _drop;
+                setAnalysis(v === undefined || v === 0 ? rest : { ...rest, from: v });
+              })}
+            </label>
+          ) : null}
+        </div>
+      ) : null}
+      {analysis.kind === 'ac' ? (
+        <div className="ms-ed-row">
+          <label>
+            <span>{lt('ed.freq')}</span>
+            {secondsInput(analysis.freq, lt('ed.freqTip'), (v) => v !== undefined && v > 0 && setAnalysis({ ...analysis, freq: v }))}
+          </label>
+          <label>
+            <span>{lt('ed.reading')}</span>
+            <select className="ms-select" title={lt('ed.reading')} value={analysis.reading} onChange={(e) => setAnalysis({ ...analysis, reading: e.target.value as (typeof AC_READINGS)[number] })}>
+              {AC_READINGS.map((r) => (
+                <option key={r} value={r}>
+                  {lt(`ed.reading.${r}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      ) : null}
       <label>
         <span>{lt('ed.probe')}</span>
         <select
@@ -154,7 +242,7 @@ function CheckFields({ check, onChange }: { check: LessonCheckSpec; onChange: (v
             onChange({ ...check, probe: next });
           }}
         >
-          {PROBE_KINDS.map((k) => (
+          {probeKinds.map((k) => (
             <option key={k} value={k}>
               {lt(`ed.probe.${k}`)}
             </option>

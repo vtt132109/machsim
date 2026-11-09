@@ -16,6 +16,8 @@ import { parseSpice } from '../spice/parser';
 import { applyMeasurements } from './meas';
 import type { AnalysisContext } from '../engine/analysis-registry';
 import { analysisTitle } from '../engine/titles';
+import { runSpec } from '../engine/run';
+import { childContext } from './util';
 
 export interface UserControls {
   analyses: AnalysisSpec[];
@@ -101,11 +103,14 @@ export function runUserAnalysis(spec: UserAnalysis, ctx: AnalysisContext): Analy
   if (c.errors.length) throw new SimulationError(`${what}: ${c.errors.join('; ')}`, 'netlist');
   if (!c.analyses.length) throw new SimulationError(`${what}: no analysis card (.op, .dc, .ac, .tran, ...) in the text`, 'netlist');
   const netlist = withControls(ctx.netlist, c);
+  // a `.step param` card re-evaluates the netlist before flattening: it needs the same controls
+  // applied to the source netlist, or its runs would lose the cards' options and initial conditions
+  const sub: AnalysisContext = ctx.source ? { ...childContext(ctx, netlist), source: withControls(ctx.source, c) } : childContext(ctx, netlist);
   const runs: { label: string; result: AnalysisResult }[] = [];
   c.analyses.forEach((a, i) => {
     ctx.checkAbort();
     ctx.progress(i / c.analyses.length, c.cards[i]);
-    const result = ctx.runSpec(a, netlist);
+    const result = runSpec(a, sub);
     runs.push({ label: `${i + 1}: ${c.cards[i] || analysisTitle(a.type)}`, result });
   });
   if (c.measures.length) applyMeasurements(runs.map((r) => r.result), { measures: c.measures, params: ctx.netlist.params });

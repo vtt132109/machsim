@@ -80,6 +80,15 @@ export interface PartInstance {
    * all (src/model/ercMatrix.ts). Absent = no markers.
    */
   ncPins?: string[];
+  /**
+   * Block instances only: parameter values of the parts INSIDE the block's design that belong to
+   * THIS placed copy, keyed by the part's refdes path relative to the block ("S1", or "X2/S1" for
+   * a part of a nested block). Live interactions (a click on a switch, a potentiometer key, an
+   * instrument setting) write here, so two copies of one block keep their own state while the
+   * block design itself stays untouched. The netlister applies them on top of the saved
+   * parameters (src/model/hierarchy.ts `innerParams`). Absent = every part keeps the saved values.
+   */
+  inner?: Record<string, Record<string, string>>;
 }
 
 /** BOM / PCB fields of a placed part (PartInstance.fields); every field is optional. */
@@ -817,8 +826,25 @@ export type SignalRef =
   /** branch current I(element) of a V source (often a 0 V sense source inserted by the netlister) */
   | { kind: 'current'; element: string };
 
+/**
+ * Where a live binding sits when its part is inside a block: the placed copy of the block (the
+ * refdes of each block on the way down from the top level) and the part's own refdes in the child
+ * design. `refdes` of such a binding is the dotted path ("X2.XMM1").
+ */
+export interface LiveScope {
+  /** refdes of the block copies from the top level down, e.g. ["X1", "X2"] */
+  path: string[];
+  /** refdes of the part inside the child design */
+  local: string;
+  /** child design that holds the part */
+  childId: string;
+}
+
 export interface InstrumentBinding {
+  /** refdes of the part; a part inside a block is named by its path ("X2.XMM1", see `scope`) */
   refdes: string;
+  /** set when the instrument sits inside a block (one binding per placed copy of the block) */
+  scope?: LiveScope;
   partId: string;
   kind: InstrumentKind;
   params: Record<string, string>;
@@ -830,6 +856,8 @@ export interface InstrumentBinding {
 
 export interface ProbeBinding {
   probeId: string;
+  /** probes inside a block: refdes of the block copies from the top level down (one binding per copy) */
+  path?: string[];
   name: string;
   kind: ProbeKind;
   color: string;

@@ -30,7 +30,11 @@ import { analysisAllowed } from '../../model/restrictions';
 import { defaultParams } from '../../library';
 import { buildNetlist, type NetlistBuildEx } from '../../model/netlister';
 import { designPartsReady } from '../../model/libraryLoad';
+import { activeViewPath } from '../store/editorStore';
 import { elementValueChanges } from '../../model/interactive';
+import { applySteps } from '../../model/steps';
+import { stepMessage } from '../../i18n/steps';
+import { flattenNetlist } from '../../sim/spice/flatten';
 import type { Design, ErcMessage, InstrumentBinding } from '../../model/types';
 import type { TransientChunk } from '../../sim/api';
 import type { AnalysisSpec, AnalysisType, Netlist, TranAnalysis } from '../../sim/netlist';
@@ -41,12 +45,12 @@ import { chunkSignal, pushTransientChunk } from '../instruments/signals';
 import { createInstrumentStream, type InstrumentStream } from '../instruments/types';
 import { instrumentNeed, type InstrumentNeed } from '../instruments/needs';
 import { createStore, type Store } from '../store/createStore';
-import { findPartByRefdes } from '../store/designOps';
+import { liveParams, resolveLiveName } from '../../model/hierarchy';
 import type { Editor } from '../store/editorStore';
 import type { SimMessageSeverity } from '../store/types';
 import { SimulationCancelled, type InteractiveSession, type RunHandle, type SessionEnd, type SimClient } from '../sim/client';
 import { specContext } from './circuitInfo';
-import { SignalHistory, indicatorReadings, liveLevels, lowerValues, neededVectors, needsStreaming, probeText, type IndicatorReading } from './live';
+import { SignalHistory, probeKey, indicatorReadings, liveLevels, lowerValues, neededVectors, needsStreaming, probeText, type IndicatorReading } from './live';
 import { t } from '../../i18n';
 import { ANALYSIS_LABELS } from '../app/menus';
 import { explainErc } from '../../i18n/erc';
@@ -393,12 +397,13 @@ export class SimulationIntegration {
   /** An instrument panel changed its settings (complete params record). */
   instrumentParams(refdes: string, next: Record<string, string>): void {
     const design = this.editor.getState().design;
-    const f = findPartByRefdes(design, refdes);
+    // `refdes` is a top-level refdes or the dotted path of an instrument inside a block ("X2.XMM1")
+    const f = resolveLiveName(design, refdes);
     if (!f) return;
     const def = this.editor.lookup(f.part.partId);
-    const current = { ...(def ? defaultParams(def) : {}), ...f.part.params };
+    const current = { ...(def ? defaultParams(def) : {}), ...liveParams(f) };
     for (const [k, v] of Object.entries(next)) {
-      if (current[k] !== v) this.editor.actions.setInteractiveParam(f.part.refdes, k, v);
+      if (current[k] !== v) this.editor.actions.setInteractiveParam(f.local, k, v, f.path);
     }
   }
 
@@ -541,7 +546,19 @@ export class SimulationIntegration {
       this.opts.onProblems?.();
       return null;
     }
-    return spec;
+    // `.step` cards of the circuit's SPICE text and Parameter sweeps of a design variable: the
+    // circuit is rebuilt for every value (src/model/steps.ts), then all of it runs as one family
+    const saves = effectiveSaves(design.analysis.saves, neededVectors(build));
+    const stepped = applySteps(design, spec, (n) => ({ ...n, analyses: [], saves }));
+    for (const note of stepped.notes) this.msg('info', stepMessage(note), 'step');
+    if (stepped.errors.length) {
+      const text = t('integration.controller.stepFailed', { error: stepMessage(stepped.errors[0]) });
+      this.msg('error', text, 'step');
+      this.status({ state: 'error', message: text, simTime: 0 });
+      this.opts.onProblems?.();
+      return null;
+    }
+    return stepped.spec;
   }
 
   // ------------------------------------------------------------------ one-shot analyses
@@ -709,7 +726,7 @@ export class SimulationIntegration {
       const v = chunkSignal(chunk, p.signal);
       const i = p.kind === 'power' && p.current ? chunkSignal(chunk, p.current) : null;
       for (let k = Math.max(0, n - h.capacity); k < n; k++) h.push(time[k], i ? v[k] * i[k] : v[k]);
-      probeValues[p.probeId] = probeText(p, lower, h);
+      probeValues[probeKey(p)] = probeText(p, lower, h);
     }
     this.editor.actions.setProbeValues(probeValues);
   }
@@ -724,7 +741,7 @@ export class SimulationIntegration {
     if (Object.keys(this.editor.getState().ratingStates).length) this.editor.actions.setRatingStates({});
     this.structureWarned = false;
     this.latest = {};
-    this.histories = new Map(build.probes.map((p) => [p.probeId, new SignalHistory()]));
+    this.histories = new Map(build.probes.map((p) => [probeKey(p), new SignalHistory()]));
     this.needKeys.clear();
     const streams: Record<string, InstrumentStream> = {};
     for (const b of build.instruments) streams[b.refdes] = createInstrumentStream(b);
@@ -788,7 +805,7 @@ export class SimulationIntegration {
       if (stream) pushTransientChunk(stream, b, chunk);
     }
     for (const p of build.probes) {
-      const h = this.histories.get(p.probeId);
+      const h = this.histories.get(probeKey(p));
       if (!h) continue;
       const v = chunkSignal(chunk, p.signal);
       const i = p.kind === 'power' && p.current ? chunkSignal(chunk, p.current) : null;
@@ -822,13 +839,17 @@ export class SimulationIntegration {
   private flushLive(build: NetlistBuildEx): void {
     const lower = lowerValues(this.latest);
     const probeValues: Record<string, string> = {};
-    for (const p of build.probes) probeValues[p.probeId] = probeText(p, lower, this.histories.get(p.probeId));
+    for (const p of build.probes) probeValues[probeKey(p)] = probeText(p, lower, this.histories.get(probeKey(p)));
     const levels = liveLevels(build.indicators, this.latest);
     const readings = indicatorReadings(build.indicators, this.latest);
     this.editor.actions.setProbeValues(probeValues);
     this.editor.actions.setIndicatorLevels(levels.schematic);
     // the ladder editor lights up the rungs that carry power
-    if (build.ladder?.debug) this.editor.actions.setLadderLive(ladderLive(lower, build.ladder.element, build.ladder.ir));
+    // (a program inside a block: the one of the placed copy the learner has opened)
+    const view = activeViewPath(this.editor.getState());
+    const lad = view.length ? build.ladders?.find((l) => l.scope?.path.join('/') === view.join('/')) : build.ladder;
+    if (lad?.debug) this.editor.actions.setLadderLive(ladderLive(lower, lad.element, lad.ir));
+    else if (view.length && build.ladder?.debug) this.editor.actions.setLadderLive(null);
     if (build.ratings?.length) this.pushRatingStates(build);
     this.live.setState((s) => ({ ...s, breadboardLevels: levels.breadboard, readings }));
     const st = this.live.getState();
@@ -999,7 +1020,9 @@ export class SimulationIntegration {
   }
 
   private async runNeed(build: NetlistBuildEx, b: InstrumentBinding, need: InstrumentNeed): Promise<void> {
-    const base: Netlist = { ...build.netlist, analyses: [] };
+    // an instrument inside a block names the flattened elements of its copy ("V.XHB1.V_XFG1_p"):
+    // the sources its analysis sets live in the flat netlist
+    const base: Netlist = { ...(b.scope ? flattenNetlist(build.netlist) : build.netlist), analyses: [] };
     let netlists: Netlist[];
     switch (need.kind) {
       case 'stream':

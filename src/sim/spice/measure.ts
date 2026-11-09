@@ -1,7 +1,8 @@
 /**
  * `.meas` / `.measure` cards (ngspice and LTspice syntax) -> MeasDirective (src/sim/netlist.ts).
  *
- *   .meas [TRAN|AC|DC] name FIND expr AT=x
+ *   .meas [TRAN|AC|DC|NOISE] name FIND expr AT=x
+ *   .meas OP|TF name FIND expr          (OP and TF results are single points: the value of expr; also PARAM)
  *   .meas ... name FIND expr WHEN lhs=rhs [RISE=n|FALL=n|CROSS=n|LAST] [TD=x]
  *   .meas ... name DERIV expr AT=x | WHEN ...
  *   .meas ... name WHEN lhs=rhs [RISE|FALL|CROSS=n|LAST] [TD=x]          (the x of the crossing)
@@ -198,12 +199,12 @@ export function parseMeasCard(text: string, num: MeasNumber, line?: number): Mea
   const c = new Cursor(words);
   let analysis: MeasAnalysis = 'tran';
   const first = c.lower();
-  if (first === 'tran' || first === 'ac' || first === 'dc') {
+  if (first === 'tran' || first === 'ac' || first === 'dc' || first === 'op' || first === 'noise' || first === 'tf') {
     analysis = first;
     c.next();
-  } else if (first === 'op' || first === 'noise' || first === 'tf') {
-    throw new CardError(`.meas ${first.toUpperCase()} is not supported (use TRAN, AC or DC)`);
   }
+  // an OP or TF result is one point: there is no x to measure at, so FIND takes just the expression
+  const singlePoint = analysis === 'op' || analysis === 'tf';
   const name = c.next();
   if (!name || name === '=' || !/^[A-Za-z_][A-Za-z0-9_.]*$/.test(name)) throw new CardError('.meas: missing or invalid measurement name');
   const kindWord = c.lower();
@@ -211,6 +212,9 @@ export function parseMeasCard(text: string, num: MeasNumber, line?: number): Mea
   if (!kind) throw new CardError(`.meas ${name}: expected FIND, WHEN, DERIV, TRIG, AVG, RMS, MIN, MAX, PP, INTEG or PARAM, found '${c.peek() ?? ''}'`);
   c.next();
   const d: MeasDirective = { analysis, name, kind, ...(line !== undefined ? { line } : {}) };
+  if (singlePoint && kind !== 'find' && kind !== 'param') {
+    throw new CardError(`.meas ${analysis.toUpperCase()} ${name}: an ${analysis === 'op' ? 'operating point' : 'transfer function'} is one point, so only FIND <expression> and PARAM can be measured on it`);
+  }
   switch (kind) {
     case 'param': {
       if (c.peek() === '=') c.next();
@@ -228,7 +232,7 @@ export function parseMeasCard(text: string, num: MeasNumber, line?: number): Mea
       } else if (w === 'when') {
         c.next();
         d.when = readCondition(c, num, 'WHEN');
-      } else throw new CardError(`.meas ${name}: ${kind.toUpperCase()} needs AT= or WHEN`);
+      } else if (!(singlePoint && kind === 'find')) throw new CardError(`.meas ${name}: ${kind.toUpperCase()} needs AT= or WHEN`);
       break;
     }
     case 'when':
@@ -281,7 +285,7 @@ export function formatMeasCard(d: MeasDirective, num: (v: number) => string): st
       return `${head} PARAM {${d.expr}}`;
     case 'find':
     case 'deriv':
-      return `${head} ${d.kind.toUpperCase()} ${d.expr} ${d.at !== undefined ? `AT=${num(d.at)}` : `WHEN ${cond(d.when!)}`}`;
+      return `${head} ${d.kind.toUpperCase()} ${d.expr}${d.at !== undefined ? ` AT=${num(d.at)}` : d.when ? ` WHEN ${cond(d.when)}` : ''}`;
     case 'when':
       return `${head} WHEN ${cond(d.when!)}`;
     case 'trigtarg':

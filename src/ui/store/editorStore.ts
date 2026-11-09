@@ -39,7 +39,7 @@ import type {
   TitleBlockFields,
   Wire,
 } from '../../model/types';
-import { childIdOfPart, findSheet, getChild, hierarchyTree, isBlockPartId, resolvePart, type HierarchyNode } from '../../model/hierarchy';
+import { childIdOfPart, copyPaths, findSheet, getChild, hierarchyTree, isBlockPartId, liveParams, pathLeadsTo, resolveLiveName, resolveLivePart, resolvePart, withLiveParam, type HierarchyNode } from '../../model/hierarchy';
 import { isCustomPartId } from '../../library/custom/types';
 import { isCustomPartDef } from '../../library/custom/partDef';
 import { syncCustomParts } from '../../library/custom/design';
@@ -125,6 +125,7 @@ export function initialEditorState(design: Design = newDesign(), fileName = 'Unt
     savedDesign: design,
     fileName,
     activeSheetId: design.sheets[0]?.id ?? 'sheet1',
+    viewPath: [],
     selection: [],
     tool: { kind: 'select' },
     views: {},
@@ -196,6 +197,18 @@ function listOf(sheet: Sheet, kind: ItemKind): { id: string }[] {
 /** Child id of the design level the active sheet belongs to (undefined = root design). */
 export function activeLevel(s: EditorState): string | undefined {
   return findSheet(s.design, s.activeSheetId)?.child?.id;
+}
+
+/**
+ * Refdes path of the placed block copy the learner is looking at ([] at the top level). The path
+ * the learner opened (EditorState.viewPath) when it still leads to the open design, else the first
+ * copy of the open child design.
+ */
+export function activeViewPath(s: EditorState): string[] {
+  const level = activeLevel(s);
+  if (level === undefined) return [];
+  if (pathLeadsTo(s.design, s.viewPath, level)) return s.viewPath;
+  return copyPaths(s.design, level)[0] ?? [];
 }
 
 /** Sheets of the design level the active sheet belongs to. */
@@ -401,6 +414,22 @@ export function createEditor(options: EditorOptions = {}) {
   function showRect(rect: { x: number; y: number; w: number; h: number } | null) {
     const s = getState();
     setView(s.activeSheetId, rect ? fitRect(rect, s.viewportSize) : DEFAULT_VIEW);
+  }
+
+  /** An interactive change of a part inside a placed block: stored on that copy, not on the block design. */
+  function setCopyParam(refdes: string, param: string, value: string, path: readonly string[]): boolean {
+    const s = getState();
+    const ref = resolveLivePart(s.design, path, refdes);
+    if (!ref || liveParams(ref)[param] === value) return false;
+    const apply = (d: Design): Design => {
+      const r = resolveLivePart(d, path, refdes);
+      return r && liveParams(r)[param] !== value ? withLiveParam(d, r, param, value) : d;
+    };
+    const history = { ...s.history, past: s.history.past.map(apply), future: s.history.future.map(apply) };
+    if (drag) drag = { ...drag, base: apply(drag.base), baseHistory: { ...drag.baseHistory, past: drag.baseHistory.past.map(apply), future: drag.baseHistory.future.map(apply) } };
+    setState({ ...s, design: apply(s.design), history });
+    emitInteractive([...path, ref.local].join('.'), param, value);
+    return true;
   }
 
   function emitInteractive(refdes: string, param: string, value: string) {
@@ -1128,13 +1157,34 @@ export function createEditor(options: EditorOptions = {}) {
     },
     /** Open the child design of a placed block. */
     openBlock(partId: string): boolean {
-      const f = ops.findItem(getState().design, 'part', partId);
-      const child = f ? childIdOfPart((f.item as PartInstance).partId) : undefined;
-      return child !== undefined && actions.openChild(child);
+      const s = getState();
+      const f = ops.findItem(s.design, 'part', partId);
+      const inst = f ? (f.item as PartInstance) : undefined;
+      const child = inst ? childIdOfPart(inst.partId) : undefined;
+      if (child === undefined || !inst) return false;
+      // the copy that is opened: the block's own refdes below the copy the learner is looking at
+      const viewPath = [...activeViewPath(s), inst.refdes];
+      if (!actions.openChild(child)) return false;
+      patch({ viewPath });
+      return true;
+    },
+    /** Choose which placed copy of the open block is shown (see EditorState.viewPath). */
+    setViewPath(path: string[]) {
+      if (getState().viewPath.join('/') !== path.join('/')) patch({ viewPath: path });
     },
     /** From a child sheet back to the sheet holding (the first instance of) its block. */
     goToParent(): boolean {
       const s = getState();
+      const view = activeViewPath(s);
+      if (view.length > 0) {
+        // back to the sheet that holds the block copy the learner came from
+        const parent = resolveLivePart(s.design, view.slice(0, -1), view[view.length - 1]);
+        if (parent) {
+          actions.setActiveSheet(parent.sheetId);
+          patch({ selection: [{ kind: 'part', id: parent.part.id }], viewPath: view.slice(0, -1) });
+          return true;
+        }
+      }
       const path = levelPath(s);
       if (path.length < 2) return false;
       const node = path[path.length - 1];
@@ -1170,10 +1220,13 @@ export function createEditor(options: EditorOptions = {}) {
     /** Select a part by refdes, switch to its sheet and centre it. Returns false when not found. */
     findAndShow(refdes: string): boolean {
       const s = getState();
-      const f = ops.findPartByRefdes(s.design, refdes);
+      // a top-level refdes, or the path of a part inside a block ("X2.LED1"): open that copy
+      const top = ops.findPartByRefdes(s.design, refdes);
+      const copy = top ? null : resolveLiveName(s.design, refdes);
+      const f = top ?? copy;
       if (!f) return false;
       actions.setActiveSheet(f.sheetId);
-      patch({ selection: [{ kind: 'part', id: f.part.id }] });
+      patch({ selection: [{ kind: 'part', id: f.part.id }], viewPath: copy ? copy.path : [] });
       const st = getState();
       setView(f.sheetId, centerOn(viewOf(st, f.sheetId), f.part, st.viewportSize));
       return true;
@@ -1269,8 +1322,9 @@ export function createEditor(options: EditorOptions = {}) {
      * Change an instance parameter from an interaction (switch, key press, slider) without
      * recording an undo step, then notify onInteractive listeners.
      */
-    setInteractiveParam(refdes: string, param: string, value: string): boolean {
+    setInteractiveParam(refdes: string, param: string, value: string, path: readonly string[] = []): boolean {
       const s = getState();
+      if (path.length > 0) return setCopyParam(refdes, param, value, path);
       const f = ops.findPartByRefdes(s.design, refdes);
       if (!f) return false;
       if (f.part.params[param] === value) return false;
@@ -1289,9 +1343,12 @@ export function createEditor(options: EditorOptions = {}) {
      * multi-control part (InteractiveDef.controls: DIP switch position, keypad key; default the
      * first). Returns the new value or null.
      */
-    interact(refdes: string, phase: InteractionPhase, control?: number): string | null {
+    interact(refdes: string, phase: InteractionPhase, control?: number, path: readonly string[] = []): string | null {
       const s = getState();
-      const f = ops.findPartByRefdes(s.design, refdes);
+      // a part inside a placed block: its state lives in that copy (PartInstance.inner)
+      const copy = path.length > 0 ? resolveLivePart(s.design, path, refdes) : null;
+      if (path.length > 0 && !copy) return null;
+      const f = copy ? { sheetId: copy.sheetId, part: { ...copy.part, params: liveParams(copy) } } : ops.findPartByRefdes(s.design, refdes);
       if (!f) return null;
       const def = lookup(f.part.partId);
       const idef: InteractiveDef | undefined = def?.interactive;
@@ -1303,7 +1360,7 @@ export function createEditor(options: EditorOptions = {}) {
       if (ctl?.value !== undefined) {
         // selector control (rotary switch contact): choose its value; release does nothing
         if (phase === 'release' || ctl.value === current) return null;
-        actions.setInteractiveParam(f.part.refdes, param, ctl.value);
+        actions.setInteractiveParam(f.part.refdes, param, ctl.value, path);
         return ctl.value;
       }
       const instNum = (key: string | undefined): number | undefined => {
@@ -1314,7 +1371,7 @@ export function createEditor(options: EditorOptions = {}) {
       };
       const next = nextInteractiveValue(idef, pdef, current, phase, { step: instNum(idef.stepParam), min: instNum(idef.minParam), max: instNum(idef.maxParam) });
       if (next === null || next === current) return null;
-      actions.setInteractiveParam(f.part.refdes, param, next);
+      actions.setInteractiveParam(f.part.refdes, param, next, path);
       return next;
     },
     onInteractiveChange(cb: InteractiveListener): () => void {

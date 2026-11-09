@@ -35,14 +35,14 @@
  * {@link CanvasInteraction.overlay} store for the canvas overlay layer.
  */
 import type { InstrumentKind, LabelKind, Point, Rotation, ShapeKind, Sheet } from '../../model/types';
-import { isBlockPartId } from '../../model/hierarchy';
+import { hierarchyTree, innerKey, isBlockPartId, resolveLivePart, type HierarchyNode } from '../../model/hierarchy';
 import { busMembers, nextFreeMember } from '../../model/bus';
 import { busNameAt, onBus } from '../store/schematicOps';
 import { onWire } from '../store/wireOps';
 import { samePoint, sheetToLocal, snap } from '../../model/geometry';
 import { createStore } from '../store/createStore';
 import type { Editor } from '../store/editorStore';
-import { activeSheet, isSelected } from '../store/editorStore';
+import { activeSheet, activeViewPath, isSelected } from '../store/editorStore';
 import { nextNetLabelName, pinAt } from '../store/designOps';
 import { hitTest, itemsInRect, nearestPin, nearestWire, wireAtPoint, type HitResult } from '../store/hitTest';
 import { draftPoints, pinStubHorizontal } from '../store/routing';
@@ -173,7 +173,7 @@ type Gesture =
   | { kind: 'move'; start: Point; started: boolean }
   | { kind: 'label'; partId: string; which: 'ref' | 'value'; start: Point; startOffset: Point; key: string; moved: boolean }
   | { kind: 'band'; a: Point; additive: boolean; capture?: boolean }
-  | { kind: 'momentary'; refdes: string; control?: number };
+  | { kind: 'momentary'; refdes: string; control?: number; path: string[] };
 
 const EMPTY_OVERLAY: Overlay = {
   cursor: null,
@@ -470,7 +470,7 @@ export class CanvasInteraction {
         return;
       }
       case 'momentary':
-        this.editor.actions.interact(g.refdes, 'release', g.control);
+        this.editor.actions.interact(g.refdes, 'release', g.control, g.path);
         return;
       default:
         return;
@@ -588,7 +588,7 @@ export class CanvasInteraction {
 
   /** Refdes of every part in the design whose PartDef.interactive key matches `key`. */
   interactiveTargets(key: string): string[] {
-    return [...new Set(this.interactiveControlTargets(key).map((t) => t.refdes))];
+    return [...new Set(this.interactiveControlTargets(key).map((t) => [...t.path, t.refdes].join('.')))];
   }
 
   /**
@@ -598,25 +598,45 @@ export class CanvasInteraction {
    * and their main key, when they have one, operates the main param (rotary switch: next
    * position).
    */
-  interactiveControlTargets(key: string): { refdes: string; control?: number }[] {
-    const out: { refdes: string; control?: number }[] = [];
-    for (const sheet of this.state.design.sheets) {
-      for (const inst of sheet.parts) {
-        const def = this.editor.lookup(inst.partId);
-        const idef = def?.interactive;
-        if (!idef) continue;
-        if (idef.controls?.length) {
-          controlKeys(idef, inst.params).forEach((k, i) => {
-            if (interactiveKeyMatches(k, key)) out.push({ refdes: inst.refdes, control: i });
-          });
+  interactiveControlTargets(key: string): { refdes: string; control?: number; path: string[] }[] {
+    const out: { refdes: string; control?: number; path: string[] }[] = [];
+    const design = this.state.design;
+    // the top level, then every placed copy of every block (a key operates the parts of all copies)
+    const levels: { path: string[]; sheets: Sheet[] }[] = [{ path: [], sheets: design.sheets }];
+    const walk = (n: HierarchyNode, path: string[]) => {
+      for (const c of n.children) {
+        const here = [...path, c.block?.inst.refdes ?? ''];
+        if (c.child) levels.push({ path: here, sheets: c.sheets });
+        if (!c.cyclic) walk(c, here);
+      }
+    };
+    if (design.children?.length) walk(hierarchyTree(design), []);
+    for (const { path, sheets } of levels) {
+      for (const sheet of sheets) {
+        for (const inst of sheet.parts) {
+          const def = this.editor.lookup(inst.partId);
+          const idef = def?.interactive;
+          if (!idef) continue;
+          const params = path.length ? { ...inst.params, ...(this.copyState(path, inst.refdes) ?? {}) } : inst.params;
+          if (idef.controls?.length) {
+            controlKeys(idef, params).forEach((k, i) => {
+              if (interactiveKeyMatches(k, key)) out.push({ refdes: inst.refdes, control: i, path });
+            });
+          }
+          // the part's own key (rotary switch: step to the next position); multi-control parts
+          // without a main key (DIP switch, keypad) only answer to their control keys
+          const own = params.key?.trim();
+          if (interactiveKeyMatches(own || idef.key, key)) out.push({ refdes: inst.refdes, path });
         }
-        // the part's own key (rotary switch: step to the next position); multi-control parts
-        // without a main key (DIP switch, keypad) only answer to their control keys
-        const own = inst.params.key?.trim();
-        if (interactiveKeyMatches(own || idef.key, key)) out.push({ refdes: inst.refdes });
       }
     }
     return out;
+  }
+
+  /** The state a placed block copy holds for one of its parts (PartInstance.inner), if any. */
+  private copyState(path: readonly string[], local: string): Record<string, string> | undefined {
+    const ref = resolveLivePart(this.state.design, path, local);
+    return ref?.rootBlock?.inner?.[innerKey(path, ref.local)];
   }
 
   /**
@@ -630,16 +650,16 @@ export class CanvasInteraction {
     const targets = this.interactiveControlTargets(k.key);
     if (targets.length === 0) return false;
     const actions = this.editor.actions;
-    for (const { refdes, control } of targets) {
-      const found = this.state.design.sheets.flatMap((s) => s.parts).find((p) => p.refdes === refdes);
-      const idef = found ? this.editor.lookup(found.partId)?.interactive : undefined;
+    for (const { refdes, control, path } of targets) {
+      const found = resolveLivePart(this.state.design, path, refdes);
+      const idef = found ? this.editor.lookup(found.part.partId)?.interactive : undefined;
       if (!idef) continue;
       if (idef.kind === 'momentary') {
-        if (phase === 'down' && !k.repeat) actions.interact(refdes, 'press', control);
-        else if (phase === 'up') actions.interact(refdes, 'release', control);
+        if (phase === 'down' && !k.repeat) actions.interact(refdes, 'press', control, path);
+        else if (phase === 'up') actions.interact(refdes, 'release', control, path);
       } else if (phase === 'down') {
-        if (idef.kind === 'slider') actions.interact(refdes, k.shift ? 'decrease' : 'increase', control);
-        else if (!k.repeat) actions.interact(refdes, 'click', control);
+        if (idef.kind === 'slider') actions.interact(refdes, k.shift ? 'decrease' : 'increase', control, path);
+        else if (!k.repeat) actions.interact(refdes, 'click', control, path);
       }
     }
     return true;
@@ -696,11 +716,13 @@ export class CanvasInteraction {
       if (inst && idef) {
         // multi-control parts (DIP switch, keypad): the control nearest to the click
         const control = idef.controls?.length ? nearestControl(idef, sheetToLocal(p, inst)) : undefined;
+        // inside an opened block only the copy the learner looks at changes
+        const path = activeViewPath(this.state);
         if (idef.kind === 'momentary') {
-          actions.interact(inst.refdes, 'press', control);
-          this.gesture = { kind: 'momentary', refdes: inst.refdes, ...(control !== undefined ? { control } : {}) };
-        } else if (idef.kind === 'slider') actions.interact(inst.refdes, p.shift ? 'decrease' : 'increase', control);
-        else actions.interact(inst.refdes, 'click', control);
+          actions.interact(inst.refdes, 'press', control, path);
+          this.gesture = { kind: 'momentary', refdes: inst.refdes, path, ...(control !== undefined ? { control } : {}) };
+        } else if (idef.kind === 'slider') actions.interact(inst.refdes, p.shift ? 'decrease' : 'increase', control, path);
+        else actions.interact(inst.refdes, 'click', control, path);
         return;
       }
     }

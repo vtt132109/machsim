@@ -1,13 +1,10 @@
 /**
- * Review round 2: hierarchy (src/model/netlister.ts). An instrument placed inside a subcircuit /
- * hierarchical block gets the ERC warning `instrumentInBlock`, because it cannot work there.
- * LEDs, 7-segment displays and interactive parts (switch with a key, potentiometer, push button)
- * inside a block do not work either — the LED never lights, the key does nothing — but nothing
- * tells the learner. A learner who turns a working LED + switch circuit into a subcircuit with
- * "Replace selection by subcircuit" sees it silently go dark.
- *
- * Expected: ERC warns about indicators and interactive parts inside blocks, as it does for
- * instruments. Fails while the build is silent.
+ * Review round 2 (R2-8), superseded by round 4 step 3: instruments, LEDs, displays and interactive
+ * parts (switch with a key, potentiometer, push button) inside a subcircuit / hierarchical block
+ * used not to work, so the netlister warned about them (`instrumentInBlock`, `indicatorInBlock`,
+ * `interactiveInBlock`). They work now (src/model/blockLive.test.ts): every placed copy has its own
+ * bindings, named by path, so those warnings are gone. This test keeps the scenario and asserts
+ * the new behaviour: no warning, and the part is bound.
  */
 import { describe, expect, it } from 'vitest';
 import { DesignBuilder } from '../../../src/model/designkit';
@@ -39,26 +36,29 @@ function blockWith(partId: string, refdes: string, params: Record<string, string
   return b.design;
 }
 
-describe('live parts inside a block are reported', () => {
-  it('control: an instrument inside a block gets the instrumentInBlock warning', () => {
+describe('live parts inside a block work and are no longer reported', () => {
+  it('an instrument inside a block is bound under its path and raises no warning', () => {
     const b = new DesignBuilder('meter in block');
     b.child('M', { kind: 'subcircuit' });
     b.label('IN', 0, 0, { kind: 'hier' });
     b.part('instruments/multimeter', 'XMM1', 100, 0);
     b.root();
     b.block(b.design.children![0].id, 'SC1', 300, 0);
-    const ids = buildNetlist(b.design).erc.map((m) => m.detail?.id);
-    expect(ids).toContain('instrumentInBlock');
+    const build = buildNetlist(b.design);
+    expect(build.erc.map((m) => m.detail?.id)).not.toContain('instrumentInBlock');
+    expect(build.instruments.map((i) => i.refdes)).toEqual(['SC1.XMM1']);
   });
 
   for (const [partId, refdes, params] of [
     ['diodes/led-red', 'LED1', {}],
     ['basic/switch-spst', 'S1', { key: 'A' }],
   ] as const) {
-    it(`${partId} inside a block gets an ERC warning (it is not live there)`, () => {
+    it(`${partId} inside a block raises no "not live" warning`, () => {
       const build = buildNetlist(blockWith(partId, refdes, params));
-      const forPart = build.erc.filter((m) => m.refdes === refdes);
-      expect(forPart.length).toBeGreaterThan(0);
+      const ids = build.erc.map((m) => m.detail?.id);
+      expect(ids).not.toContain('indicatorInBlock');
+      expect(ids).not.toContain('interactiveInBlock');
+      if (partId === 'diodes/led-red') expect(build.indicators.map((i) => i.refdes)).toEqual(['SC1.LED1']);
     });
   }
 });
