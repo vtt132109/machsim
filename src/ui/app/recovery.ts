@@ -1,7 +1,8 @@
 /**
  * Crash recovery: where autosaved documents live and whether to offer them at start-up.
  *
- * Recovery slot (one document):
+ * Recovery slot (one record that holds every document with unsaved changes: the first in the record
+ * itself, further ones in `others`, see files.ts AutosaveRecord):
  *   - browsers: localStorage `machsim.autosave.v1` (AutosaveRecord JSON, see files.ts);
  *   - desktop: the user-data folder through the bridge (`recovery/autosave.json`, written via a
  *     temporary file so a crash never leaves half a record); an older record in localStorage is
@@ -17,7 +18,7 @@
  * open window, whose document must not be taken over.
  */
 import type { MachsimDesktopBridge } from '../../desktop/bridge';
-import { AUTOSAVE_KEY, clearAutosave, readAutosave, writeAutosave, type AutosaveRecord, type KeyValueStorage } from './files';
+import { AUTOSAVE_KEY, clearAutosave, parseAutosave, readAutosave, writeAutosave, type AutosaveRecord, type KeyValueStorage } from './files';
 
 export const SESSION_KEY = 'machsim.session.v1';
 export const HEARTBEAT_MS = 15_000;
@@ -94,16 +95,7 @@ export interface RecoveryStore {
   endSession(now?: number): void;
 }
 
-function parseRecord(text: string | null): AutosaveRecord | null {
-  if (!text) return null;
-  try {
-    const raw = JSON.parse(text) as Partial<AutosaveRecord> | null;
-    if (!raw || typeof raw.text !== 'string' || typeof raw.fileName !== 'string' || typeof raw.savedAt !== 'number') return null;
-    return { fileName: raw.fileName, savedAt: raw.savedAt, text: raw.text };
-  } catch {
-    return null;
-  }
-}
+const parseRecord = parseAutosave;
 
 /** Recovery in browser storage (localStorage, or any KeyValueStorage in tests). */
 export function browserRecoveryStore(storage: KeyValueStorage | null, newId: () => string = () => Math.random().toString(36).slice(2)): RecoveryStore {

@@ -77,6 +77,8 @@ import type {
   DesignVariants,
   PartLibraryRef,
   NetSettings,
+  RefdesRules,
+  SheetLayers,
 } from './types';
 import { newDesign } from './types';
 import type { LadderContactKind, LadderCompareOp, LadderNode, LadderOutput, LadderOutputKind, LadderRung } from '../ladder/types';
@@ -414,6 +416,48 @@ function probe(c: Checker, v: unknown, path: string): Probe | null {
   return p;
 }
 
+/** Optional drawing order (Edit > Order) of a note or shape: a finite integer. */
+function drawOrder(c: Checker, o: Raw, path: string): number | undefined {
+  if (o.z === undefined || o.z === null) return undefined;
+  const z = c.num(o, 'z', path);
+  if (!Number.isInteger(z)) {
+    c.issue(`${path}.z`, `must be a whole number (got ${z})`);
+    return undefined;
+  }
+  return z;
+}
+
+const LAYER_KEYS = ['grid', 'refdes', 'values', 'labels', 'netNames', 'pinNumbers', 'comments', 'graphics'] as const;
+
+/** Sheet.layers: only the keys that differ from the defaults are kept (src/model/layers.ts). */
+function sheetLayers(c: Checker, v: unknown, path: string): SheetLayers | undefined {
+  const o = c.obj(v, path);
+  if (!o) return undefined;
+  const out: SheetLayers = {};
+  for (const k of Object.keys(o)) if (!(LAYER_KEYS as readonly string[]).includes(k)) c.issue(`${path}.${k}`, `unknown layer (expected ${LAYER_KEYS.join(', ')})`);
+  for (const k of LAYER_KEYS) {
+    const b = c.bool(o, k, path);
+    if (b !== undefined) out[k] = b;
+  }
+  return out;
+}
+
+/** Design.refdesRules: texts only (letters, digits, "_"); whether they make sense is src/model/refdesRules.ts. */
+function refdesRules(c: Checker, v: unknown): RefdesRules | undefined {
+  const o = c.obj(v, 'refdesRules');
+  if (!o) return undefined;
+  const out: RefdesRules = {};
+  if (o.global !== undefined && o.global !== null) {
+    const g = c.str(o, 'global', 'refdesRules');
+    if (g) out.global = g;
+  }
+  if (o.map !== undefined && o.map !== null) {
+    const map = c.record(o, 'map', 'refdesRules');
+    if (Object.keys(map).length) out.map = map;
+  }
+  return out.global || out.map ? out : undefined;
+}
+
 function note(c: Checker, v: unknown, path: string): TextNote | null {
   const o = c.obj(v, path);
   if (!o) return null;
@@ -441,6 +485,8 @@ function note(c: Checker, v: unknown, path: string): TextNote | null {
   }
   for (const k of ['author', 'created'] as const) if (o[k] !== undefined && o[k] !== null) n[k] = c.str(o, k, path);
   editable(c, o, path, n);
+  const z = drawOrder(c, o, path);
+  if (z !== undefined) n.z = z;
   return n;
 }
 
@@ -466,6 +512,8 @@ function shape(c: Checker, v: unknown, path: string): Shape | null {
     sh.src = src;
   }
   editable(c, o, path, sh);
+  const z = drawOrder(c, o, path);
+  if (z !== undefined) sh.z = z;
   return sh;
 }
 
@@ -633,6 +681,10 @@ function sheet(c: Checker, v: unknown, path: string, index: number): Sheet | nul
     s.ladder = rungs;
     if (s.kind !== 'ladder') c.issue(`${path}.kind`, 'a sheet with rungs must have kind "ladder"');
   }
+  if (o.layers !== undefined && o.layers !== null) {
+    const layers = sheetLayers(c, o.layers, `${path}.layers`);
+    if (layers && Object.keys(layers).length) s.layers = layers;
+  }
   return s;
 }
 
@@ -696,9 +748,24 @@ function printSetup(c: Checker, v: unknown): PrintSetup | undefined {
     else if (Array.isArray(o.sheets) && o.sheets.every((x) => typeof x === 'string')) p.sheets = o.sheets as string[];
     else c.issue('printSetup.sheets', "must be 'all', 'active' or a list of sheet ids");
   }
-  for (const k of ['includeChildren', 'includeInstruments', 'monochrome'] as const) {
+  for (const k of ['includeChildren', 'includeInstruments', 'monochrome', 'tile', 'footer'] as const) {
     const b = c.bool(o, k, 'printSetup');
     if (b !== undefined) p[k] = b;
+  }
+  if (o.marginMm !== undefined && o.marginMm !== null) {
+    const n = c.num(o, 'marginMm', 'printSetup');
+    if (n < 0 || n > 50) c.issue('printSetup.marginMm', `must be between 0 and 50 mm (got ${n})`);
+    p.marginMm = n;
+  }
+  if (o.pageRange !== undefined && o.pageRange !== null) p.pageRange = c.str(o, 'pageRange', 'printSetup');
+  if (o.customMm !== undefined && o.customMm !== null) {
+    const co = c.obj(o.customMm, 'printSetup.customMm');
+    if (co) {
+      const w = c.num(co, 'w', 'printSetup.customMm');
+      const h = c.num(co, 'h', 'printSetup.customMm');
+      if (w < 50 || h < 50 || w > 2000 || h > 2000) c.issue('printSetup.customMm', 'each side must be between 50 and 2000 mm');
+      p.customMm = { w, h };
+    }
   }
   return p;
 }
@@ -916,6 +983,10 @@ export function validateDesign(input: unknown): Design {
   if (o.nets !== undefined && o.nets !== null) {
     const n = netSettingsMap(c, o.nets);
     if (n) design.nets = n;
+  }
+  if (o.refdesRules !== undefined && o.refdesRules !== null) {
+    const rr = refdesRules(c, o.refdesRules);
+    if (rr) design.refdesRules = rr;
   }
   if (c.issues.length) throw new DesignFormatError(c.issues);
   return design;

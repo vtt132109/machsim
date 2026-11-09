@@ -156,40 +156,13 @@ export function decoratePlot(plot: PlotData | null, page: PageProps | undefined,
 }
 
 /** Initial view from manual axis ranges of the page (null when the page has none). */
-function axisView(plot: PlotData | null, page: PageProps | undefined): PlotViewState | null {
+export function axisView(plot: PlotData | null, page: PageProps | undefined): PlotViewState | null {
   if (!plot || !page) return null;
   const x = page.x?.min !== undefined && page.x?.max !== undefined && page.x.max > page.x.min ? ([page.x.min, page.x.max] as [number, number]) : null;
   const firstAnalog = plot.panes.findIndex((p) => p.kind === 'analog');
   const y: Record<number, [number, number]> = {};
   if (firstAnalog >= 0 && page.y?.min !== undefined && page.y?.max !== undefined && page.y.max > page.y.min) y[firstAnalog] = [page.y.min, page.y.max];
   return x || Object.keys(y).length ? { x, y } : null;
-}
-
-/** Print the plot image and cursor table in a print window. */
-function printPlot(canvas: HTMLCanvasElement | null, title: string, tableHtml: string): void {
-  if (!canvas || typeof window === 'undefined') return;
-  const w = window.open('', '_blank');
-  if (!w) return;
-  const doc = w.document;
-  doc.title = title;
-  const h = doc.createElement('h1');
-  h.textContent = title;
-  h.style.font = '16px sans-serif';
-  const img = doc.createElement('img');
-  img.src = canvas.toDataURL('image/png');
-  img.style.maxWidth = '100%';
-  doc.body.appendChild(h);
-  doc.body.appendChild(img);
-  if (tableHtml) {
-    const div = doc.createElement('div');
-    div.innerHTML = tableHtml;
-    div.style.font = '12px sans-serif';
-    doc.body.appendChild(div);
-  }
-  img.onload = () => {
-    w.focus();
-    w.print();
-  };
 }
 
 export function Grapher({ results, className, plotHeight = 380, initialTab = 0, initialPostprocessor = false, external, pageProps, onPagePropsChange, traceStyles, onTraceStyleChange, toolbarExtra, exportTitle, hideSingleTab }: GrapherProps) {
@@ -290,7 +263,8 @@ export function Grapher({ results, className, plotHeight = 380, initialTab = 0, 
     if (canvasRef.current) downloadCanvasPng(canvasRef.current, `${safeFileName(fileTitle)}.png`);
   };
 
-  const print = () => printPlot(canvasRef.current, fileTitle, cursorTableRef.current?.innerHTML ?? '');
+  // printing goes through the print preview (paper, margins, scale, page range ...)
+  const print = () => void import('../print/PrintPreview').then((m) => m.openPrintPreview({ sheets: false, grapher: true }));
 
   const toggleCursors = () => {
     if (!plot) return;

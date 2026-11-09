@@ -138,6 +138,17 @@ export interface InteractionHost {
   pickImage?(): Promise<string | null>;
   /** the learner dragged a rectangle with the capture tool: copy / save it as a picture (optional) */
   captureArea?(rect: { x: number; y: number; w: number; h: number }): void;
+  /**
+   * A selection is being dragged and the pointer is at this screen position: the host highlights a
+   * document tab under it (document tabs); called with null when the drag ends (optional).
+   */
+  dragOverDocument?(clientX: number, clientY: number): void;
+  /**
+   * The drag of a selection ended at this screen position. Returns true when it was dropped on a
+   * document tab: the host copies the selection into that document, and the drag is cancelled so
+   * the items stay where they were (optional).
+   */
+  dropOnDocument?(clientX: number, clientY: number): boolean;
 }
 
 /** Host that does nothing (until the application installs a real one). */
@@ -362,7 +373,10 @@ export class CanvasInteraction {
         g.started = true;
         this.editor.actions.beginDrag();
       }
-      if (g.started) this.editor.actions.dragTo(snap(p.x - g.start.x), snap(p.y - g.start.y));
+      if (g.started) {
+        this.editor.actions.dragTo(snap(p.x - g.start.x), snap(p.y - g.start.y));
+        if (p.clientX !== undefined && p.clientY !== undefined) this.host.dragOverDocument?.(p.clientX, p.clientY);
+      }
       this.patch({ cursor, target: null, hover: null });
       return;
     }
@@ -429,7 +443,12 @@ export class CanvasInteraction {
     }
     switch (g.kind) {
       case 'move':
-        if (g.started) this.editor.actions.endDrag();
+        if (g.started) {
+          this.host.dragOverDocument?.(-1, -1);
+          // dropped on a document tab: the selection is copied there and stays where it was here
+          if (p.clientX !== undefined && p.clientY !== undefined && this.host.dropOnDocument?.(p.clientX, p.clientY)) this.editor.actions.cancelDrag();
+          else this.editor.actions.endDrag();
+        }
         return;
       case 'band': {
         this.patch({ band: null });
@@ -631,6 +650,7 @@ export class CanvasInteraction {
     const o = this.overlay.getState();
     const g = this.gesture;
     if (g.kind === 'move' && g.started) {
+      this.host.dragOverDocument?.(-1, -1);
       this.editor.actions.cancelDrag();
       this.gesture = { kind: 'none' };
       return;

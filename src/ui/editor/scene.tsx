@@ -46,6 +46,8 @@ import { MechaGlyph } from './mechaGlyphs';
 import { explainErc } from '../../i18n/erc';
 import { partDescription, partName } from '../../i18n/library';
 import { activeVariant, isFitted } from '../../model/variants';
+import { layerVisible } from '../../model/layers';
+import { annotationStack, hasDrawingOrder } from '../../model/annotationOrder';
 
 /** Drawing frame of a sheet without paper settings (schematic units); see model/paper.ts sheetFrame. */
 export const PAGE = { x: 0, y: 0, w: 1200, h: 850 } as const;
@@ -200,6 +202,46 @@ function NcMarks({ def, inst }: { def: PartDef; inst: PartInstance }) {
   );
 }
 
+/**
+ * Physical pin numbers (PinDef.number) drawn just outside each pin, for the "pin numbers" layer.
+ * The text sits a few units beyond the pin end, away from the body, above the stub.
+ */
+export function PinNumbers({ def, inst }: { def: PartDef; inst: PartInstance }) {
+  const pins = def.symbol.pins.filter((p) => p.number !== undefined && p.number !== '');
+  if (!pins.length) return null;
+  return (
+    <g className="ms-pin-numbers" aria-hidden="true">
+      {pins.map((p) => {
+        const out = p.dir === 'left' ? { x: -7, y: -3 } : p.dir === 'right' ? { x: 7, y: -3 } : p.dir === 'up' ? { x: 5, y: -6 } : p.dir === 'down' ? { x: 5, y: 9 } : { x: 0, y: -4 };
+        const at = localToSheet({ x: p.x + out.x, y: p.y + out.y }, inst);
+        return (
+          <text key={p.name} className="ms-pin-number" x={at.x} y={at.y} textAnchor="middle" fontSize={7}>
+            {p.number}
+          </text>
+        );
+      })}
+    </g>
+  );
+}
+
+/** Where the name of a net is written: the middle of its longest straight run on this sheet. */
+export function netNamePlacements(sheet: Sheet, wireNets: Map<string, string>): { name: string; x: number; y: number }[] {
+  const best = new Map<string, { len: number; x: number; y: number }>();
+  for (const w of sheet.wires) {
+    if (w.bus) continue;
+    const name = wireNets.get(w.id);
+    if (!name) continue;
+    for (let i = 0; i + 1 < w.points.length; i++) {
+      const a = w.points[i];
+      const b = w.points[i + 1];
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      const cur = best.get(name);
+      if (!cur || len > cur.len) best.set(name, { len, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+    }
+  }
+  return [...best].map(([name, v]) => ({ name, x: v.x, y: v.y - 4 })).sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export interface PartGlyphProps {
   inst: PartInstance;
   def: PartDef | undefined;
@@ -218,6 +260,11 @@ export interface PartGlyphProps {
   cells?: number[];
   /** the instructor hides part values: the value label reads "?" */
   hideValue?: boolean;
+  /** layer settings (Edit > Layer settings): false hides the reference designator / the value */
+  showRef?: boolean;
+  showValue?: boolean;
+  /** draw the physical pin numbers next to the pins */
+  pinNumbers?: boolean;
 }
 
 /** Summary of the faults the editor may show for an instance (hidden auto faults stay hidden). */
@@ -228,7 +275,7 @@ export function faultSummary(inst: PartInstance, design: Pick<Design, 'autoFault
 }
 
 /** One placed part: symbol, labels, indicator glow and tooltip. */
-export const PartGlyph = memo(function PartGlyph({ inst, def, selected, level, className, noTitle, rating, faults, cells, hideValue }: PartGlyphProps) {
+export const PartGlyph = memo(function PartGlyph({ inst, def, selected, level, className, noTitle, rating, faults, cells, hideValue, showRef = true, showValue = true, pinNumbers = false }: PartGlyphProps) {
   const labels = partLabelLayout(inst, def, hideValue);
   const box = partBox(inst, def);
   // segment displays and bar graphs receive the lit mask as their level: draw the segments / bars
@@ -275,6 +322,7 @@ export const PartGlyph = memo(function PartGlyph({ inst, def, selected, level, c
           {probeLit ? <ProbeLight def={def} o={inst} /> : null}
           <ControlStates def={def} inst={inst} />
           <NcMarks def={def} inst={inst} />
+          {pinNumbers ? <PinNumbers def={def} inst={inst} /> : null}
         </>
       ) : (
         <>
@@ -285,7 +333,7 @@ export const PartGlyph = memo(function PartGlyph({ inst, def, selected, level, c
         </>
       )}
       {labels.map((l) =>
-        l.visible ? (
+        l.visible && (l.which === 'ref' ? showRef : showValue) ? (
           <text key={l.which} className="ms-part-label" x={l.x} y={l.y} textAnchor={l.anchor} data-label={l.which}>
             {l.text}
           </text>
@@ -738,24 +786,49 @@ export function SheetScene({ design, sheet, lookup, selected = EMPTY_SET, indica
   const hideValues = valuesHidden(design);
   // parts the active design variant does not fit are drawn dimmed
   const variantId = activeVariant(design)?.id;
+  // layer settings of the sheet (Edit > Layer settings)
+  const showRef = layerVisible(sheet, 'refdes');
+  const showValue = layerVisible(sheet, 'values');
+  const showLabels = layerVisible(sheet, 'labels');
+  const showGraphics = layerVisible(sheet, 'graphics');
+  const showComments = layerVisible(sheet, 'comments');
+  const showPinNumbers = layerVisible(sheet, 'pinNumbers');
+  const showNetNames = layerVisible(sheet, 'netNames') && !!wireNets;
+  const ordered = hasDrawingOrder(sheet);
+  const shapeById = useMemo(() => new Map((sheet.shapes ?? []).map((x) => [x.id, x])), [sheet.shapes]);
+  const noteById = useMemo(() => new Map(sheet.notes.map((n) => [n.id, n])), [sheet.notes]);
+  const netNames = useMemo(() => (showNetNames && wireNets ? netNamePlacements(sheet, wireNets) : []), [showNetNames, sheet, wireNets]);
   return (
     <g className="ms-scene" style={Object.keys(colors).length ? (colors as React.CSSProperties) : undefined}>
       {showPage ? <PageFrame design={design} sheet={sheet} /> : null}
-      {sheet.shapes?.length ? (
-        <g className="ms-layer-shapes">
-          {sheet.shapes.map((x) => (
-            <ShapeGlyph key={x.id} shape={x} selected={selected.has(selKey('shape', x.id))} />
-          ))}
+      {ordered ? (
+        <g className="ms-layer-annotations">
+          {annotationStack(sheet).map((r) => {
+            if (r.kind === 'shape') {
+              const x = shapeById.get(r.id);
+              return x && showGraphics ? <ShapeGlyph key={`s${x.id}`} shape={x} selected={selected.has(selKey('shape', x.id))} /> : null;
+            }
+            const n = noteById.get(r.id);
+            return n && (showComments || !n.comment) ? <NoteGlyph key={`n${n.id}`} note={n} selected={selected.has(selKey('note', n.id))} /> : null;
+          })}
         </g>
-      ) : null}
-      <g className="ms-layer-notes">
-        {sheet.notes.map((n) => (
-          <NoteGlyph key={n.id} note={n} selected={selected.has(selKey('note', n.id))} />
-        ))}
-      </g>
+      ) : (
+        <>
+          {showGraphics && sheet.shapes?.length ? (
+            <g className="ms-layer-shapes">
+              {sheet.shapes.map((x) => (
+                <ShapeGlyph key={x.id} shape={x} selected={selected.has(selKey('shape', x.id))} />
+              ))}
+            </g>
+          ) : null}
+          <g className="ms-layer-notes">
+            {sheet.notes.map((n) => (showComments || !n.comment ? <NoteGlyph key={n.id} note={n} selected={selected.has(selKey('note', n.id))} /> : null))}
+          </g>
+        </>
+      )}
       <g className="ms-layer-parts">
         {sheet.parts.map((p) => (
-          <PartGlyph key={p.id} inst={p} def={lookup(p.partId)} selected={selected.has(selKey('part', p.id))} level={indicatorLevels?.[p.refdes]} rating={ratingStates?.[p.refdes]} faults={faultSummary(p, design)} cells={displayCells(lookup(p.partId), p.refdes, indicatorLevels)} hideValue={hideValues} className={variantId && !isFitted(p, variantId) ? 'is-not-fitted' : undefined} />
+          <PartGlyph key={p.id} inst={p} def={lookup(p.partId)} selected={selected.has(selKey('part', p.id))} level={indicatorLevels?.[p.refdes]} rating={ratingStates?.[p.refdes]} faults={faultSummary(p, design)} cells={displayCells(lookup(p.partId), p.refdes, indicatorLevels)} hideValue={hideValues} showRef={showRef} showValue={showValue} pinNumbers={showPinNumbers} className={variantId && !isFitted(p, variantId) ? 'is-not-fitted' : undefined} />
         ))}
       </g>
       <g className="ms-layer-wires">
@@ -771,11 +844,22 @@ export function SheetScene({ design, sheet, lookup, selected = EMPTY_SET, indica
           <circle key={`b${j.x}:${j.y}`} className="ms-bus-junction" cx={j.x} cy={j.y} r={4.5} />
         ))}
       </g>
-      <g className="ms-layer-labels">
-        {sheet.labels.map((l) => (
-          <NetLabelGlyph key={l.id} label={l} selected={selected.has(selKey('label', l.id))} />
-        ))}
-      </g>
+      {showLabels ? (
+        <g className="ms-layer-labels">
+          {sheet.labels.map((l) => (
+            <NetLabelGlyph key={l.id} label={l} selected={selected.has(selKey('label', l.id))} />
+          ))}
+        </g>
+      ) : null}
+      {netNames.length ? (
+        <g className="ms-layer-netnames" aria-hidden="true">
+          {netNames.map((n) => (
+            <text key={n.name} className="ms-net-name" x={n.x} y={n.y} textAnchor="middle" fontSize={8}>
+              {n.name}
+            </text>
+          ))}
+        </g>
+      ) : null}
       <g className="ms-layer-probes">
         {sheet.probes.map((p) => (
           <ProbeGlyph key={p.id} probe={p} selected={selected.has(selKey('probe', p.id))} value={probeValues?.[p.id]} />

@@ -20,11 +20,14 @@ import { snapshotGrapher } from '../results/savedGrapher';
 import { createStore } from '../store/createStore';
 import { actions, useEditor } from '../store';
 import { registerSaveTransform } from '../app/document';
+import { documents } from '../app/documentSet';
 import { pickTextFile } from '../app/files';
 import { alertDialog } from '../common/dialogs';
 import { measurementResult, MeasurementError, parseMeasurement } from '../../util/traceImport';
 import type { SimulationIntegration } from './controller';
 import { pendingGrapherPages } from './grapherPersist';
+import { registerPrintContribution } from '../print/printSources';
+import { renderGraphPages } from '../results/printPage';
 import { ft } from '../../i18n/filesText';
 import { t } from '../../i18n';
 
@@ -32,6 +35,17 @@ import { t } from '../../i18n';
 export const grapherDoc = createStore<GrapherDoc>(emptyDoc());
 
 let controller: SimulationIntegration | null = null;
+
+// document tabs: each document keeps its own Grapher pages (page / axis / trace properties); the
+// runs themselves are kept per document by the simulation controller
+documents.registerExtension({
+  id: 'grapher',
+  capture: () => grapherDoc.getState(),
+  restore: (d) => {
+    grapherDoc.setState((d as GrapherDoc | undefined) ?? emptyDoc());
+    pendingGrapherPages.setState(null);
+  },
+});
 
 /** The workspace brought up to date: new runs added, pages saved in the open file applied. */
 function currentDoc(): GrapherDoc {
@@ -51,6 +65,13 @@ registerSaveTransform((d) => {
   const doc = currentDoc();
   if (!doc.pages.length) return d;
   return { ...d, grapher: snapshotGrapher(doc.runs, doc.pages, doc.active) };
+});
+
+// the print preview offers the Grapher pages of the run on show
+registerPrintContribution({
+  id: 'grapher',
+  available: () => grapherDoc.getState().pages.length > 0 || (controller?.live.getState().runs.length ?? 0) > 0,
+  pages: async ({ monochrome }) => renderGraphPages(currentDoc(), { monochrome }),
 });
 
 /** Grapher > Import measurement…: a CSV / text file becomes a page of its own. */

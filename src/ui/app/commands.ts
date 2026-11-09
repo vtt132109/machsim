@@ -17,11 +17,11 @@ import {
   exportSheetSvg,
   newDocument,
   openDocument,
-  printDesign,
   recoverAutosaved,
   saveDocument,
   saveDocumentAs,
 } from './document';
+import { documents } from './documentSet';
 import { openAboutDialog, openFindDialog, openPropertiesDialog, openShortcutsDialog } from './appDialogs';
 import { showDesignTree } from './DesignTree';
 import type { AlignMode } from '../store/schematicOps';
@@ -46,6 +46,12 @@ const placeUi = () => import('../parts/PlaceComponentDialog');
 const libraryUi = () => import('../parts/libraryTools');
 /** ERC options / report, net settings, capture area, customize UI, footprint manager (lazy chunk) */
 const schematicTools = () => import('../schematicTools/flows');
+/** Closing / saving several designs, moving content between them (lazy chunk) */
+const docFlows = () => import('./documentFlows');
+/** Layer settings, drawing order, paste special, reference designator prefixes (lazy chunk) */
+const editingUi = () => import('./editingDialogs');
+/** Print preview, page setup, printing and PDF (lazy chunk) */
+const printUi = () => import('../print/PrintPreview');
 /** Lesson authoring (teachers write their own lessons) loads on first use. */
 const lessonUi = () => import('../learn/lessonFlows');
 import { contextTopic, openHelp, openWelcome } from '../help/open';
@@ -88,6 +94,21 @@ export const BUILTIN_COMMANDS = [
   'file.exportTemplate',
   'file.importTemplate',
   'file.recover',
+  'file.close',
+  'file.closeAll',
+  'file.saveAll',
+  'window.next',
+  'window.previous',
+  'window.recent',
+  'edit.order.front',
+  'edit.order.back',
+  'edit.order.forward',
+  'edit.order.backward',
+  'edit.layers',
+  'edit.pasteSpecial.keepNames',
+  'edit.pasteSpecial.values',
+  'edit.pasteSpecial.block',
+  'tools.refdesRules',
   'options.fileOptions',
   'edit.undo',
   'edit.redo',
@@ -259,8 +280,27 @@ export function installBuiltinCommands(): void {
   });
   def('file.exportSvg', () => exportSheetSvg());
   def('file.exportPng', () => exportSheetPng());
-  def('file.print', () => printDesign());
-  def('file.printSetup', async () => (await dialogs()).openPrintSetupDialog(() => void printDesign()));
+  // Print and Page setup open the same preview: the learner always sees the pages before printing
+  def('file.print', async () => (await printUi()).openPrintPreview());
+  def('file.printSetup', async () => (await printUi()).openPrintPreview());
+  def('file.close', async () => {
+    await (await docFlows()).closeDocumentFlow();
+  });
+  def('file.closeAll', async () => {
+    await (await docFlows()).closeAllFlow();
+  });
+  def('file.saveAll', async () => {
+    await (await docFlows()).saveAllFlow();
+  });
+  def('window.next', () => {
+    void documents.next();
+  });
+  def('window.previous', () => {
+    void documents.previous();
+  });
+  def('window.recent', () => {
+    void documents.switchToRecent();
+  });
   def('file.newFromTemplate', async () => (await dialogs()).openNewFromTemplateDialog());
   def('file.saveAsTemplate', async () => (await dialogs()).saveAsTemplateFlow());
   def('file.project', async () => (await projects()).openProjectDialog());
@@ -293,6 +333,11 @@ export function installBuiltinCommands(): void {
     const at = cursorStore.getState().pos;
     actions.paste(at ?? undefined);
   });
+  def('edit.pasteSpecial.keepNames', async () => (await editingUi()).pasteSpecialFlow('keepNames'));
+  def('edit.pasteSpecial.values', async () => (await editingUi()).pasteSpecialFlow('values'));
+  def('edit.pasteSpecial.block', async () => (await editingUi()).pasteSpecialFlow('block'));
+  for (const op of ['front', 'back', 'forward', 'backward'] as const) def(`edit.order.${op}`, async () => (await editingUi()).orderFlow(op));
+  def('edit.layers', async () => (await editingUi()).openLayerSettingsDialog());
   def('edit.duplicate', () => {
     actions.duplicate();
   });
@@ -393,6 +438,7 @@ export function installBuiltinCommands(): void {
     const n = actions.annotate('missing');
     actions.addSimMessage('info', n ? t('annotate.done', { n }) : t('annotate.none'), 'annotate');
   });
+  def('tools.refdesRules', async () => (await editingUi()).openRefdesRulesDialog());
   def('tools.renumber', async () => {
     const ok = await confirmDialog({ title: t('app.commands.renumberAllParts'), message: t('app.commands.renumberEveryReferenceDesignatorPer'), okLabel: t('app.commands.renumber') });
     if (ok) actions.annotate('all');

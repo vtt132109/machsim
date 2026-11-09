@@ -97,6 +97,9 @@ export interface LiveState {
   version: number;
 }
 
+/** The part of {@link LiveState} that belongs to a document (see SimulationIntegration.documentState). */
+export type DocumentLive = Omit<LiveState, 'mode' | 'session' | 'speed'>;
+
 export function initialLiveState(speed = 1): LiveState {
   return {
     mode: 'idle',
@@ -424,6 +427,42 @@ export class SimulationIntegration {
       else if (b) await b.promise.catch(() => undefined);
       await Promise.resolve();
     }
+  }
+
+  /**
+   * Document tabs (src/ui/app/documents.ts): stop whatever is running on the current document and
+   * wait until it has ended, so the document can be left. The results stay.
+   */
+  async stopForDocumentSwitch(): Promise<void> {
+    await this.stop();
+    await this.idle();
+  }
+
+  /**
+   * Document tabs: the simulation results that belong to the current document (instrument data,
+   * the Grapher run history, the last analysis), to be kept while another document is shown.
+   */
+  documentState(): DocumentLive {
+    const { mode: _mode, session: _session, speed: _speed, ...rest } = this.live.getState();
+    void _mode;
+    void _session;
+    void _speed;
+    return rest;
+  }
+
+  /**
+   * Document tabs: show the results of a document again (`undefined` = a new document with no
+   * results). The streaming speed and the run counter are kept, so run numbers stay unique.
+   */
+  restoreDocumentState(state: DocumentLive | undefined): void {
+    this.cancelPending();
+    this.latest = state?.latest ? { ...state.latest } : {};
+    this.histories.clear();
+    this.blown.clear();
+    this.needKeys.clear();
+    this.recorder = new ChunkRecorder();
+    this.fatal = null;
+    this.live.setState((s) => ({ ...initialLiveState(s.speed), ...(state ?? {}), speed: s.speed, version: s.version + 1 }));
   }
 
   dispose(): void {

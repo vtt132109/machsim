@@ -6,7 +6,7 @@
  */
 import { useMemo, useState } from 'react';
 import { listParts, getPart, loadAllGroups } from '../../library';
-import type { ChildDesign, PrintSetup, PaperSize } from '../../model/types';
+import type { ChildDesign } from '../../model/types';
 import { ensureDesignParts } from '../../model/libraryLoad';
 import { busMembers } from '../../model/bus';
 import { ALL_FIND_FIELDS, findInDesign, replaceInDesign, type FindField, type FindMatch } from '../../model/findReplace';
@@ -14,21 +14,20 @@ import { valuesHidden } from '../../model/restrictions';
 import { serializeDesign, DesignFormatError } from '../../model/serialize';
 import { parseDesignSafely } from '../../model/sanitize';
 import { childIdOfPart, getChild } from '../../model/hierarchy';
-import { PAPER_SIZES } from '../../model/paper';
 import { BUILTIN_TEMPLATES, builtinTemplate, designFromTemplate, parseTemplateList, templateFromDesign, TEMPLATE_EXTENSION, type BuiltinTemplateId, type TemplateRecord } from '../../model/templates';
 import { actions, getState, partLookup, useEditor } from '../store';
 import { activeSheet } from '../store/editorStore';
 import { childAsDesign } from '../store/hierarchyOps';
 import { Dialog } from '../common/Dialog';
 import { alertDialog, openCustomDialog, promptText } from '../common/dialogs';
-import { CheckField, CommitField, SelectField } from '../common/Field';
+import { CheckField, CommitField } from '../common/Field';
 import { Tabs } from '../common/Tabs';
 import { SheetAndDesignProperties } from '../editor/PropertiesPanel';
 import { SheetSetupFields, TitleBlockEditor } from '../editor/SchematicProperties';
 import { focusCanvas } from '../editor/controller';
 import { browserStorage, exportFile, fileNameForTitle, pickTextFile, saveTextAs } from './files';
 import { runCommand } from './extensions';
-import { confirmDiscardChanges } from './document';
+import { confirmDiscardChanges, openGeneratedDesign } from './document';
 import { t } from '../../i18n';
 import { partName } from '../../i18n/library';
 
@@ -158,82 +157,6 @@ function SheetSetupDialog({ close }: { close: () => void }) {
 
 export function openSheetSetupDialog(): void {
   openCustomDialog((close) => <SheetSetupDialog close={close} />);
-}
-
-// ---------------------------------------------------------------------------
-// print setup
-// ---------------------------------------------------------------------------
-
-function PrintSetupDialog({ close, onPrint }: { close: () => void; onPrint: () => void }) {
-  const ps = useEditor((s) => s.design.printSetup) ?? {};
-  const hasChildren = useEditor((s) => (s.design.children?.length ?? 0) > 0);
-  const set = (patch: Partial<PrintSetup>) => {
-    const next: PrintSetup = { ...ps, ...patch };
-    for (const k of Object.keys(next) as (keyof PrintSetup)[]) if (next[k] === undefined) delete next[k];
-    actions.setPrintSetup(next);
-  };
-  const scaleText = ps.scale === undefined || ps.scale === 'fit' ? 'fit' : String(ps.scale);
-  return (
-    <Dialog
-      title={t('cmd.file.printSetup')}
-      onClose={close}
-      width={460}
-      footer={
-        <>
-          <button type="button" className="ms-btn" onClick={close}>
-            {t('common.close')}
-          </button>
-          <button
-            type="button"
-            className="ms-btn ms-btn-primary"
-            onClick={() => {
-              close();
-              onPrint();
-            }}
-          >
-            {t('cmd.file.print')}
-          </button>
-        </>
-      }
-    >
-      <div className="ms-prop-section">
-        <SelectField label={t('schematic.print.paper')} value={ps.paper ?? 'A4'} options={PAPER_SIZES.filter((p) => p !== 'Custom').map((p) => ({ value: p, label: p }))} onChange={(v) => set({ paper: v as PaperSize })} />
-        <SelectField
-          label={t('schematic.sheet.orientation')}
-          value={ps.orientation ?? 'landscape'}
-          options={[
-            { value: 'landscape', label: t('schematic.sheet.landscape') },
-            { value: 'portrait', label: t('schematic.sheet.portrait') },
-          ]}
-          onChange={(v) => set({ orientation: v as 'landscape' | 'portrait' })}
-        />
-        <CommitField
-          label={t('schematic.print.scale')}
-          value={scaleText}
-          validate={(v) => (v.trim() === 'fit' || (Number.isFinite(Number(v)) && Number(v) >= 5 && Number(v) <= 1000) ? null : t('schematic.print.scaleInvalid'))}
-          onCommit={(v) => set({ scale: v.trim() === 'fit' ? 'fit' : Number(v) })}
-          hint={t('schematic.print.scaleHint')}
-        />
-        <SelectField
-          label={t('schematic.print.sheets')}
-          value={Array.isArray(ps.sheets) ? 'all' : (ps.sheets ?? 'all')}
-          options={[
-            { value: 'all', label: t('schematic.print.allSheets') },
-            { value: 'active', label: t('schematic.print.activeSheet') },
-          ]}
-          onChange={(v) => set({ sheets: v as 'all' | 'active' })}
-        />
-        {hasChildren ? <CheckField label={t('schematic.print.children')} checked={!!ps.includeChildren} onChange={(v) => set({ includeChildren: v || undefined })} /> : null}
-        <CheckField label={t('schematic.print.instruments')} checked={!!ps.includeInstruments} onChange={(v) => set({ includeInstruments: v || undefined })} />
-        <CheckField label={t('schematic.print.mono')} checked={!!ps.monochrome} onChange={(v) => set({ monochrome: v || undefined })} />
-        <p className="ms-hint">{t('schematic.print.hint')}</p>
-      </div>
-    </Dialog>
-  );
-}
-
-export function openPrintSetupDialog(onPrint: () => void): void {
-  openCustomDialog((close) => <PrintSetupDialog close={close} onPrint={onPrint} />);
 }
 
 // ---------------------------------------------------------------------------
@@ -475,7 +398,7 @@ function TemplateDialog({ close }: { close: () => void }) {
     if (!title) return;
     const design = make(title);
     await ensureDesignParts(design);
-    actions.loadDesign(design, fileNameForTitle(title), false);
+    await openGeneratedDesign(design, fileNameForTitle(title), false);
   };
   const notes = () => [t('schematic.tpl.lab.goal'), t('schematic.tpl.lab.parts'), t('schematic.tpl.lab.steps'), t('schematic.tpl.lab.results')];
   return (

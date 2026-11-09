@@ -13,6 +13,7 @@ import { getSheet, itemsBounds, mergeChildren, normalizeSheet, selIds, updateShe
 import { sanitizeIncomingSheets, type SanitizeNote } from '../../model/sanitize';
 import { newId } from './ids';
 import { collectRefdes, nextRefdes } from './refdes';
+import { effectivePrefix } from '../../model/refdesRules';
 import { onWire, onWireInterior, wireEnds } from './wireOps';
 
 /** A port to create in a new child design. */
@@ -71,7 +72,7 @@ export function placeBlock(design: Design, sheetId: string, childId: string, pos
   const inst: PartInstance = {
     id: newId('p'),
     partId: def.id,
-    refdes: nextRefdes(def.prefix, collectRefdes(design, sheetId)),
+    refdes: nextRefdes(effectivePrefix(def.prefix, design.refdesRules), collectRefdes(design, sheetId)),
     x: snap(pos.x),
     y: snap(pos.y),
     rotation,
@@ -213,7 +214,7 @@ export function replaceWithSubcircuit(design: Design, sheetId: string, selection
   const block: PartInstance = {
     id: newId('p'),
     partId: blockPartId(childId),
-    refdes: nextRefdes(def.prefix, collectRefdes(design, sheetId)),
+    refdes: nextRefdes(effectivePrefix(def.prefix, design.refdesRules), collectRefdes(design, sheetId)),
     x: snap(box.x),
     y: snap(box.y),
     rotation: 0,

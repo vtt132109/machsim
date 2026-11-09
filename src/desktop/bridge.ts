@@ -20,6 +20,16 @@ export interface DesktopFileStat {
   modified: string;
 }
 
+/** Page options the desktop shell needs to print the print-only pages (src/ui/print). */
+export interface DesktopPrintOptions {
+  /** paper size in millimetres, as printed (landscape already applied) */
+  widthMm: number;
+  heightMm: number;
+  landscape: boolean;
+  /** false = print in black and white */
+  color: boolean;
+}
+
 export interface DesktopSaved {
   path: string;
   name: string;
@@ -56,6 +66,21 @@ export interface MachsimDesktopBridge {
    * desktop builds do not have it.
    */
   setLanguage?(lang: 'vi' | 'en'): void;
+
+  // ---- document tabs and printing (optional: older desktop builds lack them)
+  /** Names of the documents with unsaved changes; the shell lists them if it has to ask itself. */
+  setDirtyDocuments?(names: string[]): void;
+  /**
+   * The window was asked to close while a document has unsaved changes. The renderer asks its
+   * Close all question and calls {@link confirmQuit} to let the window close; doing nothing keeps it open.
+   */
+  onCloseRequest?(callback: () => void): () => void;
+  /** Close the window now, without asking again. */
+  confirmQuit?(): void;
+  /** Print the current page (the print-only pages of the print preview) with the system print dialog. */
+  printPage?(opts: DesktopPrintOptions): Promise<{ ok: boolean; error?: string }>;
+  /** Save the current page (the print-only pages) as a PDF through a save dialog; null when cancelled. */
+  printToPdf?(opts: DesktopPrintOptions & { suggestedName?: string }): Promise<DesktopSaved | null>;
 
   // ---- projects (optional: desktop builds from before the schematic-capture round lack them)
   /** Open dialog for a project file (.msimproj); its folder becomes readable / writable by relative path. */

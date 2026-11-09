@@ -48,9 +48,9 @@ function context(ed: ReturnType<typeof createEditor>, registered: (id: string) =
 const builtinOnly = (id: string) => !(EXTENSION_COMMANDS as readonly string[]).includes(id);
 
 describe('menu model', () => {
-  it('has the nine top-level menus in order', () => {
+  it('has the ten top-level menus in order (Window sits before Help)', () => {
     const ed = createEditor({ lookup: testLookup });
-    expect(buildMenus(context(ed, () => true)).map((m) => m.label)).toEqual(['File', 'Edit', 'View', 'Place', 'Simulate', 'Tools', 'Reports', 'Options', 'Help']);
+    expect(buildMenus(context(ed, () => true)).map((m) => m.label)).toEqual(['File', 'Edit', 'View', 'Place', 'Simulate', 'Tools', 'Reports', 'Options', 'Window', 'Help']);
   });
 
   it('keeps extension commands disabled until they are registered', () => {
@@ -159,5 +159,66 @@ describe('menu model', () => {
     expect(find(buildMenus(context(ed, () => true)).flatMap((m) => m.items), 'Capture screen area').disabled).toBe(true);
     ed.actions.setActiveSheet('sheet1');
     expect(find(buildMenus(context(ed, () => true)).flatMap((m) => m.items), 'Capture screen area').disabled).toBeFalsy();
+  });
+
+  it('has a Window menu that lists the open designs, marks the current one and switches', () => {
+    const ed = createEditor({ lookup: testLookup });
+    const single = context(ed, () => true, { documents: [{ id: 'd1', label: 'one.msim', dirty: false, active: true }] });
+    const window1 = buildMenus(single).find((m) => m.id === 'window')!;
+    expect(window1.label).toBe('Window');
+    expect(find(window1.items, 'Next design').disabled).toBe(true);
+    expect(find(window1.items, 'Last used design').disabled).toBe(true);
+    const many = context(ed, () => true, {
+      documents: [
+        { id: 'd1', label: 'one.msim', dirty: false, active: false },
+        { id: 'd2', label: 'two.msim', dirty: true, active: true },
+      ],
+      switchDocument: vi.fn(),
+    });
+    const w = buildMenus(many).find((m) => m.id === 'window')!;
+    expect(find(w.items, 'Next design').disabled).toBe(false);
+    expect(find(w.items, '1  one.msim').checked).toBe(false);
+    const current = find(w.items, '2  two.msim  ●');
+    expect(current.checked).toBe(true);
+    find(w.items, '1  one.msim').onSelect();
+    expect(many.switchDocument).toHaveBeenCalledWith('d1');
+  });
+
+  it('File has Close, Close all and Save all; Save all waits for an unsaved design', () => {
+    const ed = createEditor({ lookup: testLookup });
+    const file = (docs: NonNullable<MenuContext['documents']>) => buildMenus(context(ed, () => true, { documents: docs }))[0].items;
+    const clean = file([{ id: 'd1', label: 'a', dirty: false, active: true }]);
+    expect(find(clean, 'Close design').disabled).toBe(false);
+    expect(find(clean, 'Save all designs').disabled).toBe(true);
+    expect(find(clean, 'Close all designs').disabled).toBe(true);
+    const dirty = file([
+      { id: 'd1', label: 'a', dirty: true, active: true },
+      { id: 'd2', label: 'b', dirty: false, active: false },
+    ]);
+    expect(find(dirty, 'Save all designs').disabled).toBe(false);
+    expect(find(dirty, 'Close all designs').disabled).toBe(false);
+  });
+
+  it('Edit has Order (graphics and text only), Layer settings and Paste special', () => {
+    const ed = createEditor({ lookup: testLookup });
+    const edit = () => buildMenus(context(ed, () => true))[1].items;
+    expect(find(edit(), 'Bring to front').disabled).toBe(true);
+    expect(find(edit(), 'Layer settings…').disabled).toBe(false);
+    expect(find(edit(), 'Paste without renaming').disabled).toBe(true);
+    const n = ed.actions.addNote({ x: 0, y: 0 }, 'x')!;
+    ed.actions.select([{ kind: 'note', id: n }]);
+    expect(find(edit(), 'Bring to front').disabled).toBe(false);
+    expect(find(edit(), 'Send to back').disabled).toBe(false);
+    const r = ed.actions.placePart('test/resistor', { x: 0, y: 100 })!;
+    ed.actions.select([{ kind: 'part', id: r }]);
+    ed.actions.copy();
+    expect(find(edit(), 'Paste without renaming').disabled).toBe(false);
+    expect(find(edit(), 'Paste values only').disabled).toBe(false);
+    expect(find(edit(), 'Bring to front').disabled).toBe(true);
+  });
+
+  it('Tools has the reference designator prefixes', () => {
+    const ed = createEditor({ lookup: testLookup });
+    expect(find(buildMenus(context(ed, () => true))[5].items, 'Reference designator prefixes…').disabled).toBe(false);
   });
 });

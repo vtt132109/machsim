@@ -8,6 +8,7 @@ import beginner from './beginner';
 import catalog from './catalog';
 import common from './common';
 import digital from './digital';
+import documents from './documents';
 import editor from './editor';
 import erc from './erc';
 import files from './files';
@@ -31,6 +32,6 @@ import tips from './tips';
 import wizards from './wizards';
 
 /** Every section, by name (the i18n tests check each one for duplicates and placeholder parity). */
-export const SECTIONS = { analysis, app, beginner, catalog, common, digital, editor, erc, files, help, instruments, integration, ladder, learn, library, mcu, parts, placement, results, schematic, schematicTools, shell, sim, simtools, store, tips, wizards } as const;
+export const SECTIONS = { analysis, app, beginner, catalog, common, digital, documents, editor, erc, files, help, instruments, integration, ladder, learn, library, mcu, parts, placement, results, schematic, schematicTools, shell, sim, simtools, store, tips, wizards } as const;
 
-export const MESSAGES = { ...analysis, ...app, ...beginner, ...catalog, ...common, ...digital, ...editor, ...erc, ...files, ...help, ...instruments, ...integration, ...ladder, ...learn, ...library, ...mcu, ...parts, ...placement, ...results, ...schematic, ...schematicTools, ...shell, ...sim, ...simtools, ...store, ...tips, ...wizards } as const;
+export const MESSAGES = { ...analysis, ...app, ...beginner, ...catalog, ...common, ...digital, ...documents, ...editor, ...erc, ...files, ...help, ...instruments, ...integration, ...ladder, ...learn, ...library, ...mcu, ...parts, ...placement, ...results, ...schematic, ...schematicTools, ...shell, ...sim, ...simtools, ...store, ...tips, ...wizards } as const;

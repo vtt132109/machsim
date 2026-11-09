@@ -36,7 +36,7 @@ export default {
   'cmd.file.exportSpice': ['Xuất netlist SPICE…', 'Export SPICE netlist…'],
   'cmd.file.exportSvg': ['Xuất trang thành SVG…', 'Export sheet as SVG…'],
   'cmd.file.exportPng': ['Xuất trang thành PNG…', 'Export sheet as PNG…'],
-  'cmd.file.print': ['In…', 'Print…'],
+  'cmd.file.print': ['In và xem trước…', 'Print and preview…'],
   'cmd.edit.undo': ['Hoàn tác', 'Undo'],
   'cmd.edit.redo': ['Làm lại', 'Redo'],
   'cmd.edit.cut': ['Cắt', 'Cut'],

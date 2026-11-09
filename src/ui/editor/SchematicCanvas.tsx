@@ -7,6 +7,7 @@
  *   controller (see interaction.ts) which implements the tools.
  * - Library parts can be dropped from the component browser (drag & drop).
  */
+import { layerVisible } from '../../model/layers';
 import { memo, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { defaultParams, libraryVersion, subscribeLibrary } from '../../library';
 import type { PartInstance, Point } from '../../model/types';
@@ -356,7 +357,7 @@ export function SchematicCanvas() {
         </defs>
         <rect className="ms-canvas-bg" width="100%" height="100%" />
         <g transform={`translate(${view.panX} ${view.panY}) scale(${view.zoom})`}>
-          {showGrid ? (
+          {showGrid && layerVisible(sheet, 'grid') ? (
             <>
               {minorGrid ? <rect x={vis.x - GRID} y={vis.y - GRID} width={vis.w + 2 * GRID} height={vis.h + 2 * GRID} fill={lineGrid ? 'url(#ms-grid-lines-minor)' : 'url(#ms-grid-minor)'} /> : null}
               <rect x={vis.x - GRID * 5} y={vis.y - GRID * 5} width={vis.w + GRID * 10} height={vis.h + GRID * 10} fill={lineGrid ? 'url(#ms-grid-lines-major)' : 'url(#ms-grid-major)'} />

@@ -13,6 +13,7 @@
  */
 import type { Design, PinRef, Point } from '../../model/types';
 import type { PartLookup } from './types';
+import { findSheet } from '../../model/hierarchy';
 import { sheetPins } from './designOps';
 import { onWire, pointKey, wireEnds } from './wireOps';
 
@@ -170,4 +171,16 @@ export function computeConnectivity(design: Pick<Design, 'sheets'>, lookup: Part
     for (const p of n.pins) pinNet.set(`${p.refdes}.${p.pin}`, i);
   });
   return { nets, wireNet, pinNet };
+}
+
+/**
+ * Wire id -> net name for the design level that holds `sheetId` (a child design's sheets are a
+ * scope of their own). Used by the canvas tooltips, the "net names" layer and the image export.
+ */
+export function sheetWireNets(design: Design, sheetId: string, lookup: PartLookup): Map<string, string> {
+  const child = findSheet(design, sheetId)?.child;
+  const c = computeConnectivity(child ? { ...design, sheets: child.sheets } : design, lookup);
+  const m = new Map<string, string>();
+  for (const [wid, idx] of c.wireNet) m.set(wid, c.nets[idx].name);
+  return m;
 }

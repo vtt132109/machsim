@@ -57,6 +57,7 @@ import { installReports } from '../reports/install';
 import { installFileFeatures } from '../files/install';
 import { installLibraryAutoload } from '../../model/libraryLoad';
 import './app.css';
+import { DocumentTabs } from './DocumentTabs';
 import { t, tDynamic } from '../../i18n';
 
 installBuiltinCommands();
@@ -346,6 +347,7 @@ export default function App() {
         <MenuBar />
         <Toolbar />
       </header>
+      <DocumentTabs />
       <div className="ms-main">
         {layout.browser === 'open' ? (
           <>

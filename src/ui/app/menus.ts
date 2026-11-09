@@ -49,6 +49,9 @@ export interface MenuContext {
   setVariant?(id: string): void;
   /** true when a real simulation controller is installed */
   simulationConnected: boolean;
+  /** the open designs (document tabs), for the Window menu; absent = the menu lists none */
+  documents?: readonly { id: string; label: string; dirty: boolean; active: boolean }[];
+  switchDocument?(id: string): void;
 }
 
 export interface TopMenu {
@@ -78,6 +81,7 @@ export function buildMenus(ctx: MenuContext): TopMenu[] {
   const multi = s.selection.length > 1;
   const partSelected = s.selection.some((x) => x.kind === 'part');
   const blockSelected = s.selection.some((x) => x.kind === 'part' && sheet.parts.find((p) => p.id === x.id)?.partId.startsWith('hier:'));
+  const annotationSelected = s.selection.some((x) => x.kind === 'shape' || x.kind === 'note');
   const running = s.sim.state === 'running';
   /** analyses the instructor disabled for this design */
   const disabledAnalyses: readonly AnalysisType[] = s.design.restrictions?.disabledAnalyses ?? [];
@@ -111,8 +115,12 @@ export function buildMenus(ctx: MenuContext): TopMenu[] {
     { type: 'submenu', label: t('menu.recentProjects'), items: recentProjectItems },
     item('file.examples'),
     SEP,
+    item('file.close'),
+    item('file.closeAll', { enabled: (ctx.documents?.length ?? 1) > 1 || s.design !== s.savedDesign }),
+    SEP,
     item('file.save'),
     item('file.saveAs'),
+    item('file.saveAll', { enabled: (ctx.documents ?? []).some((d) => d.dirty) }),
     item('file.saveAsTemplate'),
     item('file.exportTemplate'),
     SEP,
@@ -155,6 +163,12 @@ export function buildMenus(ctx: MenuContext): TopMenu[] {
     item('edit.cut', { enabled: hasSel }),
     item('edit.copy', { enabled: hasSel }),
     item('edit.paste', { enabled: s.clipboardAvailable }),
+    {
+      type: 'submenu',
+      id: 'menu.pasteSpecial',
+      label: t('menu.pasteSpecial'),
+      items: [item('edit.pasteSpecial.keepNames', { enabled: s.clipboardAvailable }), item('edit.pasteSpecial.values', { enabled: s.clipboardAvailable && partSelected }), item('edit.pasteSpecial.block', { enabled: s.clipboardAvailable })],
+    },
     item('edit.duplicate', { enabled: hasSel }),
     item('edit.delete', { enabled: hasSel }),
     item('file.snippetSave', { enabled: hasSel }),
@@ -185,6 +199,18 @@ export function buildMenus(ctx: MenuContext): TopMenu[] {
         item('edit.unlock', { enabled: hasSel }),
       ],
     },
+    {
+      type: 'submenu',
+      id: 'menu.order',
+      label: t('menu.order'),
+      items: [
+        item('edit.order.front', { enabled: annotationSelected }),
+        item('edit.order.forward', { enabled: annotationSelected }),
+        item('edit.order.backward', { enabled: annotationSelected }),
+        item('edit.order.back', { enabled: annotationSelected }),
+      ],
+    },
+    item('edit.layers'),
     item('edit.replaceComponent', { enabled: partSelected && !blockSelected }),
     item('edit.editComponent', { enabled: s.selection.length === 1 && partSelected && !blockSelected }),
     item('edit.ncMarker', { enabled: partSelected }),
@@ -324,6 +350,7 @@ export function buildMenus(ctx: MenuContext): TopMenu[] {
     SEP,
     item('tools.annotate'),
     item('tools.renumber'),
+    item('tools.refdesRules'),
     SEP,
     {
       type: 'submenu',
@@ -391,6 +418,18 @@ export function buildMenus(ctx: MenuContext): TopMenu[] {
     item('options.instructor'),
   ];
 
+  const docs = ctx.documents ?? [];
+  const windowMenu: MenuEntry[] = [
+    item('window.next', { enabled: docs.length > 1 }),
+    item('window.previous', { enabled: docs.length > 1 }),
+    item('window.recent', { enabled: docs.length > 1 }),
+    SEP,
+    ...docs.map((d, i): MenuEntry => ({ label: `${i + 1}  ${d.label}${d.dirty ? '  ●' : ''}`, checked: d.active, onSelect: () => ctx.switchDocument?.(d.id) })),
+    SEP,
+    item('file.close'),
+    item('file.closeAll'),
+  ];
+
   const help: MenuEntry[] = [
     item('help.gettingStarted'),
     item('help.whatsNew'),
@@ -414,6 +453,7 @@ export function buildMenus(ctx: MenuContext): TopMenu[] {
     { id: 'tools', label: t('menu.tools'), items: tools },
     { id: 'reports', label: t('menu.reports'), items: reports },
     { id: 'options', label: t('menu.options'), items: options },
+    { id: 'window', label: t('menu.window'), items: windowMenu },
     { id: 'help', label: t('menu.help'), items: help },
   ];
 }

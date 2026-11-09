@@ -164,6 +164,12 @@ const openFilters = () => [
 
 let mainWindow = null;
 let dirty = false;
+/** names of the documents with unsaved changes (document tabs), for the quit question */
+let dirtyDocuments = [];
+/** the renderer runs its own Close all question and answers with machsim:confirm-quit */
+let rendererHandlesClose = false;
+/** the window may close now (the renderer asked, or nothing is unsaved) */
+let forceClose = false;
 let pendingOpen = null; // file passed on the command line before the window was ready
 
 function fileFromArgv(argv) {
@@ -468,6 +474,51 @@ function registerIpc() {
     if (mainWindow) mainWindow.setDocumentEdited(dirty);
   });
 
+  ipcMain.on('machsim:set-dirty-documents', (_e, names) => {
+    dirtyDocuments = Array.isArray(names) ? names.filter((n) => typeof n === 'string').map((n) => n.slice(0, 120)).slice(0, 50) : [];
+  });
+
+  // the renderer registers (or removes) its own close question
+  ipcMain.on('machsim:close-handler', (_e, value) => {
+    rendererHandlesClose = Boolean(value);
+  });
+  ipcMain.on('machsim:confirm-quit', () => {
+    forceClose = true;
+    if (mainWindow) mainWindow.close();
+  });
+
+  // ---- printing: the renderer builds the pages (print preview) in a print-only container, the
+  // shell prints that page with the options the learner chose in the preview
+  const printOptions = (o) => {
+    const mm = o && typeof o === 'object' ? o : {};
+    const w = Math.max(50, Math.min(2000, Number(mm.widthMm) || 210));
+    const h = Math.max(50, Math.min(2000, Number(mm.heightMm) || 297));
+    // Chromium wants the portrait size plus the landscape flag
+    return { landscape: Boolean(mm.landscape), color: mm.color !== false, size: { width: Math.round(Math.min(w, h) * 1000), height: Math.round(Math.max(w, h) * 1000) } };
+  };
+  ipcMain.handle('machsim:print-page', (_e, opts) => {
+    if (!mainWindow) return { ok: false, error: 'no window' };
+    const p = printOptions(opts);
+    return new Promise((resolve) => {
+      mainWindow.webContents.print({ silent: false, printBackground: true, color: p.color, landscape: p.landscape, margins: { marginType: 'none' }, pageSize: p.size }, (success, reason) => resolve({ ok: Boolean(success), error: success ? undefined : String(reason || '') }));
+    });
+  });
+  ipcMain.handle('machsim:print-pdf', async (_e, opts) => {
+    if (!mainWindow) return null;
+    const p = printOptions(opts);
+    const o = opts && typeof opts === 'object' ? opts : {};
+    const data = await mainWindow.webContents.printToPDF({ printBackground: true, preferCSSPageSize: true, margins: { marginType: 'none' } });
+    const suggested = typeof o.suggestedName === 'string' && o.suggestedName.trim() ? o.suggestedName.trim().replace(/[<>:"/\\|?*\u0000-\u001f]+/g, '_') : 'MachSim.pdf';
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: s('pdfTitle'),
+      defaultPath: path.join(readSettings().lastDir || app.getPath('documents'), /\.pdf$/i.test(suggested) ? suggested : `${suggested}.pdf`),
+      filters: [{ name: s('filterPdf'), extensions: ['pdf'] }],
+    });
+    if (result.canceled || !result.filePath) return null;
+    fs.writeFileSync(result.filePath, data);
+    return { path: result.filePath, name: path.basename(result.filePath) };
+  });
+
   ipcMain.on('machsim:set-language', (_e, value) => {
     if (value === 'vi' || value === 'en') {
       lang = value;
@@ -655,7 +706,14 @@ function createWindow() {
   mainWindow.on('close', (event) => {
     const b = mainWindow.getNormalBounds();
     writeSettings({ window: { ...b, maximized: mainWindow.isMaximized() } });
-    if (dirty) {
+    if (dirty && !forceClose) {
+      // the renderer lists the unsaved documents and offers Save all / Don't save / Cancel
+      if (rendererHandlesClose && !mainWindow.webContents.isCrashed()) {
+        event.preventDefault();
+        mainWindow.webContents.send('machsim:close-request');
+        return;
+      }
+      const several = dirtyDocuments.length > 1;
       const choice = dialog.showMessageBoxSync(mainWindow, {
         type: 'warning',
         buttons: [s('quitWithoutSaving'), s('cancel')],
@@ -663,7 +721,7 @@ function createWindow() {
         cancelId: 1,
         title: 'MachSim',
         message: s('unsavedMessage'),
-        detail: s('unsavedDetail'),
+        detail: several ? [s('unsavedListMessage', { n: dirtyDocuments.length }), ...dirtyDocuments, '', s('unsavedDetail')].join(String.fromCharCode(10)) : s('unsavedDetail'),
       });
       if (choice !== 0) event.preventDefault();
     }

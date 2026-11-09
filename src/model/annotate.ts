@@ -22,6 +22,8 @@
 
 import { getPart } from '../library';
 import { packageKey } from './sections';
+import { effectivePrefix } from './refdesRules';
+import type { RefdesRules } from './types';
 import type { Design, PartInstance } from './types';
 
 export interface RefdesParts {
@@ -36,9 +38,10 @@ export function splitRefdes(refdes: string): RefdesParts {
   return { prefix: t.replace(/\?+$/, ''), num: null };
 }
 
-function prefixOf(inst: PartInstance): string {
+function prefixOf(inst: PartInstance, rules?: RefdesRules): string {
   const def = getPart(inst.partId);
-  if (def) return def.prefix;
+  // the design's prefix rules (Tools > Reference designator prefixes) shape the library prefix
+  if (def) return effectivePrefix(def.prefix, rules);
   const p = splitRefdes(inst.refdes).prefix;
   return p || 'U';
 }
@@ -121,7 +124,7 @@ export function annotateDesign(design: Design, opts: AnnotateOptions = {}): Anno
   if (mode === 'all') {
     const counters = new Map<string, number>();
     for (const group of groups) {
-      const prefix = prefixOf(group[0]);
+      const prefix = prefixOf(group[0], design.refdesRules);
       const k = prefix.toLowerCase();
       const n = (counters.get(k) ?? 0) + 1;
       counters.set(k, n);
@@ -142,7 +145,7 @@ export function annotateDesign(design: Design, opts: AnnotateOptions = {}): Anno
   const pending = new Set(needs.flat());
   const usedByPrefix = new Map<string, Set<number>>();
   for (const group of needs) {
-    const prefix = prefixOf(group[0]);
+    const prefix = prefixOf(group[0], design.refdesRules);
     const k = prefix.toLowerCase();
     let used = usedByPrefix.get(k);
     if (!used) {

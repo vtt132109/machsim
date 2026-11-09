@@ -43,6 +43,11 @@ export const BEGINNER_COMMANDS: readonly string[] = [
   'file.exportPng',
   'file.print',
   'file.info',
+  // several designs: a learner who opens a second one needs to close it and to move between them
+  // (the Window menu itself stays hidden; the tabs, Ctrl+Tab and these two commands are enough)
+  'file.close',
+  'window.next',
+  'window.previous',
   // snippets: the rc-stages lesson says "Edit › Snippets › Save snippet"
   'file.snippetSave',
   'file.snippetPlace',

@@ -32,6 +32,9 @@ Có thể đóng gói thành ứng dụng Windows (Electron/Tauri) ở giai đo�
 | Schematic capture (`SchematicCapture`, `SCH_CAP`, `Nets`, `DrwEngine`) | Editor SVG, kết nối, nhãn net, nhiều sheet | `src/ui/editor`, `src/model` |
 | Netlister & ERC (`CIRCEXP`, `SETATTR`) | Design → Netlist IR, ERC, BOM | `src/model` |
 | Công cụ sơ đồ chuyên nghiệp (ERC options, Net settings, Capture area, Customize UI, Footprint manager) | Ma trận loại chân + dấu NC + báo cáo ERC, cài đặt theo net (màu / PCB), chụp vùng sơ đồ, phím tắt & thanh công cụ tuỳ biến, danh mục chân vỏ, ký hiệu nhiều phần (`packageGroups` chọn phần dẫn đầu **có tham gia**, `packageKey` giữ cả vỏ cùng một refdes qua Đánh số / Dán / Tìm & thay, `placePart`+`joinPackage` cho cổng vừa đặt vào vỏ còn trống cổng ấy) | `src/model/ercMatrix.ts`, `ercReport.ts`, `netSettings.ts`, `sections.ts`, `src/library/footprints.ts`, `sectionKit.ts`, `src/ui/schematicTools`, `src/ui/app/customize.ts` |
+| Nhiều thiết kế mở cùng lúc (Multisim: nhiều thiết kế trong một cửa sổ, Close all / Save all) | Thẻ tài liệu: bộ quản lý đổi `DocumentState` vào kho soạn thảo, phần mở rộng cho vị trí tệp / kết quả mô phỏng / Grapher, luồng đóng – lưu – thoát, lưu tự động mọi thiết kế | `src/ui/app/documents.ts`, `documentSet.ts`, `DocumentTabs.tsx`, `documentFlows.ts`, `document.ts`, `src/ui/integration/controller.ts` |
+| In, xem trước, Page setup, PDF | Hộp Xem trước khi in dùng chung cho trình duyệt và desktop: phép tính trang (khổ giấy, lề, tỉ lệ, chia tờ, khoảng trang), nguồn nội dung (trang sơ đồ / bậc thang / vùng chọn, thiết bị đo, Grapher, báo cáo, bài học), `window.print` hoặc IPC `printPage` / `printToPdf` | `src/ui/print/*`, `desktop/main.cjs` |
+| Order, Layer settings, Paste special, Reference Designator Prefix Setup | Thứ tự vẽ `z`, lớp hiển thị theo trang, ba kiểu dán đặc biệt, quy tắc tiền tố tên theo thiết kế | `src/model/annotationOrder.ts`, `layers.ts`, `refdesRules.ts`, `src/ui/app/editingDialogs.tsx`, `editorStore.ts` |
 | Thuộc tính (`prp`) | Dialog thuộc tính theo ParamDef | `src/ui/editor` |
 | Grapher & postprocessor (`grapher`, `POSTPROC`) | Đồ thị, cursor, biểu thức, CSV | `src/ui/results` |
 | Thiết bị ảo (`SCOPE*`, `FGEN*`, `mulmeter*`, `bode`, `WATTMETR`, `FreqCounter`, `IV_Analyzer`, `spec_an`, `netan`, `distor`, `logican`, `wgen`, `logconv`) | Panel thiết bị | `src/ui/instruments` |
@@ -858,6 +861,56 @@ giáo viên báo đúng chứ không báo "không có gì".
   `src/ui/app/files.test.ts`, `src/model/fileInfo.test.ts`, `src/model/ercNetlist.test.ts`,
   `tests/review/round4/{invariants,beginner-menu-paths,logic-pin-types}.test.ts`.
 
+## Nhiều thiết kế mở cùng lúc, in và các lệnh sửa (vòng 4 bước 2)
+
+### Thẻ tài liệu (`src/ui/app/documents.ts`, `documentSet.ts`, `DocumentTabs.tsx`, `documentFlows.ts`)
+
+- **Một kho soạn thảo, nhiều tài liệu.** `editor` (`src/ui/store/index.ts`) vẫn chỉ giữ MỘT tài liệu đang mở: mọi hành động sửa, canvas, bộ điều khiển mô phỏng và hộp thoại làm việc trên nó,
+  nên không chỗ nào khác phải biết "tài liệu". Bộ quản lý (`createDocumentManager({ editor, blank })`, thuần, không DOM) cất các tài liệu còn lại thành ảnh chụp
+  `DocumentState` (`src/ui/store/types.ts`: `design`, `savedDesign`, `fileName`, `activeSheetId`, `selection`, `views`, `history`, `ercMarkers`, `simMessages`, `probeValues`,
+  `indicatorLevels`, `ladderLive`, `ratingStates`, `sim`) và đổi vào kho khi chọn thẻ (`editor.actions.captureDocument` / `restoreDocument` / `makeDocument`). Bố cục, bộ nhớ tạm,
+  công cụ và `ui` dùng chung cho mọi tài liệu (bộ nhớ tạm dùng chung chính là cách dán sang thiết kế khác).
+- **Phần của tài liệu nằm ngoài kho** đăng ký `DocumentExtension { id, capture, restore, beforeLeave? }` (`documents.registerExtension`): vị trí tệp (`document.ts`, mở đầu tệp),
+  kết quả mô phỏng và lịch sử chạy (`controller.documentState()` / `restoreDocumentState()`, đăng ký trong `integration/index.tsx`; `beforeLeave` = `stopForDocumentSwitch()` dừng phiên đang chạy
+  trước khi đổi), trang Grapher (`GrapherWindow.tsx`, `grapherDoc`). `restore(undefined)` = tài liệu mới tinh. Mã số lần chạy vẫn tăng đơn điệu qua mọi tài liệu.
+- **Quy tắc**: thiết kế mới vào thẻ mới; tài liệu hiện tại "nguyên sơ" (chưa sửa, chưa lưu dưới tên, trống, `setReplaceable()` của lớp tệp cho phép) bị thay thế; File > New luôn thêm thẻ;
+  tối đa `MAX_DOCUMENTS` = 16 (`open()` trả null, người học được báo); luôn còn ít nhất một tài liệu; mọi chuyển đổi chạy nối đuôi nhau (`serial`).
+  `confirmDiscardChanges()` (document.ts) giữ tên cũ cho các nơi gọi nhưng nay chỉ từ chối khi hết chỗ; `presentDesign()` là chỗ duy nhất đưa thiết kế vào thẻ (mở tệp, thiết kế sinh ra, khôi phục).
+- **Đóng / lưu**: `documents.close(id, host)`, `closeAll(host, why)`, `saveAll(host)` với `CloseHost { askUnsaved, saveActive }` (hộp thoại trong `documentFlows.ts`, giả trong test).
+  Huỷ hoặc lưu hỏng thì không đóng gì; Đóng tất cả và thoát hỏi MỘT lần kèm danh sách. Desktop: `main.cjs` chặn đóng cửa sổ khi còn thiết kế chưa lưu, gửi `machsim:close-request`, renderer chạy
+  `quitFlow()` rồi gọi `bridge.confirmQuit()`; bản cũ của renderer không đăng ký thì vẫn có hộp hỏi cũ nhưng liệt kê tên (`setDirtyDocuments`).
+- **Tự lưu / khôi phục**: một bản ghi `AutosaveRecord` giữ thiết kế chưa lưu đầu tiên ở `fileName/text` và các thiết kế khác ở `others` (`files.ts` `parseAutosave`, `recordDocuments`; đọc được bản ghi cũ).
+  `buildRecoveryRecord()` / `syncRecovery()` trong `document.ts`; sau Lưu / Đóng bản ghi được ghi lại hoặc xoá theo các thiết kế còn chưa lưu.
+- **Kéo giữa các thiết kế**: `InteractionHost.dragOverDocument` / `dropOnDocument` (canvasHost.ts) cho vùng chọn kéo thả lên thẻ (`data-doc-id`); kéo linh kiện thư viện dùng HTML5 DnD (`PART_DRAG_MIME`).
+  `copySelectionToDocument` / `placePartInDocument` chép, chuyển sang thẻ đích và dán bằng đường dán thường nên lớp toàn vẹn và hạn chế của giảng viên vẫn áp dụng.
+- **Menu / phím**: menu Cửa sổ (`MenuContext.documents` / `switchDocument`), `file.close` (Ctrl+F4, Ctrl+W), `file.closeAll`, `file.saveAll`, `window.next|previous|recent` (Ctrl+Tab, Ctrl+Shift+Tab). Chế độ người mới: `file.close`,
+  `window.next`, `window.previous` được phép; menu Cửa sổ ẩn.
+
+### In và xem trước (`src/ui/print/`)
+
+- `printLayout.ts` (thuần, số học): `PageSetup`, `paperSizeMm`, `printableArea`, `itemScale`, `tileCount`, `layoutItems(items, setup) → PrintLayout { pages, all, area, clippedItems, rangeError }`,
+  `parsePageRange`, và phân trang chữ (`wrapText`, `paginateTable`, `paginateDocument`). 100 % = kích thước thật; chia tờ chỉ khi tỉ lệ là phần trăm (ô chồng `TILE_OVERLAP_MM` = 8 mm, ô cuối có thể nhỏ hơn);
+  số trang tính cả các ô. `setupFromDesign` / `setupToDesign` đọc / ghi `Design.printSetup` (`marginMm`, `tile`, `footer`, `pageRange`, `customMm` thêm vào `PrintSetup`; tệp cũ mở với mặc định).
+- `printModel.ts`: `PrintContent` (ảnh có kích thước thật, bảng, tài liệu) → `buildJob` → `PrintJob { items, bodies, captions }`. `printSources.ts`: `buildContents(ctx, choices)` cho trang sơ đồ / bậc thang (cùng bộ xuất
+  `sheetToSvg` nên lớp ẩn được tôn trọng), vùng chọn, thiết bị đo, báo cáo (`reportTables`), bài học; cửa sổ khác góp trang qua `registerPrintContribution` (Grapher: `results/printPage.ts` vẽ từng trang ra canvas trắng).
+- `PrintPages.tsx` vẽ các trang `.ms-pp` (đơn vị mm) — dùng cho cả xem trước (thu nhỏ bằng `transform`) lẫn in (`printOutput.ts` gắn vào `.ms-print-area` cùng `@page { size; margin: 0 }`, rồi
+  `bridge.printPage` (hộp in Windows), `bridge.printToPdf` (ghi PDF) hoặc `window.print()`). `PrintPreview.tsx` là hộp thoại (nạp lười từ lệnh `file.print` / `file.printSetup`); chữ ở `src/i18n/printText.ts`.
+  Cài đặt được lưu vào thiết kế khi in; `printPlan.ts` giữ `printSheetIds` / `instrumentSummary`.
+
+### Lớp hiển thị, thứ tự, dán đặc biệt, tiền tố tên
+
+- `src/model/layers.ts`: `Sheet.layers` (`grid, refdes, values, labels, netNames, pinNumbers, comments, graphics`; chỉ ghi phần khác mặc định, `netNames` và `pinNumbers` mặc định tắt).
+  `SheetScene` (scene.tsx) đọc `layerVisible` nên canvas, bản xuất SVG / PNG và bản in giống nhau; `netNames` cần `wireNets` (xuất ảnh tự tính bằng `sheetWireNets`).
+- `src/model/annotationOrder.ts`: `Shape.z` / `TextNote.z`; `annotationStack`, `reorderAnnotations`, `movedStack`. Không trường `z` nào thì vẽ như trước (hình rồi chữ); có `z` thì một nhóm `ms-layer-annotations`;
+  mục chưa có `z` (mới thêm sau) nằm trên cùng. `hitTest` duyệt theo thứ tự này. Action `orderSelection(op)`.
+- `editorStore.pasteSpecial(mode, opts)` (`keepNames` | `values` | `block`) trả `PasteSpecialResult`; `designOps.pasteValuesOnly`; `pasteItems(... { keepRefdes })` nay đặt trước mọi tên còn trống rồi mới tìm số mới.
+  Dialog / thông báo ở `editingDialogs.tsx`.
+- `src/model/refdesRules.ts`: `Design.refdesRules { global?, map? }`; `effectivePrefix`, `libraryPrefixOf`, `validateRules`, `applyRulesToDesign`. `annotate.ts`, `createPartInstance`, `pasteItems`, `renumberParts`, `placeBlock`,
+  `replacePart` dùng `effectivePrefix(prefix, design.refdesRules)`; action `setRefdesRules(rules, rename)`.
+- **Quy ước khi thêm trường mới vào tệp**: ghi sau trường cuối cùng cùng cấp trong `serialize.ts` (để khứ hồi đúng từng byte) và thêm thao tác vào mảng `OPS` của `tests/review/round4/invariants.test.ts` (đã làm cho các lệnh này).
+- **Test**: `documents.test.ts`, `controllerDocuments.test.ts`, `documentTabs.test.ts`, `printLayout.test.ts`, `layers.test.ts`, `annotationOrder.test.ts`, `pasteSpecial.test.ts`, `refdesRules.test.ts`,
+  `menus.test.ts`, `beginner.test.ts`, `tests/review/round4/invariants.test.ts`.
+
 ## Hợp đồng dùng chung (chỉ thêm, không đổi nghĩa)
 
 - `src/sim/netlist.ts` — Netlist IR, analysis specs, options.
@@ -871,6 +924,7 @@ giáo viên báo đúng chứ không báo "không có gì".
 - `src/ladder/types.ts` — bậc thang trong tệp thiết kế (`Sheet.kind`, `Sheet.ladder`); `program.ts`, `machine.ts`, `probes.ts`, `layout.ts`, `edit.ts` — biên dịch, vòng quét, biến số liệu, hình vẽ và thao tác sửa (thuần, dùng chung giữa engine và giao diện).
 - `src/mecha/models.ts` — mô hình máy (chân vào / chân cảm biến / nút báo trạng thái), dùng bởi code model `A_MECHA` và bởi giao diện để vẽ chuyển động.
 - `src/model/ercMatrix.ts`, `ercReport.ts`, `netSettings.ts`, `sections.ts`, `src/library/footprints.ts` — tuỳ chọn ERC + ma trận loại chân, phạm vi / báo cáo ERC, cài đặt theo net, vi mạch nhiều phần, danh mục chân vỏ (thuần).
+- `src/ui/app/documents.ts` — `createDocumentManager`, `DocumentExtension`, `CloseHost`; `src/ui/store/types.ts` `DocumentState`; `src/ui/print/printLayout.ts` — phép tính trang in (thuần).
 - `src/model/sanitize.ts` — lớp toàn vẹn dùng chung: mọi nội dung vào một thiết kế đi qua đây (`sanitizeIncoming`, `sanitizeIncomingSheets`, `sanitizeDesign`, `parseDesignSafely` / `validateDesignSafely` / `repairRawDesign`, `neededVariables` / `referencedVariables`, `SanitizeNote`). Thuần; `src/i18n/sanitize.ts` dịch ghi chú.
 
 ## Luồng dữ liệu
