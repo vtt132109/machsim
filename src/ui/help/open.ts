@@ -76,6 +76,8 @@ export function contextTopic(state: Pick<EditorState, 'selection' | 'design'>): 
   const f = floating.getState();
   const win = f.windows.find((w) => w.id === f.active);
   if (win && isInstrumentKind(win.kind)) return { kind: 'instrument', instrument: win.kind };
+  // the Scripts window explains itself (F1 / What is this?)
+  if (win && win.kind === 'script') return { kind: 'guide', page: 'scripting' };
   return { kind: 'index' };
 }
 

@@ -104,6 +104,8 @@ export const DESIGN_EXAMPLES: readonly ExampleMeta[] = [
   { file: '71-timer-relays.msim', topic: 'automation', title: 'On-delay and off-delay timer relays', summary: 'Rơ-le thời gian trễ đóng và trễ mở cùng một xung 24 V' },
   { file: '72-speaker-filter.msim', topic: 'mixed', title: 'Listen to a filter: two tones through an RC low-pass', summary: 'Hai âm qua lọc RC và mạch đệm tới loa · nghe tác dụng của bộ lọc' },
   { file: '73-dual-opamp-variants.msim', topic: 'opamps', title: 'Dual op-amp in sections with two gain variants', summary: 'LM358 vẽ thành hai phần U1A / U1B, hai phương án lắp ráp khác giá trị R2 · độ lợi 2 và 11' },
+  { file: '80-hysteresis-bh-loop.msim', topic: 'power', title: 'B-H loop of an iron core (Jiles-Atherton hysteresis)', summary: 'Cuộn 100 vòng trên lõi thép silic có từ trễ Jiles–Atherton và dòng xoáy · vẽ đường B–H trong Grapher' },
+  { file: '81-ekv-bsim4-inverter.msim', topic: 'digital', title: 'CMOS inverter with EKV and BSIM4 transistors', summary: 'Cổng đảo CMOS vẽ hai lần: MOSFET EKV 2.6 và MOSFET BSIM4 · quét DC' },
 ];
 
 /** Metadata of the SPICE decks in examples/spice (title = the deck's first line). */

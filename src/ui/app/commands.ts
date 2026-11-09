@@ -213,6 +213,7 @@ export const BUILTIN_COMMANDS = [
   'tools.pldWizard',
   'simulate.mcuEditor',
   'simulate.audio',
+  'tools.script',
   'reports.partList',
   'reports.netList',
   'options.autosave',

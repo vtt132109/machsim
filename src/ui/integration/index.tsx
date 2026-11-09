@@ -38,7 +38,7 @@ import { TAB_IDS, registerIntegrationCommands, runSpiceText } from './commands';
 import { installGrapherPersistence } from './grapherPersist';
 import { SimulationIntegration, type DocumentLive } from './controller';
 import { InstrumentWindow } from './InstrumentWindow';
-import { AudioPanel, BomTab, ErcTab, GrapherWindow, McuPanel, NetlistTab, SimulationTab } from './panels';
+import { AudioPanel, BomTab, ErcTab, GrapherWindow, McuPanel, NetlistTab, ScriptPanel, SimulationTab } from './panels';
 import { t } from '../../i18n';
 
 export { SimulationIntegration, initialLiveState, rateText, type LiveState } from './controller';
@@ -196,6 +196,12 @@ export function installIntegration(): () => void {
       render: () => <AudioPanel />,
       defaultSize: { w: 460, h: 560 },
       minSize: { w: 320, h: 300 },
+    }),
+    registerFloatingWindowKind('script', {
+      title: () => t('script.window.title'),
+      render: () => <ScriptPanel />,
+      defaultSize: { w: 980, h: 640 },
+      minSize: { w: 560, h: 360 },
     }),
     registerBottomTab({ id: TAB_IDS.simulation, title: t('common.simulation'), render: () => <SimulationTab ctrl={ctrl} />, order: 10 }),
     registerBottomTab({ id: TAB_IDS.erc, title: 'ERC', render: () => <ErcTab />, order: 20 }),

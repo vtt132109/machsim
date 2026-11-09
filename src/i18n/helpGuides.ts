@@ -14,8 +14,9 @@ import { LADDER_GUIDE_PAGES } from './ladderHelp';
 import { DOCS_GUIDE_PAGES } from './docsHelp';
 import { ELECTRO_GUIDE_PAGES } from './electroHelp';
 import { XCHG_GUIDE_SECTIONS } from './xchgHelp';
+import { AUTOMATION_GUIDE_PAGES } from './automationHelp';
 
-export type GuidePageId = 'whatsNew' | 'lessons' | 'description' | 'instructor' | 'reports' | 'pcb' | 'spiceImport' | 'commandLine' | 'samples' | 'snippets' | 'fileSafety' | 'exchange' | 'measurements' | 'spiceMeasure' | 'signalBlocks' | 'realParts' | 'placement' | 'updateComponents' | 'variants' | 'myLibrary' | 'mcu' | 'pld' | 'ladder' | 'mecha' | 'ercTools' | 'netSettings' | 'customizeUi' | 'footprints' | 'documents' | 'printing' | 'editingTools' | 'relays' | 'audio';
+export type GuidePageId = 'whatsNew' | 'lessons' | 'description' | 'instructor' | 'reports' | 'pcb' | 'spiceImport' | 'commandLine' | 'samples' | 'snippets' | 'fileSafety' | 'exchange' | 'measurements' | 'spiceMeasure' | 'signalBlocks' | 'realParts' | 'placement' | 'updateComponents' | 'variants' | 'myLibrary' | 'mcu' | 'pld' | 'ladder' | 'mecha' | 'ercTools' | 'netSettings' | 'customizeUi' | 'footprints' | 'documents' | 'printing' | 'editingTools' | 'relays' | 'audio' | 'scripting' | 'compactModels';
 
 export interface GuidePage {
   title: LocalizedText;
@@ -24,12 +25,13 @@ export interface GuidePage {
   code?: string[];
 }
 
-export const GUIDE_ORDER: GuidePageId[] = ['whatsNew', 'lessons', 'samples', 'placement', 'signalBlocks', 'realParts', 'updateComponents', 'variants', 'myLibrary', 'description', 'instructor', 'ercTools', 'netSettings', 'customizeUi', 'footprints', 'reports', 'snippets', 'fileSafety', 'documents', 'printing', 'editingTools', 'exchange', 'spiceImport', 'spiceMeasure', 'measurements', 'mcu', 'pld', 'ladder', 'mecha', 'relays', 'audio', 'pcb', 'commandLine'];
+export const GUIDE_ORDER: GuidePageId[] = ['whatsNew', 'lessons', 'samples', 'placement', 'signalBlocks', 'realParts', 'updateComponents', 'variants', 'myLibrary', 'description', 'instructor', 'ercTools', 'netSettings', 'customizeUi', 'footprints', 'reports', 'snippets', 'fileSafety', 'documents', 'printing', 'editingTools', 'exchange', 'spiceImport', 'spiceMeasure', 'measurements', 'mcu', 'pld', 'ladder', 'mecha', 'relays', 'audio', 'scripting', 'compactModels', 'pcb', 'commandLine'];
 
 export const GUIDE_PAGES: Record<GuidePageId, GuidePage> = {
   ...LADDER_GUIDE_PAGES,
   ...DOCS_GUIDE_PAGES,
   ...ELECTRO_GUIDE_PAGES,
+  ...AUTOMATION_GUIDE_PAGES,
   whatsNew: {
     title: L('Có gì mới trong MachSim', "What's new in MachSim"),
     sections: [
@@ -722,6 +724,7 @@ export const GUIDE_PAGES: Record<GuidePageId, GuidePage> = {
       'MachSim.exe --batch loc.cir --out bode.csv',
       'MachSim.exe --batch mach.msim --analysis dc --set R=4.7k --out quet.json',
       'MachSim.exe --batch mach.msim --erc --log erc.txt',
+      'MachSim.exe --script gain.js ketqua.csv',
     ],
   },
 };

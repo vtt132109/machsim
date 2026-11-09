@@ -3,14 +3,21 @@
  *
  * The model level decides the implementation, but a device factory only sees the element, not
  * its model card. `MosDevice` therefore resolves the card in setup() and creates the real device:
- * BSIM3 (bsim3.ts) for LEVEL 7 / 8 / 49 / 53 and, approximated, BSIM4 LEVEL 14 / 54; the SPICE
- * level 1 / 2 / 3 Mosfet (mosfet.ts) for everything else. Every Device method is forwarded.
+ * BSIM3 (bsim3.ts) for LEVEL 7 / 8 / 49 / 53, the BSIM4-class variant of the same code for LEVEL 14 / 54,
+ * the charge-based EKV 2.6 model (ekv.ts) for LEVEL 44; the SPICE level 1 / 2 / 3 Mosfet (mosfet.ts)
+ * for everything else. Every Device method is forwarded.
  * Runtime parameter changes made before setup are replayed on the created device.
  */
 import type { AcContext, Device, LoadContext, NoiseContext, NoiseGenerator, SetupContext, TruncContext } from '../../device';
 import type { ElementIR } from '../../netlist';
 import { Bsim3, BSIM3_LEVELS, BSIM4_LEVELS } from './bsim3';
+import { Ekv, EKV_LEVELS } from './ekv';
 import { Mosfet } from './mosfet';
+
+/** True when a MOSFET model card of this level is evaluated by the EKV implementation. */
+export function isEkvLevel(level: number | undefined): boolean {
+  return level !== undefined && Number.isFinite(level) && EKV_LEVELS.has(Math.round(level));
+}
 
 /** True when a MOSFET model card of this level is evaluated by the BSIM3 implementation. */
 export function isBsimLevel(level: number | undefined): boolean {
@@ -24,7 +31,7 @@ export class MosDevice implements Device {
   readonly name: string;
   readonly nodeNames: string[];
   private readonly el: ElementIR;
-  private inner: Mosfet | Bsim3 | null = null;
+  private inner: Mosfet | Bsim3 | Ekv | null = null;
   private readonly pending: [string, number][] = [];
 
   constructor(el: ElementIR) {
@@ -34,19 +41,19 @@ export class MosDevice implements Device {
   }
 
   /** The device that evaluates this element (after setup). */
-  get implementation(): Mosfet | Bsim3 | null {
+  get implementation(): Mosfet | Bsim3 | Ekv | null {
     return this.inner;
   }
 
   setup(ctx: SetupContext): void {
     const card = this.el.model ? ctx.model(this.el.model) : undefined;
     const level = card && (card.type.toUpperCase() === 'NMOS' || card.type.toUpperCase() === 'PMOS') ? card.params.level : undefined;
-    this.inner = isBsimLevel(level) ? new Bsim3(this.el) : new Mosfet(this.el);
+    this.inner = isEkvLevel(level) ? new Ekv(this.el) : isBsimLevel(level) ? new Bsim3(this.el) : new Mosfet(this.el);
     for (const [p, v] of this.pending.splice(0)) this.inner.setParam(p, v);
     this.inner.setup(ctx);
   }
 
-  private dev(): Mosfet | Bsim3 {
+  private dev(): Mosfet | Bsim3 | Ekv {
     if (!this.inner) throw new Error(`${this.name}: MOSFET used before setup`);
     return this.inner;
   }

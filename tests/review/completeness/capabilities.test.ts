@@ -50,8 +50,9 @@ describe('component library', () => {
 
   it('counts the simulatable parts of the catalogue', () => {
     // the PLC analog output module (round 4, xchg) is a rack part without toSpice: one more part, not simulatable on its own
-    expect(simulatable.length).toBe(4859);
-    expect(listParts()).toHaveLength(5064);
+    // round 4 auto adds 8 simulatable parts (EKV, BSIM4 MOSFETs and Jiles-Atherton cores)
+    expect(simulatable.length).toBe(4867);
+    expect(listParts()).toHaveLength(5072);
   });
 
   // the biggest group (RF: hundreds of transmission-line and mixer parts) takes about 45 s on its

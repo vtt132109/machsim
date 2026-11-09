@@ -43,10 +43,25 @@ describe('MOSFET dispatcher', () => {
     expect(d.getParam('w')).toBe(20e-6);
   });
 
-  it('BSIM4 cards run with the BSIM3 core and a warning', () => {
+  it('BSIM4 cards run on the BSIM4-class variant without a warning (changed in round 4: they used the BSIM3 core with a warning)', () => {
     const [op] = runAnalyses(parseSpice('b4\nVD d 0 1\nVG g 0 1\nM1 d g 0 0 N4 W=1u L=0.1u\n.model N4 NMOS (LEVEL=54 TOXE=2n NDEP=3e18 VTH0=0.3)\n.op\n.end').netlist);
     expect(op.error).toBeUndefined();
-    expect(op.warnings.join(' ')).toMatch(/BSIM4 model \(level 54\) evaluated with the BSIM3v3 core/);
+    expect(op.warnings.join(' ')).not.toMatch(/BSIM3v3 core/);
+  });
+
+  it('the dispatcher marks LEVEL 14 / 54 cards as BSIM4 and LEVEL 49 cards as BSIM3', () => {
+    const make = (level: number) => {
+      const d = new MosDevice({ type: 'M', name: 'M1', nodes: ['d', 'g', '0', '0'], model: 'MM', params: {} });
+      const c = new TestCircuit({}).model({ name: 'MM', type: 'NMOS', params: { level, vth0: 0.4 } });
+      c.element(() => d, { type: 'M', name: 'M1', nodes: ['d', 'g', '0', '0'], model: 'MM', params: {} });
+      c.vsource('VD', 'd', '0', 1);
+      c.vsource('VG', 'g', '0', 1);
+      c.op();
+      return d.implementation as Bsim3;
+    };
+    expect(make(54).isBsim4).toBe(true);
+    expect(make(14).isBsim4).toBe(true);
+    expect(make(49).isBsim4).toBe(false);
   });
 });
 

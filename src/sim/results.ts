@@ -28,6 +28,10 @@ export type VectorUnit =
   | 'A^2/Hz'
   | 'V/rtHz'
   | 'A/rtHz'
+  /** magnetic nodes of the hysteresis cores: <ref>.b (tesla), <ref>.h / <ref>.m (A/m), <ref>.flux (weber-turns) */
+  | 'T'
+  | 'A/m'
+  | 'Wb'
   | '';
 
 export interface Vector {
@@ -39,6 +43,13 @@ export interface Vector {
   im?: Float64Array;
   /** digital vectors: 0/1/X(=0.5)/Z(=NaN) samples aligned with the scale */
   digital?: boolean;
+  /**
+   * X-Y plots (postprocessor `vs(y, x)`): the vector is drawn against these values instead of the
+   * result's scale (same length as `re`), with the axis name / unit of the x quantity.
+   */
+  xValues?: Float64Array;
+  xName?: string;
+  xUnit?: VectorUnit;
 }
 
 export interface AnalysisResult {
